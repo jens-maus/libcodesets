@@ -1,0 +1,832 @@
+/****************************************************************************
+**
+** Copyright 2004 Alfonso Ranieri <alforan@tin.it>.
+**
+** Released under the terms of the GPL II.
+**
+** MUI demo that load/Save UTF8 files
+**
+** Needs TextEditor.mcc and Textinput.mcc
+**
+*****************************************************************************/
+
+#include <proto/exec.h>
+#include <proto/dos.h>
+#include <proto/utility.h>
+#include <proto/muimaster.h>
+#include <proto/codesets.h>
+#include <libraries/asl.h>
+#include <libraries/gadtools.h>
+#include <libraries/mui.h>
+#include <mui/Textinput_mcc.h>
+#include <mui/TextEditor_mcc.h>
+#include <clib/alib_protos.h>
+#include <stdio.h>
+#include <string.h>
+
+/***********************************************************************/
+/*
+** Some macro
+*/
+
+#ifndef MAKE_ID
+#define MAKE_ID(a,b,c,d) ((ULONG) (a)<<24 | (ULONG) (b)<<16 | (ULONG) (c)<<8 | (ULONG) (d))
+#endif
+
+#define SAVEDS  __saveds
+#define ASM     __asm
+#define REG(x)  register __ ## x
+#define STDARGS __stdargs
+
+/***********************************************************************/
+/*
+** Globals
+*/
+
+char __ver[] = "\0$VER: CodesetsDemo1 1.0 (10.11.2004)";
+long __stack = 8192;
+struct Library *MUIMasterBase, *CodesetsBase;
+struct MUI_CustomClass *appClass, *popupCodesetsClass, *editorClass;
+
+/***********************************************************************/
+/*
+** MUI stuff
+*/
+
+/* App attributes */
+#define MUIA_App_Win            (TAG_USER+1)
+
+/* App methods */
+#define MUIM_App_DisposeWin     (TAG_USER+2)
+#define MUIM_App_About          (TAG_USER+3)
+#define MUIM_App_AboutMUI       (TAG_USER+4)
+
+struct MUIP_App_DisposeWin
+{
+    ULONG  MethodID;
+    Object *win;
+};
+
+/* Editor attributes */
+#define MUIA_Editor_CodesetsObj (TAG_USER+5)
+
+/* Editor methods */
+#define MUIM_Editor_Load        (TAG_USER+6)
+#define MUIM_Editor_Save        (TAG_USER+7)
+
+struct MUIP_Editor_Load
+{
+    ULONG MethodID;
+    ULONG plain;
+};
+
+/* Classes object creation macros */
+#define appObject          NewObject(appClass->mcc_Class,NULL
+#define editorObject       NewObject(editorClass->mcc_Class,NULL
+#define popupCodesetObject NewObject(popupCodesetsClass->mcc_Class,NULL
+
+/***********************************************************************/
+/*
+** Usual DoSuperNew funct
+*/
+
+ULONG STDARGS
+DoSuperNew(struct IClass *cl,Object *obj,ULONG tag1,...)
+{
+    return DoSuperMethod(cl,obj,OM_NEW,&tag1,NULL);
+}
+
+/***********************************************************************/
+/*
+** Codesets popup open window hook funct
+*/
+
+static void ASM SAVEDS
+popupWindowFun(REG(a0) struct Hook *hook,REG(a1) Object *win,REG(a2) Object *pop)
+{
+    set(win,MUIA_Window_DefaultObject,pop);
+}
+
+/***********************************************************************/
+/*
+** Codesets popup open hook funct
+** Sets the active entry in the list
+*/
+
+static ULONG ASM SAVEDS
+popupOpenFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
+{
+    STRPTR       s, x;
+    register int i;
+
+    get(str,MUIA_Textinput_Contents,&s);
+
+    for (i = 0; ;i++)
+    {
+        DoMethod(list,MUIM_List_GetEntry,i,&x);
+        if (!x)
+        {
+            set(list,MUIA_List_Active,MUIV_List_Active_Off);
+            break;
+        }
+        else
+            if (!stricmp(x,s))
+            {
+                set(list,MUIA_List_Active,i);
+                break;
+            }
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************/
+/*
+** Codesets popup close hook funct
+** Set the string contents
+*/
+
+static void ASM SAVEDS
+popupCloseFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
+{
+    STRPTR e;
+
+    DoMethod(list,MUIM_List_GetEntry,MUIV_List_GetEntry_Active,&e);
+    set(str,MUIA_Textinput_Contents,e);
+}
+
+/***********************************************************************/
+/*
+** Codesets popup new method
+*/
+
+static struct Hook popupWindowHook = {{NULL,NULL},(APTR)popupWindowFun,NULL,NULL},
+                   popupOpenHook   = {{NULL,NULL},(APTR)popupOpenFun,NULL,NULL},
+                   popupCloseHook  = {{NULL,NULL},(APTR)popupCloseFun,NULL,NULL};
+
+static ULONG
+mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
+{
+    register Object *str, *bt, *lv, *l;
+
+    if (obj = (Object *)DoSuperNew(cl,obj,
+
+            MUIA_Popstring_String, str = TextinputObject,
+                MUIA_ControlChar,           (ULONG)'h',
+                MUIA_CycleChain,            TRUE,
+                StringFrame,
+                MUIA_Textinput_AdvanceOnCR, TRUE,
+                MUIA_Textinput_MaxLen,      256,
+            End,
+
+            MUIA_Popstring_Button, bt = MUI_MakeObject(MUIO_PopButton,MUII_PopUp),
+
+            MUIA_Popobject_Object, lv = ListviewObject,
+                MUIA_Listview_List, l = ListObject,
+                    MUIA_Frame,              MUIV_Frame_InputList,
+                    MUIA_Background,         MUII_ListBack,
+                    MUIA_List_AutoVisible,   TRUE,
+                    MUIA_List_ConstructHook, MUIV_List_ConstructHook_String,
+                    MUIA_List_DestructHook,  MUIV_List_DestructHook_String,
+                End,
+            End,
+            MUIA_Popobject_WindowHook, &popupWindowHook,
+            MUIA_Popobject_StrObjHook, &popupOpenHook,
+            MUIA_Popobject_ObjStrHook, &popupCloseHook,
+
+            TAG_MORE,msg->ops_AttrList))
+    {
+        register struct codeset *codeset;
+        register STRPTR         *array;
+
+        set(bt,MUIA_CycleChain,TRUE);
+        DoMethod(lv,MUIM_Notify,MUIA_Listview_DoubleClick,TRUE,obj,2,MUIM_Popstring_Close,TRUE);
+
+        /* Build list of available codesets */
+        if (array = CodesetsSupportedA(NULL))
+        {
+            DoMethod(l,MUIM_List_Insert,array,-1,MUIV_List_Insert_Sorted);
+            CodesetsFreeA(array,NULL);
+        }
+        else SetSuperAttrs(cl,obj,MUIA_Disabled,TRUE,TAG_DONE);
+
+        /* Use the default codeset */
+        codeset = CodesetsFindA(NULL,NULL);
+        set(str,MUIA_Textinput_Contents,codeset->name);
+    }
+
+    return (ULONG)obj;
+}
+
+/***********************************************************************/
+/*
+** Codesets popup dispatcher
+*/
+
+static ULONG ASM SAVEDS
+popupDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+{
+    switch (msg->MethodID)
+    {
+        case OM_NEW: return mpopupNew(cl,obj,(APTR)msg);
+        default:     return DoSuperMethodA(cl,obj,msg);
+    }
+}
+
+/***********************************************************************/
+/*
+** Editor instance
+*/
+
+struct editorData
+{
+    Object               *codesetsObj;
+    struct FileRequester *req;
+};
+
+/***********************************************************************/
+/*
+** Editor new method
+*/
+
+static ULONG
+meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
+{
+    register struct FileRequester *req;
+
+    if ((req = MUI_AllocAslRequest(ASL_FileRequest,NULL)) &&
+        (obj = (Object *)DoSuperNew(cl,obj,
+            TAG_MORE,msg->ops_AttrList)))
+    {
+        register struct editorData *data = INST_DATA(cl,obj);
+
+        data->codesetsObj = (Object *)GetTagData(MUIA_Editor_CodesetsObj,NULL,msg->ops_AttrList);
+
+        data->req = req;
+    }
+    else
+    {
+        if (req) MUI_FreeAslRequest(req);
+    }
+
+    return (ULONG)obj;
+}
+
+/***********************************************************************/
+/*
+** Editor dispose method
+*/
+
+static ULONG
+meditorDispose(struct IClass *cl,Object *obj,Msg msg)
+{
+    register struct editorData *data = INST_DATA(cl,obj);
+
+    if (data->req) MUI_FreeAslRequest(data->req);
+
+    return DoSuperMethodA(cl,obj,msg);
+}
+
+/***********************************************************************/
+/*
+** Editor load method
+*/
+
+static ULONG
+meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
+{
+    register struct editorData *data = INST_DATA(cl,obj);
+
+    set(_app(obj),MUIA_Application_Sleep,TRUE);
+    SetSuperAttrs(cl,obj,MUIA_TextEditor_Quiet,FALSE,TAG_DONE);
+
+    /* Request file name */
+    if (MUI_AslRequestTags(data->req,ASLFR_TitleText,msg->plain ?
+        "Select a file to load" : "Select a file to load as UTF8",TAG_DONE))
+    {
+        register char fname[256];
+        register BPTR lock;
+
+        strcpy(fname,data->req->fr_Drawer);
+        AddPart(fname,data->req->fr_File,sizeof(fname));
+
+        /* Get size */
+        if (lock = Lock(fname,SHARED_LOCK))
+        {
+            register struct FileInfoBlock *fib;
+            register ULONG                go = FALSE, size;
+
+            if (fib = AllocDosObject(DOS_FIB,NULL))
+            {
+                if (Examine(lock,fib))
+                {
+                    size = fib->fib_Size;
+                    go = TRUE;
+                }
+
+                FreeDosObject(DOS_FIB,fib);
+            }
+
+            UnLock(lock);
+
+            if (go)
+            {
+                DoSuperMethod(cl,obj,MUIM_TextEditor_ClearText);
+
+                if (size>0)
+                {
+                    register STRPTR buf;
+
+                    /* Alloc whole file buf */
+                    if (buf = AllocMem(size+1,MEMF_ANY))
+                    {
+                        register BPTR file;
+
+                        if (file = Open(fname,MODE_OLDFILE))
+                        {
+                            register ULONG r;
+
+                            r = Read(file,buf,size);
+                            if (r>=0)
+                            {
+                                buf[r] = 0;
+
+                                if (msg->plain)
+                                {
+                                    /* If plain just set it */
+                                    set(obj,MUIA_TextEditor_Contents,buf);
+                                }
+                                else
+                                {
+                                    register struct codeset *codeset;
+                                    register STRPTR         str;
+                                    STRPTR                  cname;
+
+                                    /* Get used codeset */
+                                    get(data->codesetsObj,MUIA_Textinput_Contents,&cname);
+                                    codeset = CodesetsFindA(cname,NULL);
+
+                                    /* Convert */
+                                    str = CodesetsUTF8ToStr(CODESETSA_Source,  buf,
+                                                            CODESETSA_Codeset, codeset,
+                                                            TAG_DONE);
+                                    if (str)
+                                    {
+                                        SetSuperAttrs(cl,obj,MUIA_TextEditor_Contents,str,TAG_DONE);
+                                        CodesetsFreeA(str,NULL);
+                                    }
+                                }
+                            }
+
+                            Close(file);
+                        }
+
+                        FreeMem(buf,size+1);
+                    }
+                }
+
+                SetSuperAttrs(cl,obj,MUIA_TextEditor_CursorX, 0,
+                                     MUIA_TextEditor_CursorY, 0,
+                                     TAG_DONE);
+            }
+        }
+    }
+
+    SetSuperAttrs(cl,obj,MUIA_TextEditor_Quiet,FALSE,TAG_DONE);
+    set(_app(obj),MUIA_Application_Sleep,FALSE);
+
+    return 0;
+}
+
+/***********************************************************************/
+/*
+** Editor save method
+*/
+
+static ULONG
+meditorSave(struct IClass *cl,Object *obj,Msg msg)
+{
+    register struct editorData *data = INST_DATA(cl,obj);
+    STRPTR                     text;
+
+    set(_app(obj),MUIA_Application_Sleep,TRUE);
+
+    /* Get editor text */
+    if (text = (STRPTR)DoSuperMethod(cl,obj,MUIM_TextEditor_ExportText))
+    {
+        register struct codeset *codeset;
+        register UTF8           *utf8;
+        STRPTR                  cname;
+        ULONG                   dlen;
+
+        /* Get current user codeset */
+        get(data->codesetsObj,MUIA_Textinput_Contents,&cname);
+        codeset = CodesetsFindA(cname,NULL);
+
+        /* Convert text as utf8 */
+        if (utf8 = CodesetsUTF8Create(CODESETSA_Source,text,CODESETSA_Codeset,codeset,CODESETSA_DestLenPtr,&dlen,TAG_DONE))
+        {
+            /* Save converted text to a file */
+
+            if (MUI_AslRequestTags(data->req,ASLFR_DoSaveMode,TRUE,ASLFR_TitleText,"Select a file to save as UTF8",TAG_DONE))
+            {
+                register char fname[256];
+                register BPTR file;
+
+                strcpy(fname,data->req->fr_Drawer);
+                AddPart(fname,data->req->fr_File,sizeof(fname));
+
+                if (file = Open(fname,MODE_NEWFILE))
+                {
+                    Write(file,utf8,dlen);
+                    Close(file);
+                }
+            }
+
+            /* Free converted string */
+            CodesetsFreeA(utf8,NULL);
+        }
+
+        FreeVec(text);
+    }
+
+    set(_app(obj),MUIA_Application_Sleep,FALSE);
+
+    return 0;
+}
+
+/***********************************************************************/
+/*
+** Editor dispatcher
+*/
+
+static ULONG ASM SAVEDS
+editorDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+{
+    switch (msg->MethodID)
+    {
+        case OM_NEW:           return meditorNew(cl,obj,(APTR)msg);
+        case OM_DISPOSE:       return meditorDispose(cl,obj,(APTR)msg);
+        case MUIM_Editor_Save: return meditorSave(cl,obj,(APTR)msg);
+        case MUIM_Editor_Load: return meditorLoad(cl,obj,(APTR)msg);
+        default:               return DoSuperMethodA(cl,obj,msg);
+    }
+}
+
+/***********************************************************************/
+/*
+** App instance
+*/
+
+struct appData
+{
+    Object *win;
+    Object *about;
+    Object *aboutMUI;
+    Object *config;
+};
+
+/***********************************************************************/
+/*
+** App new method
+*/
+
+/* Menus */
+#define MTITLE(t)  {NM_TITLE,(STRPTR)(t),0,0,0,0}
+#define MITEM(t,d) {NM_ITEM,(STRPTR)(t),0,0,0,(APTR)(d)}
+#define MBAR       {NM_ITEM,(STRPTR)NM_BARLABEL,0,0,0,NULL}
+#define MEND       {NM_END,NULL,0,0,0,NULL}
+
+enum
+{
+    MABOUT = 1,
+    MABOUTMUI,
+    MMUI,
+    MQUIT,
+};
+
+static struct NewMenu appMenu[] =
+{
+    MTITLE("Project"),
+        MITEM("?\0About...",MABOUT),
+        MITEM("M\0About MUI...",MABOUTMUI),
+        MBAR,
+        MITEM("Q\0Quit",MQUIT),
+
+    MTITLE("Editor"),
+        MITEM("M\0MUI Settings...",MMUI),
+
+    MEND
+};
+
+static ULONG
+mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
+{
+    register Object *strip, *win, *codesets, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
+
+    if (obj = (Object *)DoSuperNew(cl,obj,
+                MUIA_Application_Title,        "Codesets Demo1",
+                MUIA_Application_Version,      "$VER: CodesetsDemo1 1.0 (10.11.2004)",
+                MUIA_Application_Copyright,    "Copyright 2004 by Alfonso Ranieri",
+                MUIA_Application_Author,       "Alfonso Ranieri <alforan@tin.it>",
+                MUIA_Application_Description,  "Codesets example",
+                MUIA_Application_Base,         "CODESETSEXAMPLE",
+                MUIA_Application_Menustrip,    strip = MUI_MakeObject(MUIO_MenustripNM,appMenu,MUIO_MenustripNM_CommandKeyCheck),
+
+                SubWindow, win = WindowObject,
+                    MUIA_Window_ID,             MAKE_ID('M','A','I','N'),
+                    MUIA_Window_Title,          "Codesets Demo1",
+                    WindowContents, VGroup,
+
+                        Child, HGroup,
+                            Child, Label2("C_harset"),
+                            Child, codesets = popupCodesetObject, End,
+                        End,
+
+                        Child, HGroup,
+                            MUIA_Group_Horiz,   TRUE,
+                            MUIA_Group_Spacing, 0,
+                            Child, editor = editorObject,
+                                MUIA_Editor_CodesetsObj, codesets,
+                            End,
+                            Child, sb = ScrollbarObject, End,
+                        End,
+
+                        Child, HGroup,
+                            Child, loadPlain = MUI_MakeObject(MUIO_Button,"Load _plain"),
+                            Child, RectangleObject, MUIA_Weight, 50, End,
+                            Child, loadUTF8 = MUI_MakeObject(MUIO_Button,"_Load utf8"),
+                            Child, RectangleObject, MUIA_Weight, 50, End,
+                            Child, save = MUI_MakeObject(MUIO_Button,"_Save utf8"),
+                            Child, RectangleObject, MUIA_Weight, 50, End,
+                            Child, cancel = MUI_MakeObject(MUIO_Button,"_Cancel"),
+                        End,
+
+                    End,
+                End,
+                TAG_MORE,msg->ops_AttrList))
+    {
+        register struct appData *data = INST_DATA(cl,obj);
+
+        data->win = win;
+
+        set(editor,MUIA_TextEditor_Slider,sb);
+
+        set(loadPlain,MUIA_CycleChain,TRUE);
+        set(loadUTF8,MUIA_CycleChain,TRUE);
+        set(save,MUIA_CycleChain,TRUE);
+        set(cancel,MUIA_CycleChain,TRUE);
+
+        DoMethod(win,MUIM_Notify,MUIA_Window_CloseRequest,TRUE,MUIV_Notify_Application,2,
+            MUIM_Application_ReturnID,MUIV_Application_ReturnID_Quit);
+
+        DoMethod(loadPlain,MUIM_Notify,MUIA_Pressed,FALSE,editor,2,MUIM_Editor_Load,TRUE);
+        DoMethod(loadUTF8,MUIM_Notify,MUIA_Pressed,FALSE,editor,2,MUIM_Editor_Load,FALSE);
+        DoMethod(save,MUIM_Notify,MUIA_Pressed,FALSE,editor,1,MUIM_Editor_Save);
+        DoMethod(cancel,MUIM_Notify,MUIA_Pressed,FALSE,MUIV_Notify_Application,2,
+            MUIM_Application_ReturnID,MUIV_Application_ReturnID_Quit);
+
+        DoMethod((Object *)DoMethod(strip,MUIM_FindUData,MABOUT),MUIM_Notify,
+            MUIA_Menuitem_Trigger,MUIV_EveryTime,obj,1,MUIM_App_About);
+
+        DoMethod((Object *)DoMethod(strip,MUIM_FindUData,MABOUTMUI),MUIM_Notify,
+            MUIA_Menuitem_Trigger,MUIV_EveryTime,obj,1,MUIM_App_AboutMUI);
+
+        DoMethod((Object *)DoMethod(strip,MUIM_FindUData,MQUIT),MUIM_Notify,
+            MUIA_Menuitem_Trigger,MUIV_EveryTime,obj,2,MUIM_Application_ReturnID,
+            MUIV_Application_ReturnID_Quit);
+
+        DoMethod((Object *)DoMethod(strip,MUIM_FindUData,MMUI),MUIM_Notify,
+            MUIA_Menuitem_Trigger,MUIV_EveryTime,obj,2,MUIM_Application_OpenConfigWindow,0);
+
+        set(win,MUIA_Window_Open,TRUE);
+    }
+
+    return (ULONG)obj;
+}
+
+/***********************************************************************/
+/*
+** App dispose win method
+*/
+
+static ULONG
+mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
+{
+    register struct appData *data = INST_DATA(cl,obj);
+    register Object         *win = msg->win;
+
+    set(win,MUIA_Window_Open,FALSE);
+    DoSuperMethod(cl,obj,OM_REMMEMBER,win);
+    MUI_DisposeObject(win);
+
+    if (win==data->about) data->about = NULL;
+    else if (win==data->aboutMUI) data->aboutMUI = NULL;
+
+    return 0;
+}
+
+/***********************************************************************/
+/*
+** App about method
+*/
+
+static ULONG
+mappAbout(struct IClass *cl,Object *obj,Msg msg)
+{
+    register struct appData *data = INST_DATA(cl,obj);
+
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
+
+    if (!data->about)
+    {
+        register Object *ok;
+
+        if (data->about = WindowObject,
+                MUIA_Window_RefWindow, data->win,
+                MUIA_Window_Title,     "About Codesets Demo1",
+                WindowContents, VGroup,
+                    Child, TextObject,
+                        MUIA_Text_Contents, "\n\\
+Codesets Demo1\n\\
+Copyright 2004 by Alfonso Ranieri <alforan@tin.it>\n",
+
+                        MUIA_Text_PreParse, MUIX_C,
+                    End,
+                    Child, RectangleObject, MUIA_Weight, 0, MUIA_Rectangle_HBar, TRUE, End,
+                    Child, HGroup,
+                        Child, RectangleObject, MUIA_Weight, 200, End,
+                        Child, ok = MUI_MakeObject(MUIO_Button,"_OK"),
+                        Child, RectangleObject, MUIA_Weight, 200, End,
+                    End,
+                End,
+            End)
+        {
+            DoSuperMethod(cl,obj,OM_ADDMEMBER,data->about);
+
+            set(data->about,MUIA_Window_ActiveObject,ok);
+
+            DoMethod(data->about,MUIM_Notify,MUIA_Window_CloseRequest,TRUE,obj,5,
+                MUIM_Application_PushMethod,obj,2,MUIM_App_DisposeWin,data->about);
+
+            DoMethod(ok,MUIM_Notify,MUIA_Pressed,FALSE,obj,5,
+                MUIM_Application_PushMethod,obj,2,MUIM_App_DisposeWin,data->about);
+        }
+    }
+
+    set(data->about,MUIA_Window_Open,TRUE);
+
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,FALSE,TAG_DONE);
+
+    return 0;
+}
+
+/***********************************************************************/
+/*
+** App about mui method
+*/
+
+static ULONG
+mappAboutMUI(struct IClass *cl,Object *obj,Msg msg)
+{
+    register struct appData *data = INST_DATA(cl,obj);
+
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
+
+    if (!data->aboutMUI)
+    {
+        if (data->aboutMUI = AboutmuiObject,
+                MUIA_Aboutmui_Application, obj,
+                MUIA_Window_RefWindow,     data->win,
+            End)
+        {
+            DoMethod(data->aboutMUI,MUIM_Notify,MUIA_Window_CloseRequest,TRUE,obj,5,
+                MUIM_Application_PushMethod,obj,2,MUIM_App_DisposeWin,data->aboutMUI);
+        }
+    }
+
+    set(data->aboutMUI,MUIA_Window_Open,TRUE);
+
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,FALSE,TAG_DONE);
+
+    return 0;
+}
+
+/***********************************************************************/
+/*
+** App MUI settings method
+*/
+
+static ULONG
+mappOpenMUIConfigWindow(struct IClass *cl,Object *obj,Msg msg)
+{
+    register ULONG res;
+
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
+    res = DoSuperMethodA(cl,obj,msg);
+    SetSuperAttrs(cl,obj,MUIA_Application_Sleep,FALSE,TAG_DONE);
+
+    return res;
+}
+
+/***********************************************************************/
+/*
+** App dispatcher
+*/
+
+static ULONG ASM SAVEDS
+appDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+{
+    switch (msg->MethodID)
+    {
+        case OM_NEW:                            return mappNew(cl,obj,(APTR)msg);
+        case MUIM_App_DisposeWin:               return mappDisposeWin(cl,obj,(APTR)msg);
+        case MUIM_App_About:                    return mappAbout(cl,obj,(APTR)msg);
+        case MUIM_App_AboutMUI:                 return mappAboutMUI(cl,obj,(APTR)msg);
+        case MUIM_Application_OpenConfigWindow: return mappOpenMUIConfigWindow(cl,obj,(APTR)msg);
+        default:                                return DoSuperMethodA(cl,obj,msg);
+    }
+}
+
+/***********************************************************************/
+/*
+** Main
+*/
+
+int
+main(int argc,char **argv)
+{
+    register int res = RETURN_FAIL;
+
+    /* Open codesets.library */
+    if (CodesetsBase = OpenLibrary("codesets.library",1))
+    {
+        /* Open muimaster.library */
+        if (MUIMasterBase = OpenLibrary("muimaster.library",19))
+        {
+            /* Create classes */
+            if ((appClass = MUI_CreateCustomClass(NULL,MUIC_Application,NULL,sizeof(struct appData),appDispatcher)) &&
+                (popupCodesetsClass = MUI_CreateCustomClass(NULL,MUIC_Popobject,NULL,0,popupDispatcher)) &&
+                (editorClass = MUI_CreateCustomClass(NULL,MUIC_TextEditor,NULL,sizeof(struct editorData),editorDispatcher)))
+            {
+                register Object *app;
+
+                /* Create application */
+                if (app = appObject, End)
+                {
+                    /* Here we go */
+                    ULONG sigs = 0;
+
+                    while (DoMethod(app,MUIM_Application_NewInput,&sigs)!=MUIV_Application_ReturnID_Quit)
+                    {
+                        if (sigs)
+                        {
+                            sigs = Wait(sigs | SIGBREAKF_CTRL_C);
+                            if (sigs & SIGBREAKF_CTRL_C) break;
+                        }
+                    }
+
+                    MUI_DisposeObject(app);
+
+                    res = RETURN_OK;
+                }
+                else
+                {
+                    printf("%s: can't create application\n",argv[0]);
+                }
+
+                MUI_DeleteCustomClass(popupCodesetsClass);
+                MUI_DeleteCustomClass(editorClass);
+                MUI_DeleteCustomClass(appClass);
+            }
+            else
+            {
+                if (appClass)
+                {
+                    if (popupCodesetsClass) MUI_DeleteCustomClass(popupCodesetsClass);
+                    MUI_DeleteCustomClass(appClass);
+                }
+
+                printf("%s: can't create custom classes\n",argv[0]);
+            }
+
+            CloseLibrary(MUIMasterBase);
+        }
+        else
+        {
+            printf("%s: Can't open muimaster.library ver 19 or higher\n",argv[0]);
+            res = RETURN_ERROR;
+        }
+
+        CloseLibrary(CodesetsBase);
+    }
+    else
+    {
+        printf("%s: Can't open codesets.library ver 1 or higher\n",argv[0]);
+        res = RETURN_ERROR;
+    }
+
+    return res;
+}
+
+/***********************************************************************/
