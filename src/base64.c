@@ -153,7 +153,7 @@ openIn (STRPTR name, ULONG * size)
 static int
 inchar(struct b64 *b64)
 {
-    register int c;
+    int c;
 
     if (b64->flags & B64FLG_SourceFile)
     {
@@ -182,7 +182,7 @@ ochar(struct b64 *b64,int c)
 {
     if (b64->flags & B64FLG_DestFile)
     {
-        register int r = 0;
+        int r = 0;
 
         if (b64->maxLineLen && (b64->lineCounter>=b64->maxLineLen))
         {
@@ -216,11 +216,11 @@ ochar(struct b64 *b64,int c)
 static int
 ostring(struct b64 *b64,UBYTE * buf,int s)
 {
-    register int i;
+    int i;
 
     if (b64->flags & B64FLG_DestFile)
     {
-        register int r;
+        int r;
 
         for (r = i = 0; (r!=EOF) && (i<s); i++)
         {
@@ -247,7 +247,7 @@ ostring(struct b64 *b64,UBYTE * buf,int s)
 static int
 insig(struct b64 *b64)
 {
-    register int c;
+    int c;
 
     for (;;)
     {
@@ -364,7 +364,7 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
     while(!stop)
     {
         UBYTE    igroup[3], ogroup[4];
-        register int i, c, n;
+        int i, c, n;
 
         igroup[0] = igroup[1] = igroup[2] = 0;
 
@@ -468,10 +468,10 @@ ULONG LIBFUNC
 CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
 {
     struct b64              b64;
-    register struct TagItem *tag;
-    register STRPTR         source;
-    register APTR           dest, in, out;
-    register ULONG          totSize, flags, errcheck;
+    struct TagItem *tag;
+    STRPTR         source;
+    APTR           dest, in, out;
+    ULONG          totSize, flags, errcheck;
     ULONG                   size;
     int                     sourceLen = 0;
 
@@ -562,11 +562,11 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
     for (;;)
     {
         UBYTE 	     a[4], b[4], o[3];
-        register int i;
+        int i;
 
         for (i = 0; i<4; i++)
         {
-            register int c = insig (&b64);
+            int c = insig (&b64);
 
             if (c==EOF)
             {

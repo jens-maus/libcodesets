@@ -35,7 +35,7 @@
 
 #define SAVEDS  __saveds
 #define ASM     __asm
-#define REG(x)  register __ ## x
+#define REG(x)  __ ## x
 #define STDARGS __stdargs
 
 /***********************************************************************/
@@ -117,7 +117,7 @@ static ULONG ASM SAVEDS
 popupOpenFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
 {
     STRPTR       s, x;
-    register int i;
+    int i;
 
     get(str,MUIA_Textinput_Contents,&s);
 
@@ -167,7 +167,7 @@ static struct Hook popupWindowHook = {{NULL,NULL},(APTR)popupWindowFun,NULL,NULL
 static ULONG
 mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
-    register Object *str, *bt, *lv, *l;
+    Object *str, *bt, *lv, *l;
 
     if (obj = (Object *)DoSuperNew(cl,obj,
 
@@ -196,8 +196,8 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 
             TAG_MORE,msg->ops_AttrList))
     {
-        register struct codeset *codeset;
-        register STRPTR         *array;
+        struct codeset *codeset;
+        STRPTR         *array;
 
         set(bt,MUIA_CycleChain,TRUE);
         DoMethod(lv,MUIM_Notify,MUIA_Listview_DoubleClick,TRUE,obj,2,MUIM_Popstring_Close,TRUE);
@@ -252,13 +252,13 @@ struct editorData
 static ULONG
 meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
-    register struct FileRequester *req;
+    struct FileRequester *req;
 
     if ((req = MUI_AllocAslRequest(ASL_FileRequest,NULL)) &&
         (obj = (Object *)DoSuperNew(cl,obj,
             TAG_MORE,msg->ops_AttrList)))
     {
-        register struct editorData *data = INST_DATA(cl,obj);
+        struct editorData *data = INST_DATA(cl,obj);
 
         data->codesetsObj = (Object *)GetTagData(MUIA_Editor_CodesetsObj,NULL,msg->ops_AttrList);
 
@@ -280,7 +280,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 static ULONG
 meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 {
-    register struct editorData *data = INST_DATA(cl,obj);
+    struct editorData *data = INST_DATA(cl,obj);
 
     if (data->req) MUI_FreeAslRequest(data->req);
 
@@ -295,7 +295,7 @@ meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 static ULONG
 meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 {
-    register struct editorData *data = INST_DATA(cl,obj);
+    struct editorData *data = INST_DATA(cl,obj);
 
     set(_app(obj),MUIA_Application_Sleep,TRUE);
     SetSuperAttrs(cl,obj,MUIA_TextEditor_Quiet,FALSE,TAG_DONE);
@@ -304,8 +304,8 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
     if (MUI_AslRequestTags(data->req,ASLFR_TitleText,msg->plain ?
         "Select a file to load" : "Select a file to load as UTF8",TAG_DONE))
     {
-        register char fname[256];
-        register BPTR lock;
+        char fname[256];
+        BPTR lock;
 
         strcpy(fname,data->req->fr_Drawer);
         AddPart(fname,data->req->fr_File,sizeof(fname));
@@ -313,8 +313,8 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
         /* Get size */
         if (lock = Lock(fname,SHARED_LOCK))
         {
-            register struct FileInfoBlock *fib;
-            register ULONG                go = FALSE, size;
+            struct FileInfoBlock *fib;
+            ULONG                go = FALSE, size;
 
             if (fib = AllocDosObject(DOS_FIB,NULL))
             {
@@ -335,16 +335,16 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 
                 if (size>0)
                 {
-                    register STRPTR buf;
+                    STRPTR buf;
 
                     /* Alloc whole file buf */
                     if (buf = AllocMem(size+1,MEMF_ANY))
                     {
-                        register BPTR file;
+                        BPTR file;
 
                         if (file = Open(fname,MODE_OLDFILE))
                         {
-                            register ULONG r;
+                            ULONG r;
 
                             r = Read(file,buf,size);
                             if (r>=0)
@@ -358,8 +358,8 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
                                 }
                                 else
                                 {
-                                    register struct codeset *codeset;
-                                    register STRPTR         str;
+                                    struct codeset *codeset;
+                                    STRPTR         str;
                                     STRPTR                  cname;
 
                                     /* Get used codeset */
@@ -406,7 +406,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 static ULONG
 meditorSave(struct IClass *cl,Object *obj,Msg msg)
 {
-    register struct editorData *data = INST_DATA(cl,obj);
+    struct editorData *data = INST_DATA(cl,obj);
     STRPTR                     text;
 
     set(_app(obj),MUIA_Application_Sleep,TRUE);
@@ -414,8 +414,8 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
     /* Get editor text */
     if (text = (STRPTR)DoSuperMethod(cl,obj,MUIM_TextEditor_ExportText))
     {
-        register struct codeset *codeset;
-        register UTF8           *utf8;
+        struct codeset *codeset;
+        UTF8           *utf8;
         STRPTR                  cname;
         ULONG                   dlen;
 
@@ -430,8 +430,8 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
 
             if (MUI_AslRequestTags(data->req,ASLFR_DoSaveMode,TRUE,ASLFR_TitleText,"Select a file to save as UTF8",TAG_DONE))
             {
-                register char fname[256];
-                register BPTR file;
+                char fname[256];
+                BPTR file;
 
                 strcpy(fname,data->req->fr_Drawer);
                 AddPart(fname,data->req->fr_File,sizeof(fname));
@@ -522,7 +522,7 @@ static struct NewMenu appMenu[] =
 static ULONG
 mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
-    register Object *strip, *win, *codesets, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
+    Object *strip, *win, *codesets, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
 
     if (obj = (Object *)DoSuperNew(cl,obj,
                 MUIA_Application_Title,        "Codesets Demo1",
@@ -566,7 +566,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
                 End,
                 TAG_MORE,msg->ops_AttrList))
     {
-        register struct appData *data = INST_DATA(cl,obj);
+        struct appData *data = INST_DATA(cl,obj);
 
         data->win = win;
 
@@ -613,8 +613,8 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 static ULONG
 mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 {
-    register struct appData *data = INST_DATA(cl,obj);
-    register Object         *win = msg->win;
+    struct appData *data = INST_DATA(cl,obj);
+    Object         *win = msg->win;
 
     set(win,MUIA_Window_Open,FALSE);
     DoSuperMethod(cl,obj,OM_REMMEMBER,win);
@@ -634,13 +634,13 @@ mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 static ULONG
 mappAbout(struct IClass *cl,Object *obj,Msg msg)
 {
-    register struct appData *data = INST_DATA(cl,obj);
+    struct appData *data = INST_DATA(cl,obj);
 
     SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
 
     if (!data->about)
     {
-        register Object *ok;
+        Object *ok;
 
         if (data->about = WindowObject,
                 MUIA_Window_RefWindow, data->win,
@@ -689,7 +689,7 @@ Copyright 2004 by Alfonso Ranieri <alforan@tin.it>\n",
 static ULONG
 mappAboutMUI(struct IClass *cl,Object *obj,Msg msg)
 {
-    register struct appData *data = INST_DATA(cl,obj);
+    struct appData *data = INST_DATA(cl,obj);
 
     SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
 
@@ -720,7 +720,7 @@ mappAboutMUI(struct IClass *cl,Object *obj,Msg msg)
 static ULONG
 mappOpenMUIConfigWindow(struct IClass *cl,Object *obj,Msg msg)
 {
-    register ULONG res;
+    ULONG res;
 
     SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
     res = DoSuperMethodA(cl,obj,msg);
@@ -756,7 +756,7 @@ appDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
 int
 main(int argc,char **argv)
 {
-    register int res = RETURN_FAIL;
+    int res = RETURN_FAIL;
 
     /* Open codesets.library */
     if (CodesetsBase = OpenLibrary("codesets.library",1))
@@ -769,7 +769,7 @@ main(int argc,char **argv)
                 (popupCodesetsClass = MUI_CreateCustomClass(NULL,MUIC_Popobject,NULL,0,popupDispatcher)) &&
                 (editorClass = MUI_CreateCustomClass(NULL,MUIC_TextEditor,NULL,sizeof(struct editorData),editorDispatcher)))
             {
-                register Object *app;
+                Object *app;
 
                 /* Create application */
                 if (app = appObject, End)

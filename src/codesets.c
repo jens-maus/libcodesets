@@ -59,7 +59,7 @@ mystrncmp(STRPTR str1,STRPTR str2,int len)
 {
     while (len)
     {
-        register int d;
+        int d;
 
         if ((d = *str1++ - *str2++)) return d;
         len--;
@@ -109,8 +109,8 @@ mystrnicmp(STRPTR str1,STRPTR str2,int n)
 static STRPTR
 mystrdup(STRPTR str)
 {
-    register STRPTR new;
-    register int   len;
+    STRPTR new;
+    int   len;
 
     if (!str) return NULL;
 
@@ -128,7 +128,7 @@ mystrdup(STRPTR str)
 static STRPTR
 mystrndup(STRPTR str1,int n)
 {
-    register STRPTR dest;
+    STRPTR dest;
 
     if ((dest = allocArbitrateVecPooled(n+1)))
     {
@@ -146,7 +146,7 @@ mystrndup(STRPTR str1,int n)
 static ULONG
 readLine(BPTR fh,STRPTR buf,int size)
 {
-    register STRPTR c;
+    STRPTR c;
 
     if (!FGets(fh,buf,size)) return FALSE;
 
@@ -169,7 +169,7 @@ getConfigItem(STRPTR buf,STRPTR item,int len)
 {
     if (!mystrnicmp(buf,item,len))
     {
-        register UBYTE c;
+        UBYTE c;
 
         buf += len;
 
@@ -193,12 +193,12 @@ getConfigItem(STRPTR buf,STRPTR item,int len)
 STRPTR *LIBFUNC
 CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
 {
-    register STRPTR *array;
+    STRPTR *array;
 
     if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
     {
-        register struct codeset *code, *succ;
-        register int            i;
+        struct codeset *code, *succ;
+        int            i;
 
         ObtainSemaphoreShared(&CodesetsBase->libSem);
 
@@ -297,7 +297,7 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 
     if((fh = Open(name, MODE_OLDFILE)))
     {
-        register struct codeset *codeset;
+        struct codeset *codeset;
 
         if((codeset = (struct codeset *)allocVecPooled(CodesetsBase->pool,sizeof(struct codeset))))
         {
@@ -324,7 +324,7 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
                 {
                   if((result[0]=='_') && (result[1]=='(') && (result[2]=='"'))
                   {
-                    register STRPTR end = strchr(result + 3, '"');
+                    STRPTR end = strchr(result + 3, '"');
 
                     if (end)
                       codeset->characterization = mystrndup(result+3,end-(result+3));
@@ -393,10 +393,10 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 ULONG
 codesetsInit (struct MinList * codesetsList)
 {
-    register struct codeset       *codeset;
+    struct codeset       *codeset;
     UTF32                         src;
-    register struct FileInfoBlock *fib;
-    register int                  i;
+    struct FileInfoBlock *fib;
+    int                  i;
 
     ObtainSemaphore(&CodesetsBase->poolSem);
 
@@ -638,11 +638,11 @@ codesetsInit (struct MinList * codesetsList)
 
     if((fib = AllocDosObject(DOS_FIB,NULL)))
     {
-        register BPTR dir;
+        BPTR dir;
 
         if ((dir = Lock("LIBS:Charsets",SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
         {
-            register BPTR oldDir = CurrentDir(dir);
+            BPTR oldDir = CurrentDir(dir);
 
             while(ExNext(dir,fib))
             {
@@ -672,7 +672,7 @@ codesetsInit (struct MinList * codesetsList)
 void
 codesetsCleanup(struct MinList *codesetsList)
 {
-    register struct codeset *code;
+    struct codeset *code;
 
     while((code = (struct codeset *)RemHead(LIST(codesetsList))))
     {
@@ -713,11 +713,11 @@ defaultCodeset(ULONG sem)
 struct codeset *
 codesetsFind(struct MinList *codesetsList,STRPTR name)
 {
-    register struct codeset *res = NULL;
+    struct codeset *res = NULL;
 
     if (name && *name)
     {
-        register struct codeset *mstate, *succ;
+        struct codeset *mstate, *succ;
 
         for(mstate = (struct codeset *)codesetsList->mlh_Head; (succ = (struct codeset *)mstate->node.mln_Succ); mstate = succ)
             if (!mystricmp(name,mstate->name) || !mystricmp(name,mstate->alt_name))
@@ -735,13 +735,13 @@ struct codeset *LIBFUNC
 CodesetsSetDefaultA(REG(a0, STRPTR name),
                     REG(a1, struct TagItem *attrs))
 {
-    register struct codeset *codeset;
+    struct codeset *codeset;
 
     ObtainSemaphoreShared(&CodesetsBase->libSem);
 
     if((codeset = codesetsFind(&CodesetsBase->codesets,name)))
     {
-        register ULONG flags;
+        ULONG flags;
 
         flags = GVF_SAVE_VAR | (GetTagData(CODESETSA_Save,FALSE,attrs) ? GVF_GLOBAL_ONLY : 0);
 
@@ -781,7 +781,7 @@ LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
 struct codeset *LIBFUNC
 CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
-    register struct codeset *codeset;
+    struct codeset *codeset;
 
     ObtainSemaphoreShared(&CodesetsBase->libSem);
 
@@ -827,8 +827,8 @@ LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
 struct codeset *
 codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *error_ptr)
 {
-    register struct codeset *codeset, *best_codeset = NULL;
-    register int            best_errors = text_len;
+    struct codeset *codeset, *best_codeset = NULL;
+    int            best_errors = text_len;
 
     codeset = (struct codeset *)codesetsList->mlh_Head;
 
@@ -837,16 +837,16 @@ codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *erro
         if (!codeset->read_only)
         {
             struct single_convert conv;
-            register STRPTR       text_ptr = text;
-            register int          i, errors = 0;
+            STRPTR       text_ptr = text;
+            int          i, errors = 0;
 
             for (i = 0; i<text_len; i++)
             {
-                register unsigned char c = *text_ptr++;
+                unsigned char c = *text_ptr++;
 
                 if (c)
                 {
-                    register int len = trailingBytesForUTF8[c];
+                    int len = trailingBytesForUTF8[c];
 
                     conv.utf8[1] = c;
                     strncpy((char*)&conv.utf8[2], text_ptr, len);
@@ -885,7 +885,7 @@ CodesetsFindBestA(REG(a0, STRPTR text),
                   REG(a1, ULONG *error_ptr),
                   REG(a2, UNUSED struct TagItem *attrs))
 {
-    register struct codeset *codeset;
+    struct codeset *codeset;
 
     ObtainSemaphoreShared(&CodesetsBase->libSem);
 
@@ -934,8 +934,8 @@ LIBSTUBVA(CodesetsFindBest, struct codeset *, REG(a0, STRPTR text),
 ULONG LIBFUNC
 CodesetsUTF8Len(REG(a0, UTF8 *str))
 {
-    register int           len;
-    register unsigned char c;
+    int           len;
+    unsigned char c;
 
     if (!str) return 0;
 
@@ -965,10 +965,10 @@ ULONG LIBFUNC
 CodesetsStrLenA(REG(a0, STRPTR str),
                 REG(a1, struct TagItem *attrs))
 {
-    register struct codeset *codeset;
-    register int            len, res;
-    register STRPTR         src;
-    register UBYTE          c;
+    struct codeset *codeset;
+    int            len, res;
+    STRPTR         src;
+    UBYTE          c;
 
     if (!str) return 0;
 
@@ -1021,10 +1021,10 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
 STRPTR LIBFUNC
 CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 {
-    register UTF8   *str;
-    register STRPTR dest;
-    register ULONG  *destLenPtr;
-    register ULONG  n;
+    UTF8   *str;
+    STRPTR dest;
+    ULONG  *destLenPtr;
+    ULONG  n;
 
     str = (UTF8 *)GetTagData(CODESETSA_Source, 0, attrs);
     if (!str) return NULL;
@@ -1035,13 +1035,13 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     if (str)
     {
         struct convertMsg              msg;
-        register struct codeset        *codeset;
-        register struct Hook           *hook;
-        register struct single_convert *f;
+        struct codeset        *codeset;
+        struct Hook           *hook;
+        struct single_convert *f;
         char                 	         buf[256];
-        register STRPTR                destIter = NULL, b = NULL;
-        register ULONG                 destLen;
-        register int                   i = 0;
+        STRPTR                destIter = NULL, b = NULL;
+        ULONG                 destLen;
+        int                   i = 0;
 
         hook    = (struct Hook *)GetTagData(CODESETSA_DestHook, 0, attrs);
         destLen = GetTagData(CODESETSA_DestLen,0,attrs);
@@ -1056,16 +1056,16 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         }
         else
         {
-            register APTR                   pool;
-            register struct SignalSemaphore *sem;
+            APTR                   pool;
+            struct SignalSemaphore *sem;
 
             //if (destLen==0) return NULL;
 
             if(!(dest = (STRPTR)GetTagData(CODESETSA_Dest, 0, attrs)) ||
                 GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
             {
-                register ULONG len;
-                register UBYTE c, *s;
+                ULONG len;
+                UBYTE c, *s;
 
                 len = 0;
                 s   = str;
@@ -1105,7 +1105,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
         for (; ; n++)
         {
-            register UBYTE c, d;
+            UBYTE c, d;
 
             if(!hook)
             {
@@ -1117,7 +1117,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             {
                 if (c>127)
                 {
-                    register int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
+                    int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
 
                     BIN_SEARCH(codeset->table_sorted, 0, 255, mystrncmp((char*)str, (char*)codeset->table_sorted[m].utf8+1, lenStr), f);
 
@@ -1206,10 +1206,10 @@ LIBSTUBVA(CodesetsUTF8ToStr, STRPTR, ...)
 UTF8 *LIBFUNC
 CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 {
-    register UTF8   *from;
-    register UTF8   *dest;
-    register ULONG  fromLen, *destLenPtr;
-    register ULONG  n;
+    UTF8   *from;
+    UTF8   *dest;
+    ULONG  fromLen, *destLenPtr;
+    ULONG  n;
 
     dest = NULL;
     n    = 0;
@@ -1220,12 +1220,12 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     if (from && fromLen)
     {
         struct convertMsg       msg;
-        register struct codeset *codeset;
-        register struct Hook    *hook;
-        register ULONG          destLen;
-        register int            i = 0;
+        struct codeset *codeset;
+        struct Hook    *hook;
+        ULONG          destLen;
+        int            i = 0;
         UBYTE                		buf[256];
-        register UBYTE          *src, *destPtr = NULL, *b = NULL, c;
+        UBYTE          *src, *destPtr = NULL, *b = NULL, c;
 
         if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
           codeset = defaultCodeset(TRUE);
@@ -1246,7 +1246,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
             if(!(dest = (UTF8*)GetTagData(CODESETSA_Dest, 0, attrs)) ||
                 GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
             {
-                register ULONG len, flen;
+                ULONG len, flen;
 
                 flen = fromLen;
                 len  = 0;
@@ -1257,8 +1257,8 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
                 if(!dest || (destLen<len+1))
                 {
-                    register APTR                   pool;
-                    register struct SignalSemaphore *sem;
+                    APTR                   pool;
+                    struct SignalSemaphore *sem;
 
                     if((pool = (APTR)GetTagData(CODESETSA_Pool, 0, attrs)))
                     {
@@ -1284,7 +1284,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
         for (src = from; fromLen && (c = *src); src++, fromLen--)
         {
-            register UTF8* utf8_seq;
+            UTF8* utf8_seq;
 
             for (utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
             {
@@ -1365,8 +1365,8 @@ LIBSTUBVA(CodesetsUTF8Create, UTF8*, ...)
 static int
 parseUtf8(STRPTR *ps)
 {
-    register STRPTR s = *ps;
-    register int    wc, n, i;
+    STRPTR s = *ps;
+    int    wc, n, i;
 
     if (*s<0x80)
     {
@@ -1456,7 +1456,7 @@ ULONG LIBFUNC
 CodesetsIsValidUTF8(REG(a0, STRPTR s))
 {
     STRPTR       t = s;
-    register int n;
+    int n;
 
     while ((n = parseUtf8(&t)))
     {

@@ -127,8 +127,8 @@ struct stream
 static void
 snprintfStuff(void)
 {
-    register struct stream *s = (struct stream *)REG_A3;
-    register UBYTE         c  = (UBYTE)REG_D0;
+    struct stream *s = (struct stream *)REG_A3;
+    UBYTE         c  = (UBYTE)REG_D0;
 
     if (!s->stop)
     {

@@ -18,6 +18,9 @@ $Source$
     * restructed sources to use othe latest SDI-headers for easily
       maintaining the sources for all three platforms without
       introducing heaps to #ifdef's.
+    * dropped all "register" attribute usages as modern compilers like
+      GCC normally know where to put variables on registers and where not
+      so these attributes are anyway not necessary.
     * dropped smakefile and all 68k ASM parts as we are moving towards
       building with GCC for all targets.
     * restructed the build environment of codesets.library to use
