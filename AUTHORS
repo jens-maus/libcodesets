@@ -20,30 +20,15 @@
 
 ***************************************************************************/
 
-/***************************************************************************/
+codesets.library is an Open Source development effort with the code base and
+design provided by the following people:
 
-struct LibraryHeader
-{
-	struct Library	        libBase;
-	struct Library          *sysBase;
-	ULONG                   segList;
-  struct SignalSemaphore  libSem;
-  APTR                    pool;
-  struct SignalSemaphore  poolSem;
-  ULONG                   flags;
-  struct MinList          codesets;
-  struct codeset          *systemCodeset;
-};
+Alexandre Balaban  <abalabanb@users.sourceforge.net>
+Alfonso Ranieri    <alforan@tin.it>
+Jens Langner       <damato@users.sourceforge.net>
+Sebastian Bauer    <sba@users.sourceforge.net>
 
-/***************************************************************************/
+The development of codesets is hosted by
+SourceForge http://www.sourceforge.net/
 
-extern struct LibraryHeader* CodesetsBase;
 
-/***************************************************************************/
-
-enum
-{
-    BASEFLG_Init = 1<<0,
-};
-
-/***************************************************************************/

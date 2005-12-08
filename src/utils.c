@@ -1,10 +1,24 @@
-/*
-**
-** Copyright 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-**
-** Released under the terms of the LGPL II.
-**
-**/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005      by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ $Id$
+
+***************************************************************************/
 
 #include "lib.h"
 
@@ -13,12 +27,12 @@
 APTR
 allocVecPooled(APTR pool,ULONG size)
 {
-    register ULONG *mem;
+  ULONG *mem;
 
-    if (mem = AllocPooled(pool,size += sizeof(ULONG)))
-        *mem++ = size;
+  if((mem = AllocPooled(pool,size += sizeof(ULONG))))
+    *mem++ = size;
 
-    return mem;
+  return mem;
 }
 
 /****************************************************************************/
@@ -26,7 +40,7 @@ allocVecPooled(APTR pool,ULONG size)
 void
 freeVecPooled(APTR pool,APTR mem)
 {
-    FreePooled(pool,(LONG *)mem - 1,*((LONG *)mem - 1));
+  FreePooled(pool,(LONG *)mem - 1,*((LONG *)mem - 1));
 }
 
 /****************************************************************************/
@@ -34,13 +48,13 @@ freeVecPooled(APTR pool,APTR mem)
 APTR
 allocArbitratePooled(ULONG s)
 {
-    register APTR mem;
+  APTR mem;
 
-    ObtainSemaphore(&lib_poolSem);
-    mem = AllocPooled(lib_pool, s);
-    ReleaseSemaphore(&lib_poolSem);
+  ObtainSemaphore(&CodesetsBase->poolSem);
+  mem = AllocPooled(CodesetsBase->pool, s);
+  ReleaseSemaphore(&CodesetsBase->poolSem);
 
-    return mem;
+  return mem;
 }
 
 /****************************************************************************/
@@ -48,9 +62,9 @@ allocArbitratePooled(ULONG s)
 void
 freeArbitratePooled(APTR mem,ULONG s)
 {
-    ObtainSemaphore(&lib_poolSem);
-    FreePooled(lib_pool,mem,s);
-    ReleaseSemaphore(&lib_poolSem);
+  ObtainSemaphore(&CodesetsBase->poolSem);
+  FreePooled(CodesetsBase->pool, mem, s);
+  ReleaseSemaphore(&CodesetsBase->poolSem);
 }
 
 /****************************************************************************/
@@ -58,13 +72,13 @@ freeArbitratePooled(APTR mem,ULONG s)
 APTR
 allocArbitrateVecPooled(ULONG size)
 {
-    register ULONG *mem;
+  ULONG *mem;
 
-    ObtainSemaphore(&lib_poolSem);
-    mem = allocVecPooled(lib_pool,size);
-    ReleaseSemaphore(&lib_poolSem);
+  ObtainSemaphore(&CodesetsBase->poolSem);
+  mem = allocVecPooled(CodesetsBase->pool, size);
+  ReleaseSemaphore(&CodesetsBase->poolSem);
 
-    return mem;
+  return mem;
 }
 
 /****************************************************************************/
@@ -72,9 +86,9 @@ allocArbitrateVecPooled(ULONG size)
 void
 freeArbitrateVecPooled(APTR mem)
 {
-    ObtainSemaphore(&lib_poolSem);
-    freeVecPooled(lib_pool,mem);
-    ReleaseSemaphore(&lib_poolSem);
+  ObtainSemaphore(&CodesetsBase->poolSem);
+  freeVecPooled(CodesetsBase->pool, mem);
+  ReleaseSemaphore(&CodesetsBase->poolSem);
 }
 
 /****************************************************************************/
@@ -89,13 +103,13 @@ sprintf(STRPTR buf,STRPTR fmt,...)
     VNewRawDoFmt(fmt,0,buf,va);
     va_end(va);
 }
-#else
+#elif !defined(__amigaos4__)
 static UWORD sprintfStuff[] = {0x16c0, 0x4e75};
 
 void STDARGS
 sprintf(STRPTR to,STRPTR fmt,...)
 {
-    RawDoFmt(fmt,&fmt+1,(APTR)sprintfStuff,to);
+  RawDoFmt(fmt,&fmt+1,(APTR)sprintfStuff,to);
 }
 #endif
 
@@ -148,9 +162,9 @@ snprintf(STRPTR buf,int size,STRPTR fmt,...)
 
     return s.counter-1;
 }
-#else
+#elif !defined(__amigaos4__)
 static void ASM
-snprintfStuff(REG(d0) UBYTE c,REG(a3) struct stream *s)
+snprintfStuff(REG(d0, UBYTE c), REG(a3, struct stream *s))
 {
     if (!s->stop)
     {
@@ -184,13 +198,13 @@ snprintf(STRPTR buf,int size,STRPTR fmt,...)
 int
 countNodes(struct MinList *List)
 {
-    register struct MinNode *node, *succ;
-    register int            num;
+  struct MinNode *node, *succ;
+  int            num;
 
-    for (node = List->mlh_Head, num = 0; succ = node->mln_Succ; node = succ)
-        ++num;
+  for(node = List->mlh_Head, num = 0; (succ = node->mln_Succ); node = succ)
+    ++num;
 
-    return num;
+  return num;
 }
 
 /***********************************************************************/

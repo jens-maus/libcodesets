@@ -4,15 +4,28 @@
 #include <stdio.h>
 #include <string.h>
 
+struct Library *CodesetsBase = NULL;
+#if defined(__amigaos4__)
+struct CodesetsIFace* ICodesets = NULL;
+#endif
+
+#if defined(__amigaos4__)
+#define GETINTERFACE(iface, base)	(iface = (APTR)GetInterface((struct Library *)(base), "main", 1L, NULL))
+#define DROPINTERFACE(iface)			(DropInterface((struct Interface *)iface), iface = NULL)
+#else
+#define GETINTERFACE(iface, base)	TRUE
+#define DROPINTERFACE(iface)
+#endif
+
 int main(int argc,char **argv)
 {
     int res;
 
     if (argc==3)
     {
-        struct Library *CodesetsBase;
 
-        if (CodesetsBase = OpenLibrary(CODESETSNAME,CODESETSVER))
+        if((CodesetsBase = OpenLibrary(CODESETSNAME,CODESETSVER)) &&
+           GETINTERFACE(ICodesets, CodesetsBase))
         {
             ULONG r;
 
@@ -21,7 +34,9 @@ int main(int argc,char **argv)
                                   TAG_DONE);
             printf("Res %ld\n",r);
 
+            DROPINTERFACE(ICodesets);
             CloseLibrary(CodesetsBase);
+            CodesetsBase = NULL;
 
             res = 0;
         }

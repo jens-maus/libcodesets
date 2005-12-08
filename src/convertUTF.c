@@ -42,7 +42,7 @@
 ***********************************************************************/
 
 #include "lib.h"
-#include "ConvertUTF.h"
+#include "convertUTF.h"
 
 /***********************************************************************/
 
@@ -58,12 +58,12 @@ static const UTF32 halfMask = 0x3FFUL;
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF32toUTF16(REG (a0) const UTF32 ** sourceStart,
-                            REG (a1) const UTF32 * sourceEnd,
-                            REG (a2) UTF16 ** targetStart,
-                            REG (a3) UTF16 * targetEnd,
-                            REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
+                            REG(a1, const UTF32 * sourceEnd),
+                            REG(a2, UTF16 ** targetStart),
+                            REG(a3, UTF16 * targetEnd),
+                            REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF32 *source = *sourceStart;
@@ -131,26 +131,27 @@ CodesetsConvertUTF32toUTF16(REG (a0) const UTF32 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF32toUTF16 (void)
+LIBSTUB(CodesetsConvertUTF32toUTF16, ULONG, REG(a0, const UTF32 ** sourceStart),
+                                            REG(a1, const UTF32 * sourceEnd),
+                                            REG(a2, UTF16 ** targetStart),
+                                            REG(a3, UTF16 * targetEnd),
+                                            REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF32toUTF16 ((const UTF32 **)REG_A0,
-                             		(const UTF32 *)REG_A1,
-                             		(UTF16 **)REG_A2,
-                             		(UTF16 *)REG_A3,
-                                 	(ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF32toUTF16((const UTF32 **)REG_A0, (const UTF32 *)REG_A1, (UTF16 **)REG_A2, (UTF16 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF32toUTF16(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF16toUTF32(REG (a0) const UTF16 ** sourceStart,
-                            REG (a1) const UTF16 * sourceEnd,
-                            REG (a2) UTF32 ** targetStart,
-                            REG (a3) UTF32 * targetEnd,
-                            REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
+                            REG(a1, const UTF16 * sourceEnd),
+                            REG(a2, UTF32 ** targetStart),
+                            REG(a3, UTF32 * targetEnd),
+                            REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF16 *source = *sourceStart;
@@ -223,17 +224,18 @@ CodesetsConvertUTF16toUTF32(REG (a0) const UTF16 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF16toUTF32 (void)
+LIBSTUB(CodesetsConvertUTF16toUTF32, ULONG, REG(a0, const UTF16 ** sourceStart),
+                                            REG(a1, const UTF16 * sourceEnd),
+                                            REG(a2, UTF32 ** targetStart),
+                                            REG(a3, UTF32 * targetEnd),
+                                            REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF16toUTF32 ( (const UTF16 **)REG_A0,
-                             	       	 (const UTF16 *)REG_A1,
-                             		 (UTF32 **)REG_A2,
-                             		 (UTF32 *)REG_A3,
-                                         (ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF16toUTF32((const UTF16 **)REG_A0, (const UTF16 *)REG_A1, (UTF32 **)REG_A2, (UTF32 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF16toUTF32(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
@@ -295,12 +297,12 @@ static const UTF8 firstByteMark[7] =
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF16toUTF8(REG (a0) const UTF16 ** sourceStart,
-                           REG (a1) const UTF16 * sourceEnd,
-                           REG (a2) UTF8 ** targetStart,
-                           REG (a3) UTF8 * targetEnd,
-                           REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
+                           REG(a1, const UTF16 * sourceEnd),
+                           REG(a2, UTF8 ** targetStart),
+                           REG(a3, UTF8 * targetEnd),
+                           REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF16 *source = *sourceStart;
@@ -409,17 +411,18 @@ CodesetsConvertUTF16toUTF8(REG (a0) const UTF16 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF16toUTF8 (void)
+LIBSTUB(CodesetsConvertUTF16toUTF8, ULONG, REG(a0, const UTF16 ** sourceStart),
+                                           REG(a1, const UTF16 * sourceEnd),
+                                           REG(a2, UTF8 ** targetStart),
+                                           REG(a3, UTF8 * targetEnd),
+                                           REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF16toUTF8 ((const UTF16 **)REG_A0,
-                            	       (const UTF16 *)REG_A1,
-                            	       (UTF8 **)REG_A2,
-                            	       (UTF8 *)REG_A3,
-                                       (ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF16toUTF8((const UTF16 **)REG_A0, (const UTF16 *)REG_A1, (UTF8 **)REG_A2, (UTF8 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF16toUTF8(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
@@ -434,9 +437,9 @@ LIB_CodesetsConvertUTF16toUTF8 (void)
  * definition of UTF-8 goes up to 4-byte sequences.
  */
 
-ULONG LIBCALL
-CodesetsIsLegalUTF8(REG (a0) const UTF8 * source,
-		    REG (d0) ULONG length)
+ULONG LIBFUNC
+CodesetsIsLegalUTF8(REG(a0, const UTF8 * source),
+		                REG(d0, ULONG length))
 {
     UTF8 a;
     const UTF8 *srcptr = source + length;
@@ -489,13 +492,15 @@ CodesetsIsLegalUTF8(REG (a0) const UTF8 * source,
     return TRUE;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsIsLegalUTF8(void)
+LIBSTUB(CodesetsIsLegalUTF8, ULONG, REG(a0, const UTF8 * source),
+                		                REG(d0, ULONG length))
 {
-    return CodesetsIsLegalUTF8((const UTF8 *)REG_A0,(ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsIsLegalUTF8((const UTF8 *)REG_A0,(ULONG)REG_D0);
+  #else
+  return CodesetsIsLegalUTF8(source, length);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
@@ -504,9 +509,9 @@ LIB_CodesetsIsLegalUTF8(void)
  * This is not used here; it's just exported.
  */
 
-ULONG LIBCALL
-CodesetsIsLegalUTF8Sequence(REG (a0) const UTF8 * source,
-                            REG (a1) const UTF8 * sourceEnd)
+ULONG LIBFUNC
+CodesetsIsLegalUTF8Sequence(REG(a0, const UTF8 * source),
+                            REG(a1, const UTF8 * sourceEnd))
 {
     int length = trailingBytesForUTF8[*source] + 1;
 
@@ -517,22 +522,24 @@ CodesetsIsLegalUTF8Sequence(REG (a0) const UTF8 * source,
     return CodesetsIsLegalUTF8 (source, length);
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsIsLegalUTF8Sequence (void)
+LIBSTUB(CodesetsIsLegalUTF8Sequence, ULONG, REG(a0, const UTF8 * source),
+                                            REG(a1, const UTF8 * sourceEnd))
 {
-    return CodesetsIsLegalUTF8Sequence ((const UTF8 *)REG_A0,(const UTF8 *)REG_A1);
+  #ifdef __MORPHOS__
+  return CodesetsIsLegalUTF8Sequence((const UTF8 *)REG_A0,(const UTF8 *)REG_A1);
+  #else
+  return CodesetsIsLegalUTF8Sequence(source, sourceEnd);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF8toUTF16(REG (a0) const UTF8 ** sourceStart,
-                           REG (a1) const UTF8 * sourceEnd,
-                           REG (a2) UTF16 ** targetStart,
-                           REG (a3) UTF16 * targetEnd,
-                           REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
+                           REG(a1, const UTF8 * sourceEnd),
+                           REG(a2, UTF16 ** targetStart),
+                           REG(a3, UTF16 * targetEnd),
+                           REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF8 *source = *sourceStart;
@@ -639,26 +646,27 @@ CodesetsConvertUTF8toUTF16(REG (a0) const UTF8 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF8toUTF16(void)
+LIBSTUB(CodesetsConvertUTF8toUTF16, ULONG, REG(a0, const UTF8 ** sourceStart),
+                                           REG(a1, const UTF8 * sourceEnd),
+                                           REG(a2, UTF16 ** targetStart),
+                                           REG(a3, UTF16 * targetEnd),
+                                           REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF8toUTF16((const UTF8 **)REG_A0,
-    		                      (const UTF8 *)REG_A1,
-                           	      (UTF16 **)REG_A2,
-                           	      (UTF16 *)REG_A3,
-                                      (ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF8toUTF16((const UTF8 **)REG_A0, (const UTF8 *)REG_A1, (UTF16 **)REG_A2, (UTF16 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF8toUTF16(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF32toUTF8(REG (a0) const UTF32 ** sourceStart,
-                           REG (a1) const UTF32 * sourceEnd,
-                           REG (a2) UTF8 ** targetStart,
-                           REG (a3) UTF8 * targetEnd,
-                           REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
+                           REG(a1, const UTF32 * sourceEnd),
+                           REG(a2, UTF8 ** targetStart),
+                           REG(a3, UTF8 * targetEnd),
+                           REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF32 *source = *sourceStart;
@@ -739,26 +747,27 @@ CodesetsConvertUTF32toUTF8(REG (a0) const UTF32 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF32toUTF8(void)
+LIBSTUB(CodesetsConvertUTF32toUTF8, ULONG, REG(a0, const UTF32 ** sourceStart),
+                                           REG(a1, const UTF32 * sourceEnd),
+                                           REG(a2, UTF8 ** targetStart),
+                                           REG(a3, UTF8 * targetEnd),
+                                           REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF32toUTF8((const UTF32 **)REG_A0,
-                           	      (const UTF32 *)REG_A1,
-                           	      (UTF8 **)REG_A2,
-                           	      (UTF8 *)REG_A3,
-                                      (ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF32toUTF8((const UTF32 **)REG_A0, (const UTF32 *)REG_A1, (UTF8 **)REG_A2, (UTF8 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF32toUTF8(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************/
 
-ULONG LIBCALL
-CodesetsConvertUTF8toUTF32(REG (a0) const UTF8 ** sourceStart,
-                           REG (a1) const UTF8 * sourceEnd,
-                           REG (a2) UTF32 ** targetStart,
-                           REG (a3) UTF32 * targetEnd,
-                           REG (d0) ULONG flags)
+ULONG LIBFUNC
+CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
+                           REG(a1, const UTF8 * sourceEnd),
+                           REG(a2, UTF32 ** targetStart),
+                           REG(a3, UTF32 * targetEnd),
+                           REG(d0, ULONG flags))
 {
     ULONG result = CONVRES_ConversionOK;
     const UTF8 *source = *sourceStart;
@@ -847,17 +856,18 @@ CodesetsConvertUTF8toUTF32(REG (a0) const UTF8 ** sourceStart,
     return result;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsConvertUTF8toUTF32(void)
+LIBSTUB(CodesetsConvertUTF8toUTF32, ULONG, REG(a0, const UTF8 ** sourceStart),
+                                           REG(a1, const UTF8 * sourceEnd),
+                                           REG(a2, UTF32 ** targetStart),
+                                           REG(a3, UTF32 * targetEnd),
+                                           REG(d0, ULONG flags))
 {
-    return CodesetsConvertUTF8toUTF32((const UTF8 **)REG_A0,
-                           	      (const UTF8 *)REG_A1,
-                           	      (UTF32 **)REG_A2,
-                           	      (UTF32 *)REG_A3,
-                                      (ULONG)REG_D0);
+  #ifdef __MORPHOS__
+  return CodesetsConvertUTF8toUTF32((const UTF8 **)REG_A0, (const UTF8 *)REG_A1, (UTF32 **)REG_A2, (UTF32 *)REG_A3, (ULONG)REG_D0);
+  #else
+  return CodesetsConvertUTF8toUTF32(sourceStart, sourceEnd, targetStart, targetEnd, flags);
+  #endif
 }
-#endif
 
 /***********************************************************************
 

@@ -1,12 +1,28 @@
-/*
-**
-** Copyright 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-**
-** Released under the terms of the LGPL II.
-**
-**/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005      by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ $Id$
+
+***************************************************************************/
 
 #include "lib.h"
+
+#include "SDI_stdarg.h"
 
 /****************************************************************************/
 
@@ -41,7 +57,7 @@ enum
 
 /****************************************************************************/
 
-static UBYTE etable[] =
+static const UBYTE etable[] =
 {
        65,   66,   67,   68,   69,   70,   71,   72,   73,   74,
        75,   76,   77,   78,   79,   80,   81,   82,   83,   84,
@@ -71,7 +87,7 @@ static UBYTE etable[] =
         0,    0,    0,    0,    0,    0
 };
 
-static UBYTE dtable[] =
+static const UBYTE dtable[] =
 {
       128,  128,  128,  128,  128,  128,  128,  128,  128,  128,
       128,  128,  128,  128,  128,  128,  128,  128,  128,  128,
@@ -106,29 +122,30 @@ static UBYTE dtable[] =
 static BPTR
 openIn (STRPTR name, ULONG * size)
 {
-    register struct FileInfoBlock *fib;
-    register BPTR file;
+  struct FileInfoBlock *fib;
+  BPTR file;
 
-    if (fib = AllocDosObject(DOS_FIB,NULL))
+  if((fib = AllocDosObject(DOS_FIB,NULL)))
+  {
+    if((file = Open(name,MODE_OLDFILE)))
     {
-        if (file = Open(name,MODE_OLDFILE))
-        {
-            if (!ExamineFH(file,fib))
-            {
-    	        Close(file);
-                file = NULL;
-            }
-    	    else
-            {
-            	*size = fib->fib_Size;
-            }
-    	}
+      if(!ExamineFH(file,fib))
+      {
+    	  Close(file);
+        file = 0;
+      }
+	    else
+      {
+      	*size = fib->fib_Size;
+      }
+  	}
 
-    	FreeDosObject(DOS_FIB,fib);
-    }
-    else file = NULL;
+  	FreeDosObject(DOS_FIB,fib);
+  }
+  else
+    file = 0;
 
-    return file;
+  return file;
 }
 
 /****************************************************************************/
@@ -243,42 +260,42 @@ insig(struct b64 *b64)
 
 /****************************************************************************/
 
-ULONG LIBCALL
-CodesetsEncodeB64A(REG(a0) struct TagItem *attrs)
+ULONG LIBFUNC
+CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
 {
-    struct b64              b64;
-    register struct TagItem *tag;
-    register STRPTR         source;
-    register APTR           dest, in, out;
-    register ULONG          totSize, stop, flags;
-    ULONG                   size;
-    int                     sourceLen = 0, maxLineLen;
+    struct b64     b64;
+    struct TagItem *tag;
+    STRPTR         source;
+    APTR           dest, in, out;
+    ULONG          totSize, stop, flags;
+    ULONG          size;
+    int            sourceLen = 0, maxLineLen;
 
     flags = 0;
 
-    if (tag = FindTagItem(CODESETSA_B64SourceFile,attrs))
+    if((tag = FindTagItem(CODESETSA_B64SourceFile,attrs)))
     {
         source = (STRPTR)tag->ti_Data;
         flags |= B64FLG_SourceFile;
     }
     else
     {
-        if (!(source = (STRPTR)GetTagData(CODESETSA_B64SourceString,0,attrs)))
+        if((!(source = (STRPTR)GetTagData(CODESETSA_B64SourceString, 0, attrs))))
             return B64_ERROR_MEM;
 
-        if (tag = FindTagItem(CODESETSA_B64SourceLen,attrs))
+        if((tag = FindTagItem(CODESETSA_B64SourceLen,attrs)))
             sourceLen = tag->ti_Data;
         else sourceLen = strlen(source);
     }
 
-    if (tag = FindTagItem(CODESETSA_B64DestFile,attrs))
+    if((tag = FindTagItem(CODESETSA_B64DestFile,attrs)))
     {
         dest = (APTR)tag->ti_Data;
         flags |= B64FLG_DestFile;
     }
     else
     {
-        if (!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr,NULL,attrs)))
+        if((!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr, 0, attrs))))
             return B64_ERROR_MEM;
     }
 
@@ -292,7 +309,7 @@ CodesetsEncodeB64A(REG(a0) struct TagItem *attrs)
     /* source */
     if (flags & B64FLG_SourceFile)
     {
-        if (!(in = (APTR)openIn(source,&size)))
+        if(!(in = (APTR)openIn(source,&size)))
         {
             return B64_ERROR_DOS;
         }
@@ -311,7 +328,7 @@ CodesetsEncodeB64A(REG(a0) struct TagItem *attrs)
     /* dest */
     if (flags & B64FLG_DestFile)
     {
-        if (!(out = (APTR)Open(dest,MODE_NEWFILE)))
+        if(!(out = (APTR)Open(dest,MODE_NEWFILE)))
         {
             return B64_ERROR_DOS;
         }
@@ -401,7 +418,12 @@ CodesetsEncodeB64A(REG(a0) struct TagItem *attrs)
         {
             if (FPuts((BPTR)out,b64.eols)==EOF)
                 b64.error = B64_ERROR_DOS;
+
+            #if defined(__amigaos4__)
+            FFlush((BPTR)out);
+            #else
             Flush((BPTR)out);
+            #endif
         }
 
         Close((BPTR)out);
@@ -417,18 +439,33 @@ CodesetsEncodeB64A(REG(a0) struct TagItem *attrs)
     return (ULONG)b64.error;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsEncodeB64A(void)
+LIBSTUB(CodesetsEncodeB64A, ULONG, REG(a0, struct TagItem *attrs))
 {
-    return CodesetsEncodeB64A((struct TagItem *)REG_A0);
+  #ifdef __MORPHOS__
+  return CodesetsEncodeB64A((struct TagItem *)REG_A0);
+  #else
+  return CodesetsEncodeB64A(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsEncodeB64, ULONG, ...)
+{
+  ULONG res;
+  VA_LIST args;
+
+  VA_START(args, self);
+  res = CodesetsEncodeB64A(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
 }
 #endif
 
 /****************************************************************************/
 
-ULONG LIBCALL
-CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
+ULONG LIBFUNC
+CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
 {
     struct b64              b64;
     register struct TagItem *tag;
@@ -440,7 +477,7 @@ CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
 
     flags = 0;
 
-    if (tag = FindTagItem(CODESETSA_B64SourceFile,attrs))
+    if((tag = FindTagItem(CODESETSA_B64SourceFile,attrs)))
     {
         source = (STRPTR)tag->ti_Data;
         flags |= B64FLG_SourceFile;
@@ -450,19 +487,19 @@ CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
         if (!(source = (STRPTR)GetTagData(CODESETSA_B64SourceString,0,attrs)))
             return B64_ERROR_MEM;
 
-        if (tag = FindTagItem(CODESETSA_B64SourceLen,attrs))
+        if((tag = FindTagItem(CODESETSA_B64SourceLen,attrs)))
             sourceLen = tag->ti_Data;
         else sourceLen = strlen(source);
     }
 
-    if (tag = FindTagItem(CODESETSA_B64DestFile,attrs))
+    if((tag = FindTagItem(CODESETSA_B64DestFile,attrs)))
     {
         dest = (APTR)tag->ti_Data;
         flags |= B64FLG_DestFile;
     }
     else
     {
-        if (!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr,NULL,attrs)))
+        if(!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr, 0, attrs)))
             return B64_ERROR_MEM;
     }
 
@@ -533,8 +570,8 @@ CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
 
             if (c==EOF)
             {
-		if (!(b64.flags & B64FLG_DestFile))
-		    ((STRPTR)out)[b64.outIndex] = 0;
+          		if (!(b64.flags & B64FLG_DestFile))
+        		    ((STRPTR)out)[b64.outIndex] = 0;
 
                 if (!b64.error && errcheck && (i>0))
                     b64.error = B64_ERROR_INCOMPLETE;
@@ -578,7 +615,12 @@ CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
         {
             if (FPuts((BPTR)out,b64.eols)==EOF)
                 b64.error = B64_ERROR_DOS;
+
+            #if defined(__amigaos4__)
+            FFlush((BPTR)out);
+            #else
             Flush((BPTR)out);
+            #endif
         }
 
         Close((BPTR)out);
@@ -594,11 +636,26 @@ CodesetsDecodeB64A(REG(a0) struct TagItem *attrs)
     return (ULONG)b64.error;
 }
 
-#ifdef __MORPHOS__
-ULONG
-LIB_CodesetsDecodeB64A(void)
+LIBSTUB(CodesetsDecodeB64A, ULONG, REG(a0, struct TagItem *attrs))
 {
-    return CodesetsDecodeB64A((struct TagItem *)REG_A0);
+  #ifdef __MORPHOS__
+  return CodesetsDecodeB64A((struct TagItem *)REG_A0);
+  #else
+  return CodesetsDecodeB64A(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsDecodeB64, ULONG, ...)
+{
+  ULONG res;
+  VA_LIST args;
+
+  VA_START(args, self);
+  res = CodesetsDecodeB64A(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
 }
 #endif
 

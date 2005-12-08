@@ -22,4 +22,5 @@ CodesetsUTF8CreateA(attrs)(a0)
 CodesetsEncodeB64A(attrs)(a0)
 CodesetsDecodeB64A(attrs)(a0)
 CodesetsStrLenA(str,attrs)(a0,a1)
+CodesetsIsValidUTF8(str)(a0)
 ##end

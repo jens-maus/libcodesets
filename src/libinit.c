@@ -1,248 +1,428 @@
-/*
-**
-** Copyright 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-**
-** Released under the terms of the LGPL II.
-**
-**/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005      by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ $Id$
+
+***************************************************************************/
 
 #include "lib.h"
 #include "codesets.library_rev.h"
 
-/****************************************************************************/
-
-UBYTE                   lib_name[] = PRG;
-UBYTE		               lib_ver[] = VSTRING;
-UBYTE                   lib_fullName[] = PRGNAME;
-ULONG                   lib_version = VERSION;
-ULONG                   lib_revision = REVISION;
-
-struct ExecBase         *SysBase = NULL;
-struct DosLibrary       *DOSBase = NULL;
-struct Library          *UtilityBase = NULL;
-struct LocaleBase       *LocaleBase = NULL;
-
-struct SignalSemaphore  lib_sem = {0};
-struct Library          *lib_base = NULL;
-ULONG                   lib_segList = NULL;
-struct SignalSemaphore  lib_poolSem = {0};
-APTR                    lib_pool = NULL;
-ULONG                   lib_flags = 0;
-struct MinList          lib_codesets = {0};
-struct codeset          *lib_systemCodeset = NULL;
-
-/****************************************************************************/
-
-#ifdef __MORPHOS__
 #include <exec/resident.h>
-
-static ULONG first(void) __attribute((unused));
-static struct Library *initLib ( struct Library *base , BPTR segList , struct ExecBase *sys );
-static struct Library *openLib ( void );
-static ULONG expungeLib ( void );
-static ULONG closeLib ( void );
-static ULONG nil (void );
+#include <proto/exec.h>
 
 /****************************************************************************/
 
-static ULONG
-first(void)
+
+#if defined(__amigaos4__)
+struct Library *SysBase = NULL;
+struct ExecIFace* IExec = NULL;
+#else
+struct ExecBase *SysBase = NULL;
+#endif
+
+struct LibraryHeader *CodesetsBase = NULL;
+
+static const char UserLibName[] = PRG;
+static const char UserLibID[]   = VERSTAG;
+
+/****************************************************************************/
+
+#define libvector LibNull                                 \
+                  LFUNC_FA_(CodesetsConvertUTF32toUTF16)  \
+                  LFUNC_FA_(CodesetsConvertUTF16toUTF32)  \
+                  LFUNC_FA_(CodesetsConvertUTF16toUTF8)   \
+                  LFUNC_FA_(CodesetsIsLegalUTF8)          \
+                  LFUNC_FA_(CodesetsIsLegalUTF8Sequence)  \
+                  LFUNC_FA_(CodesetsConvertUTF8toUTF16)   \
+                  LFUNC_FA_(CodesetsConvertUTF32toUTF8)   \
+                  LFUNC_FA_(CodesetsConvertUTF8toUTF32)   \
+                  LFUNC_FA_(CodesetsSetDefaultA)          \
+                  LFUNC_VA_(CodesetsSetDefault)           \
+                  LFUNC_FA_(CodesetsFreeA)                \
+                  LFUNC_VA_(CodesetsFree)                 \
+                  LFUNC_FA_(CodesetsSupportedA)           \
+                  LFUNC_VA_(CodesetsSupported)            \
+                  LFUNC_FA_(CodesetsFindA)                \
+                  LFUNC_VA_(CodesetsFind)                 \
+                  LFUNC_FA_(CodesetsFindBestA)            \
+                  LFUNC_VA_(CodesetsFindBest)             \
+                  LFUNC_FA_(CodesetsUTF8Len)              \
+                  LFUNC_FA_(CodesetsUTF8ToStrA)           \
+                  LFUNC_VA_(CodesetsUTF8ToStr)            \
+                  LFUNC_FA_(CodesetsUTF8CreateA)          \
+                  LFUNC_VA_(CodesetsUTF8Create)           \
+                  LFUNC_FA_(CodesetsEncodeB64A)           \
+                  LFUNC_VA_(CodesetsEncodeB64)            \
+                  LFUNC_FA_(CodesetsDecodeB64A)           \
+                  LFUNC_VA_(CodesetsDecodeB64)            \
+                  LFUNC_FA_(CodesetsStrLenA)              \
+                  LFUNC_VA_(CodesetsStrLen)               \
+                  LFUNC_FA_(CodesetsIsValidUTF8)          \
+                  LFUNC_FA_(CodesetsFreeVecPooledA)       \
+                  LFUNC_VA_(CodesetsFreeVecPooled)
+
+
+/****************************************************************************/
+
+#if defined(__amigaos4__)
+
+static struct LibraryHeader * LIBFUNC LibInit    (struct LibraryHeader *base, BPTR librarySegment, struct ExecIFace *pIExec);
+static BPTR                   LIBFUNC LibExpunge (struct LibraryManagerInterface *Self);
+static struct LibraryHeader * LIBFUNC LibOpen    (struct LibraryManagerInterface *Self, ULONG version);
+static BPTR                   LIBFUNC LibClose   (struct LibraryManagerInterface *Self);
+static LONG                   LIBFUNC LibNull    (void);
+
+#elif defined(__MORPHOS__)
+
+static struct LibraryHeader * LIBFUNC LibInit   (struct LibraryHeader *base, BPTR librarySegment, struct ExecBase *sb);
+static BPTR                   LIBFUNC LibExpunge(void);
+static struct LibraryHeader * LIBFUNC LibOpen   (void);
+static BPTR                   LIBFUNC LibClose  (void);
+static LONG                   LIBFUNC LibNull   (void);
+
+#else
+
+static struct LibraryHeader * LIBFUNC LibInit    (REG(a0, BPTR Segment), REG(d0, struct LibraryHeader *lh), REG(a6, struct ExecBase *sb));
+static BPTR                   LIBFUNC LibExpunge (REG(a6, struct LibraryHeader *base));
+static struct LibraryHeader * LIBFUNC LibOpen    (REG(a6, struct LibraryHeader *base));
+static BPTR                   LIBFUNC LibClose   (REG(a6, struct LibraryHeader *base));
+static LONG                   LIBFUNC LibNull    (void);
+
+#endif
+
+/****************************************************************************/
+
+#if defined(__amigaos4__)
+int _start(void)
+#else
+int Main(void)
+#endif
 {
-    return -1;
+  return RETURN_FAIL;
+}
+
+static LONG LIBFUNC LibNull(VOID)
+{
+  return(0);
 }
 
 /****************************************************************************/
 
-static const APTR funcTable[] =
+#if defined(__amigaos4__)
+/* ------------------- OS4 Manager Interface ------------------------ */
+STATIC ULONG LibObtain(struct LibraryManagerInterface *Self)
 {
-	(APTR)   FUNCARRAY_32BIT_NATIVE,
-	(APTR)   openLib,
-	(APTR)   closeLib,
-	(APTR)   expungeLib,
-	(APTR)   nil,
+   return(Self->Data.RefCount++);
+}
 
-	(APTR)   nil,
+STATIC ULONG LibRelease(struct LibraryManagerInterface *Self)
+{
+   return(Self->Data.RefCount--);
+}
 
-        (APTR)LIB_CodesetsConvertUTF32toUTF16,
-        (APTR)LIB_CodesetsConvertUTF16toUTF32,
-        (APTR)LIB_CodesetsConvertUTF16toUTF8,
-        (APTR)LIB_CodesetsIsLegalUTF8,
-        (APTR)LIB_CodesetsIsLegalUTF8Sequence,
-        (APTR)LIB_CodesetsConvertUTF8toUTF16,
-        (APTR)LIB_CodesetsConvertUTF32toUTF8,
-        (APTR)LIB_CodesetsConvertUTF8toUTF32,
-        (APTR)LIB_CodesetsSetDefaultA,
-        (APTR)LIB_CodesetsFreeA,
-        (APTR)LIB_CodesetsSupportedA,
-        (APTR)LIB_CodesetsFindA,
-        (APTR)LIB_CodesetsFindBestA,
-        (APTR)LIB_CodesetsUTF8Len,
-        (APTR)LIB_CodesetsUTF8ToStrA,
-        (APTR)LIB_CodesetsUTF8CreateA,
-
-        (APTR)LIB_CodesetsEncodeB64A,
-        (APTR)LIB_CodesetsDecodeB64A,
-
-        (APTR)LIB_CodesetsStrLenA,
-
-        (APTR)LIB_CodesetsIsValidUTF8,
-
-        (APTR)LIB_CodesetsFreeVecPooledA,
-
-        (APTR)   -1
+STATIC CONST APTR LibManagerVectors[] =
+{
+   (APTR)LibObtain,
+   (APTR)LibRelease,
+   (APTR)NULL,
+   (APTR)NULL,
+   (APTR)LibOpen,
+   (APTR)LibClose,
+   (APTR)LibExpunge,
+   (APTR)NULL,
+   (APTR)-1
 };
 
-static const ULONG initTable[] =
+STATIC CONST struct TagItem LibManagerTags[] =
 {
-	sizeof(struct Library),
-	(ULONG)funcTable,
-	NULL,
-	(ULONG)initLib
+   {MIT_Name,             (ULONG)"__library"},
+   {MIT_VectorTable,      (ULONG)LibManagerVectors},
+   {MIT_Version,          1},
+   {TAG_DONE,             0}
 };
 
-const struct Resident romTag =
+/* ------------------- Library Interface(s) ------------------------ */
+
+STATIC CONST APTR LibVectors[] =
 {
-	RTC_MATCHWORD,
-	(struct Resident *)&romTag,
-	(struct Resident *)&romTag+1,
-	RTF_AUTOINIT|RTF_PPC|RTF_EXTENDED,
-	VERSION,
-	NT_LIBRARY,
-	0,
-	(STRPTR)lib_name,
-	(STRPTR)lib_ver,
-	(APTR)initTable,
-	REVISION,
-        NULL
+   (APTR)LibObtain,
+   (APTR)LibRelease,
+   (APTR)NULL,
+   (APTR)NULL,
+   (APTR)libvector,
+   (APTR)-1
 };
 
-const ULONG __abox__	= 1;
+STATIC CONST struct TagItem MainTags[] =
+{
+   {MIT_Name,        (ULONG)"main"},
+   {MIT_VectorTable, (ULONG)LibVectors},
+   {MIT_Version,     1},
+   {TAG_DONE,        0}
+};
+
+STATIC CONST ULONG LibInterfaces[] =
+{
+   (ULONG)LibManagerTags,
+   (ULONG)MainTags,
+   (ULONG)0
+};
+
+// Out libraries always have to carry a 68k jump table with it, so
+// lets define it here as extern, as we are going to link it to
+// our binary here.
+#ifndef NO_VECTABLE68K
+extern const APTR VecTable68K[];
+#endif
+
+STATIC CONST struct TagItem LibCreateTags[] =
+{
+   {CLT_DataSize,   (ULONG)(sizeof(struct LibraryHeader))},
+   {CLT_InitFunc,   (ULONG)LibInit},
+   {CLT_Interfaces, (ULONG)LibInterfaces},
+   #ifndef NO_VECTABLE68K
+   {CLT_Vector68K,  (ULONG)VecTable68K},
+   #endif
+   {TAG_DONE,       0}
+};
+
+#else
+
+STATIC CONST APTR LibVectors[] =
+{
+	#ifdef __MORPHOS__
+	(APTR)FUNCARRAY_32BIT_NATIVE,
+	#endif
+  (APTR)LibOpen,
+  (APTR)LibClose,
+  (APTR)LibExpunge,
+  (APTR)LibNull,
+  (APTR)libvector,
+  (APTR)-1
+};
+
+STATIC CONST ULONG LibInitTab[] =
+{
+	sizeof(struct LibraryHeader),
+	(ULONG)LibVectors,
+	(ULONG)NULL,
+	(ULONG)LibInit
+};
+
 #endif
 
 /****************************************************************************/
 
-#ifdef __MORPHOS__
-static struct Library *initLib(struct Library *base,BPTR segList,struct ExecBase *sys)
-#else
-struct Library *SAVEDS ASM initLib(REG(a0) ULONG segList,REG(a6) APTR sys,REG(d0)struct Library *base)
-#endif
+static const USED_VAR struct Resident ROMTag =
 {
+  RTC_MATCHWORD,
+  (struct Resident *)&ROMTag,
+  (struct Resident *)&ROMTag + 1,
+  #if defined(__amigaos4__)
+  RTF_AUTOINIT|RTF_NATIVE,      // The Library should be set up according to the given table.
+	#elif defined(__MORPHOS__)
+	RTF_AUTOINIT|RTF_PPC,
+  #else
+  RTF_AUTOINIT,
+  #endif
+  VERSION,
+  NT_LIBRARY,
+  0,
+  PRG,
+  VSTRING,
+  #if defined(__amigaos4__)
+  (APTR)LibCreateTags           // This table is for initializing the Library.
+  #else
+  (APTR)LibInitTab,
+  #endif
+  #if defined(__MORPHOS__)
+  REVISION,
+  0
+  #endif
+};
 
-#define SysBase sys
-    InitSemaphore(&lib_sem);
-    InitSemaphore(&lib_poolSem);
-#undef SysBase
+#if defined(__MORPHOS__)
+/*
+ * To tell the loader that this is a new emulppc elf and not
+ * one for the ppc.library.
+ * ** IMPORTANT **
+ */
+ULONG	USED_VAR __amigappc__=1;
+ULONG	USED_VAR __abox__=1;
 
-    SysBase     = sys;
-    lib_segList = segList;
+#endif /* __MORPHOS */
 
-    return lib_base = base;
+/****************************************************************************/
+
+#if defined(__amigaos4__)
+static struct LibraryHeader * LibInit(struct LibraryHeader *base, BPTR librarySegment, struct ExecIFace *pIExec)
+{
+  struct ExecBase *sb = (struct ExecBase *)pIExec->Data.LibBase;
+  IExec = pIExec;
+#elif defined(__MORPHOS__)
+static struct LibraryHeader * LibInit(struct LibraryHeader *base, BPTR librarySegment, struct ExecBase *sb)
+{
+#else
+static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(d0, struct LibraryHeader *base), REG(a6, struct ExecBase *sb))
+{
+#endif
+
+  SysBase = (APTR)sb;
+
+  // cleanup the library header structure beginning with the
+  // library base.
+  base->libBase.lib_Node.ln_Type = NT_LIBRARY;
+  base->libBase.lib_Node.ln_Pri  = 0;
+  base->libBase.lib_Node.ln_Name = (char *)UserLibName;
+  base->libBase.lib_Flags        = LIBF_CHANGED | LIBF_SUMUSED;
+  base->libBase.lib_Version      = VERSION;
+  base->libBase.lib_Revision     = REVISION;
+  base->libBase.lib_IdString     = (char *)UserLibID;
+
+  base->sysBase = (APTR)SysBase;
+  base->segList = librarySegment;
+  InitSemaphore(&base->libSem);
+  base->pool = NULL;
+  InitSemaphore(&base->poolSem);
+  base->flags = 0;
+  base->systemCodeset = NULL;
+
+  // set the CodesetsBase
+  CodesetsBase = base;
+
+  return(base);
 }
 
 /****************************************************************************/
 
-#ifdef __MORPHOS__
-static struct Library *openLib(void)
-#else
-struct Library * SAVEDS ASM openLib(REG(a6) struct Library *base)
-#endif
+#if defined(__amigaos4__)
+static struct LibraryHeader *LibOpen(struct LibraryManagerInterface *Self, ULONG version UNUSED)
 {
-#ifdef __MORPHOS__
-	struct Library *base = (struct Library *)REG_A6;
+  struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
+#elif defined(__MORPHOS__)
+static struct LibraryHeader *LibOpen(void)
+{
+  struct LibraryHeader *base = (struct LibraryHeader*)REG_A6;
+#else
+static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base))
+{
 #endif
-    register struct Library *res;
+  struct LibraryHeader *res;
 
-    ObtainSemaphore(&lib_sem);
+  ObtainSemaphore(&base->libSem);
 
-    base->lib_OpenCnt++;
-    base->lib_Flags &= ~LIBF_DELEXP;
+  base->libBase.lib_Flags &= ~LIBF_DELEXP;
+	base->libBase.lib_OpenCnt++;
 
-    if (!(lib_flags & BASEFLG_Init) && !initBase())
-    {
-        base->lib_OpenCnt--;
-        res = NULL;
-    }
-    else res = base;
+  if(!(base->flags & BASEFLG_Init) && !initBase(base))
+  {
+    base->libBase.lib_OpenCnt--;
+    res = NULL;
+  }
+  else
+    res = base;
 
-    ReleaseSemaphore(&lib_sem);
+  ReleaseSemaphore(&base->libSem);
 
-    return res;
+	return base;
 }
 
 /****************************************************************************/
 
-#ifdef __MORPHOS__
-static ULONG expungeLib(void)
-#else
-ULONG SAVEDS ASM expungeLib(REG(a6) struct Library *base)
+#ifndef __amigaos4__
+#define DeleteLibrary(LIB) \
+  FreeMem((STRPTR)(LIB)-(LIB)->lib_NegSize, (ULONG)((LIB)->lib_NegSize+(LIB)->lib_PosSize))
 #endif
+
+#if defined(__amigaos4__)
+static BPTR LibExpunge(struct LibraryManagerInterface *Self)
 {
-#ifdef __MORPHOS__
-    struct Library *base = (struct Library *)REG_A6;
+  struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
+#elif defined(__MORPHOS__)
+static BPTR LibExpunge(void)
+{
+	struct LibraryHeader *base = (struct LibraryHeader*)REG_A6;
+#else
+static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
+{
 #endif
-    register ULONG res;
+  BPTR rc;
 
-    ObtainSemaphore(&lib_sem);
+  ObtainSemaphore(&base->libSem);
 
-    if (!base->lib_OpenCnt)
-    {
-        Remove((struct Node *)base);
-        FreeMem((UBYTE *)base-base->lib_NegSize,base->lib_NegSize+base->lib_PosSize);
+  if(base->libBase.lib_OpenCnt == 0)
+  {
+    SysBase = (APTR)base->sysBase;
+    rc = base->segList;
 
-        res = lib_segList;
-    }
-    else
-    {
-        base->lib_Flags |= LIBF_DELEXP;
-        res = NULL;
-    }
+    Remove((struct Node *)base);
+    DeleteLibrary(&base->libBase);
+  }
+  else
+  {
+    base->libBase.lib_Flags |= LIBF_DELEXP;
+    rc = 0;
+  }
 
-    ReleaseSemaphore(&lib_sem);
+  ReleaseSemaphore(&base->libSem);
 
-    return res;
+  return(rc);
 }
 
 /****************************************************************************/
 
-#ifdef __MORPHOS__
-static ULONG closeLib(void)
-#else
-ULONG SAVEDS ASM closeLib(REG(a6) struct Library *base)
-#endif
+#if defined(__amigaos4__)
+static BPTR LibClose(struct LibraryManagerInterface *Self)
 {
-#ifdef __MORPHOS__
-    struct Library *base = (struct Library *)REG_A6;
+  struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
+#elif defined(__MORPHOS__)
+static BPTR LibClose(void)
+{
+	struct LibraryHeader *base = (struct LibraryHeader *)REG_A6;
+#else
+static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
+{
 #endif
-    register ULONG res = NULL;
+  BPTR rc = 0;
 
-    ObtainSemaphore(&lib_sem);
+  ObtainSemaphore(&base->libSem);
 
-    if (!--base->lib_OpenCnt)
-    {
-        freeBase();
-
-        if (base->lib_Flags & LIBF_DELEXP)
+  if(base->libBase.lib_OpenCnt > 0 &&
+     --base->libBase.lib_OpenCnt == 0)
 	{
-            Remove((struct Node *)base);
-    	    FreeMem((UBYTE *)base-base->lib_NegSize,base->lib_NegSize+base->lib_PosSize);
+    freeBase(base);
 
-            res = lib_segList;
-	}
+		if(base->libBase.lib_Flags & LIBF_DELEXP)
+    {
+      #if defined(__amigaos4__)
+      rc = LibExpunge(Self);
+      #elif defined(__MORPHOS__)
+      rc = LibExpunge();
+      #else
+      rc = LibExpunge(base);
+      #endif
     }
+	}
 
-    ReleaseSemaphore(&lib_sem);
+  ReleaseSemaphore(&base->libSem);
 
-    return res;
+	return rc;
 }
 
 /****************************************************************************/
-
-#ifdef __MORPHOS__
-static ULONG nil(void)
-{
-    return 0;
-}
-#endif
-
-/****************************************************************************/
-

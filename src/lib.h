@@ -1,9 +1,6 @@
 #ifndef _LIB_H
 #define _LIB_H
 
-#define __NOLIBBASE__
-#define __USE_SYSBASE
-
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>

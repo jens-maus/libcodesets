@@ -1,0 +1,34 @@
+----------------------------------------------------------
+codesets.library - Library for handling different codesets
+----------------------------------------------------------
+
+$Id$
+$Source$
+
+2005-12-08  Jens Langner <Jens.Langner@light-speed.de>
+
+    * bumped version to v6 as the GCC/OS4 porting may introduce some
+      oddities which we might eliminate during the v6 release cycle.
+      Please note that this first OS3/GCC and OS4 porting effort may
+      still contain some oddities here and there as large portions are
+      still untested. However, we may have some time to fix step by step
+      until we can prepare a v6.0 release.
+    * got rid of all common compiler warnings which should make bug
+      hunting much more easier.
+    * restructed sources to use othe latest SDI-headers for easily
+      maintaining the sources for all three platforms without
+      introducing heaps to #ifdef's.
+    * dropped smakefile and all 68k ASM parts as we are moving towards
+      building with GCC for all targets.
+    * restructed the build environment of codesets.library to use
+      GCC for all three major platforms (OS3/OS4/MOS). Also dropped
+      the SAS/C build process. Sorry, but SAS/C is really way too old
+      and too buggy to still be considered a sensible compiler and
+      maintaining codesets.library for the very same compiler should
+      eliminate some problems in future, too.
+    * partly applied OS4 porting patch supplied by Alexandre Balaban.
+
+2005-11-23  Alfonso Ranieri <alforan@tin.it>
+
+    * initial checkin of LGPLed sources
+

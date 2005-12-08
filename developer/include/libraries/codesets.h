@@ -23,8 +23,12 @@
 #include <utility/hooks.h>
 #endif
 
-#if defined(__GNUC__)
-# pragma pack(2)
+#ifdef __GNUC__
+  #ifdef __PPC__
+    #pragma pack(2)
+  #endif
+#elif defined(__VBCC__)
+  #pragma amiga-align
 #endif
 
 /***********************************************************************/
@@ -52,8 +56,8 @@ typedef unsigned char   UTF8;    /* typically 8 bits */
 struct single_convert
 {
     unsigned char code; /* the code in this representation */
-    char 	  utf8[8];       /* the utf8 string, first byte is alway the length of the string */
-    unsigned int  ucs4;  /* the full 32 bit unicode */
+    UTF8 utf8[8];       /* the utf8 string, first byte is alway the length of the string */
+    unsigned int  ucs4; /* the full 32 bit unicode */
 };
 
 /***********************************************************************/
@@ -150,8 +154,12 @@ enum
 
 /***********************************************************************/
 
-#if defined(__GNUC__)
-# pragma pack()
+#ifdef __GNUC__
+  #ifdef __PPC__
+    #pragma pack()
+  #endif
+#elif defined(__VBCC__)
+  #pragma default-align
 #endif
 
 #endif /* LIBRARIES_CODESETS_H */

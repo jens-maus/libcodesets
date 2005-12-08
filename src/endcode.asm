@@ -1,7 +1,0 @@
-    SECTION TEXT,CODE
-
-    XDEF    ENDCODE
-
-ENDCODE:
-
-    END
