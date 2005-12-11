@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_hook.h
-        Versionstring:  $VER: SDI_hook.h 1.12 (18.05.2005)
+        Versionstring:  $VER: SDI_hook.h 1.13 (11.12.2005)
         Author:         SDI & Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -34,6 +34,8 @@
                   Mersmann)
  1.12  18.05.05 : DISPATCHERPROTO wasn't working, because of the missing REG_Ax
                   definitions. Added include <emul/emulregs.h> (Guido Mersmann)
+ 1.13  11.12.05 : fixed a minor typo in the PPC HOOKPROTONP macro.
+                  (Jens Langner)
 
 */
 
@@ -103,7 +105,7 @@
   #define HOOKPROTONO(name, ret, param) static SAVEDS ret                    \
     name(struct Hook *hook, UNUSED APTR obj, param)
   #define HOOKPROTONP(name, ret, obj) static SAVEDS ret                      \
-    name(a0, struct Hook *hook, obj, UNUSED APTR param)
+    name(struct Hook *hook, obj, UNUSED APTR param)
   #define HOOKPROTONONP(name, ret) static SAVEDS ret                         \
     name(struct Hook *hook, UNUSED APTR obj, UNUSED APTR param)
   #define HOOKPROTONH(name, ret, obj, param) static SAVEDS ret               \

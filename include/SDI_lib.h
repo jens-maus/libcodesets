@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_lib.h
-        Versionstring:  $VER: SDI_lib.h 1.6 (08.06.2005)
+        Versionstring:  $VER: SDI_lib.h 1.7 (11.12.2005)
         Author:         Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -23,11 +23,14 @@
  1.3   04.07.04 : added empty LIBFUNC define for MorphOS which was missing.
  1.4   05.10.04 : added missing LIBFUNC call to OS3/MOS interface
  1.5   19.05.05 : fixed some documentation glitches (Guido Mersmann)
- 1.6   08.06.06 : swapped LIBFUNC and ret within the prototype, because
+ 1.6   08.06.05 : swapped LIBFUNC and ret within the prototype, because
                   c standard says attributes first and vbcc want them like
                   this. (Guido Mersmann)
                   changed the documentation to explain that LIBFUNC must be
                   set first. (Guido Mersmann)
+ 1.7   11.12.05 : adapted all macros to be somewhat more compatible to also
+                  OS3 and MorphOS. Now in the real use case (codesets.library)
+                  it required a fundamental rework of the macros. (Jens Langner)
 
 */
 

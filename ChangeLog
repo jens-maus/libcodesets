@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2005-12-11  Jens Langner <Jens.Langner@light-speed.de>
+
+    * developer/examples: ported the demo1.c application to all our
+      supported platforms
+    * include/SDI_*.h: update SDI headers to latest versions.
+
 2005-12-08  Jens Langner <Jens.Langner@light-speed.de>
 
     * bumped version to v6 as the GCC/OS4 porting may introduce some
@@ -34,4 +40,3 @@ $Source$
 2005-11-23  Alfonso Ranieri <alforan@tin.it>
 
     * initial checkin of LGPLed sources
-

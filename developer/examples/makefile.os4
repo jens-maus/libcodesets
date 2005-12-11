@@ -59,7 +59,7 @@ LDLIBS   =
 # ignored warnings are:
 # none - because we want to compile with -Wall all the time
 
-TARGET = $(BINDIR)/b64d $(BINDIR)/b64e $(BINDIR)/UTF8ToStrHook
+TARGET = $(BINDIR)/b64d $(BINDIR)/b64e $(BINDIR)/UTF8ToStrHook $(BINDIR)/demo1
 
 #
 all: $(BINDIR) $(OBJDIR) $(TARGET)
@@ -78,7 +78,7 @@ $(BINDIR):
 
 $(OBJDIR)/%.o: %.c
 	@printf '\033[32mCompiling $<\033[0m\n'
-	@$(CC) $(CFLAGS) $< -o $@ -DNO_PPCINLINE_STDARG
+	@$(CC) $(CFLAGS) $< -o $@
 
 #
 
@@ -95,6 +95,13 @@ $(BINDIR)/b64e: $(OBJDIR)/b64e.o
 $(BINDIR)/UTF8ToStrHook: $(OBJDIR)/UTF8ToStrHook.o
 	@printf '\033[32mLinking \033[1m$@\033[0m\n'
 	@$(CC) $(LDFLAGS) -o $@.debug $< $(LDLIBS)
+	@$(STRIP) -o $@ $@.debug
+
+$(BINDIR)/demo1: demo1.c
+	@printf '\033[32mCompiling demo1.c\033[0m\n'
+	@$(CC) $(CFLAGS) demo1.c -o $(OBJDIR)/demo1.o -DNO_PPCINLINE_STDARG
+	@printf '\033[32mLinking \033[1m$@\033[0m\n'
+	@$(CC) $(LDFLAGS) -o $@.debug $(OBJDIR)/demo1.o $(LDLIBS)
 	@$(STRIP) -o $@ $@.debug
 
 #

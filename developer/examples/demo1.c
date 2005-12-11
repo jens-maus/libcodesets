@@ -10,19 +10,38 @@
 **
 *****************************************************************************/
 
+#include <clib/alib_protos.h>
+
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
 #include <proto/muimaster.h>
-#include <proto/codesets.h>
+#include <proto/intuition.h>
 #include <libraries/asl.h>
 #include <libraries/gadtools.h>
 #include <libraries/mui.h>
 #include <mui/Textinput_mcc.h>
 #include <mui/TextEditor_mcc.h>
-#include <clib/alib_protos.h>
+
+// tempoarly disable the INLINE STDARG define here
+#if defined(NO_INLINE_STDARG)
+#undef NO_INLINE_STDARG
+#include <proto/codesets.h>
+#define NO_INLINE_STDARG
+#elif defined(NO_PPCINLINE_STDARG)
+#undef NO_PPCINLINE_STDARG
+#include <proto/codesets.h>
+#define NO_PPCINLINE_STDARG
+#else
+#include <proto/codesets.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
+
+#include "SDI_compiler.h"
+#include "SDI_hook.h"
+#include "SDI_stdarg.h"
 
 /***********************************************************************/
 /*
@@ -33,10 +52,13 @@
 #define MAKE_ID(a,b,c,d) ((ULONG) (a)<<24 | (ULONG) (b)<<16 | (ULONG) (c)<<8 | (ULONG) (d))
 #endif
 
-#define SAVEDS  __saveds
-#define ASM     __asm
-#define REG(x)  __ ## x
-#define STDARGS __stdargs
+#if defined(__amigaos4__)
+#define GETINTERFACE(iface, base)	(iface = (APTR)GetInterface((struct Library *)(base), "main", 1L, NULL))
+#define DROPINTERFACE(iface)			(DropInterface((struct Interface *)iface), iface = NULL)
+#else
+#define GETINTERFACE(iface, base)	TRUE
+#define DROPINTERFACE(iface)
+#endif
 
 /***********************************************************************/
 /*
@@ -45,7 +67,22 @@
 
 char __ver[] = "\0$VER: CodesetsDemo1 1.0 (10.11.2004)";
 long __stack = 8192;
-struct Library *MUIMasterBase, *CodesetsBase;
+
+struct Library *MUIMasterBase = NULL;
+struct Library *CodesetsBase = NULL;
+struct Library *UtilityBase = NULL;
+
+#if defined(__amigaos4__)
+struct MUIMasterIFace *IMUIMaster = NULL;
+struct CodesetsIFace  *ICodesets = NULL;
+struct IntuitionIFace *IIntuition = NULL;
+struct UtilityIFace   *IUtility = NULL;
+struct Library *IntuitionBase = NULL;
+#else
+struct IntuitionBase *IntuitionBase = NULL;
+#endif
+
+
 struct MUI_CustomClass *appClass, *popupCodesetsClass, *editorClass;
 
 /***********************************************************************/
@@ -90,22 +127,33 @@ struct MUIP_Editor_Load
 ** Usual DoSuperNew funct
 */
 
-ULONG STDARGS
-DoSuperNew(struct IClass *cl,Object *obj,ULONG tag1,...)
+/// DoSuperNew
+//  Calls parent NEW method within a subclass
+#if !defined(__MORPHOS__)
+Object * STDARGS VARARGS68K DoSuperNew(struct IClass *cl, Object *obj, ...)
 {
-    return DoSuperMethod(cl,obj,OM_NEW,&tag1,NULL);
+  Object *rc;
+  VA_LIST args;
+
+  VA_START(args, obj);
+  rc = (Object *)DoSuperMethod(cl, obj, OM_NEW, VA_ARG(args, ULONG), NULL);
+  VA_END(args);
+
+  return rc;
 }
+#endif
+///
 
 /***********************************************************************/
 /*
 ** Codesets popup open window hook funct
 */
 
-static void ASM SAVEDS
-popupWindowFun(REG(a0) struct Hook *hook,REG(a1) Object *win,REG(a2) Object *pop)
+HOOKPROTONH(popupWindowFun, void, Object *pop, Object *win)
 {
-    set(win,MUIA_Window_DefaultObject,pop);
+  set(win,MUIA_Window_DefaultObject,pop);
 }
+MakeStaticHook(popupWindowHook, popupWindowFun);
 
 /***********************************************************************/
 /*
@@ -113,13 +161,12 @@ popupWindowFun(REG(a0) struct Hook *hook,REG(a1) Object *win,REG(a2) Object *pop
 ** Sets the active entry in the list
 */
 
-static ULONG ASM SAVEDS
-popupOpenFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
+HOOKPROTONH(popupOpenFun, ULONG, Object *list, Object *str)
 {
-    STRPTR       s, x;
+    STRPTR s, x;
     int i;
 
-    get(str,MUIA_Textinput_Contents,&s);
+    get(str, MUIA_Textinput_Contents, (ULONG)&s);
 
     for (i = 0; ;i++)
     {
@@ -139,6 +186,7 @@ popupOpenFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
 
     return TRUE;
 }
+MakeStaticHook(popupOpenHook, popupOpenFun);
 
 /***********************************************************************/
 /*
@@ -146,30 +194,26 @@ popupOpenFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
 ** Set the string contents
 */
 
-static void ASM SAVEDS
-popupCloseFun(REG(a0) struct Hook *hook,REG(a1) Object *str,REG(a2) Object *list)
+HOOKPROTONH(popupCloseFun, void, Object *list, Object *str)
 {
     STRPTR e;
 
     DoMethod(list,MUIM_List_GetEntry,MUIV_List_GetEntry_Active,&e);
     set(str,MUIA_Textinput_Contents,e);
 }
+MakeStaticHook(popupCloseHook, popupCloseFun);
 
 /***********************************************************************/
 /*
 ** Codesets popup new method
 */
 
-static struct Hook popupWindowHook = {{NULL,NULL},(APTR)popupWindowFun,NULL,NULL},
-                   popupOpenHook   = {{NULL,NULL},(APTR)popupOpenFun,NULL,NULL},
-                   popupCloseHook  = {{NULL,NULL},(APTR)popupCloseFun,NULL,NULL};
-
 static ULONG
 mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *str, *bt, *lv, *l;
 
-    if (obj = (Object *)DoSuperNew(cl,obj,
+    if((obj = (Object *)DoSuperNew(cl,obj,
 
             MUIA_Popstring_String, str = TextinputObject,
                 MUIA_ControlChar,           (ULONG)'h',
@@ -194,7 +238,7 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
             MUIA_Popobject_StrObjHook, &popupOpenHook,
             MUIA_Popobject_ObjStrHook, &popupCloseHook,
 
-            TAG_MORE,msg->ops_AttrList))
+            TAG_MORE,msg->ops_AttrList)))
     {
         struct codeset *codeset;
         STRPTR         *array;
@@ -203,7 +247,7 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
         DoMethod(lv,MUIM_Notify,MUIA_Listview_DoubleClick,TRUE,obj,2,MUIM_Popstring_Close,TRUE);
 
         /* Build list of available codesets */
-        if (array = CodesetsSupportedA(NULL))
+        if((array = CodesetsSupportedA(NULL)))
         {
             DoMethod(l,MUIM_List_Insert,array,-1,MUIV_List_Insert_Sorted);
             CodesetsFreeA(array,NULL);
@@ -223,8 +267,7 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 ** Codesets popup dispatcher
 */
 
-static ULONG ASM SAVEDS
-popupDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+DISPATCHERPROTO(popupDispatcher)
 {
     switch (msg->MethodID)
     {
@@ -260,7 +303,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
     {
         struct editorData *data = INST_DATA(cl,obj);
 
-        data->codesetsObj = (Object *)GetTagData(MUIA_Editor_CodesetsObj,NULL,msg->ops_AttrList);
+        data->codesetsObj = (Object *)GetTagData(MUIA_Editor_CodesetsObj, 0, msg->ops_AttrList);
 
         data->req = req;
     }
@@ -311,12 +354,12 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
         AddPart(fname,data->req->fr_File,sizeof(fname));
 
         /* Get size */
-        if (lock = Lock(fname,SHARED_LOCK))
+        if((lock = Lock(fname,SHARED_LOCK)))
         {
             struct FileInfoBlock *fib;
-            ULONG                go = FALSE, size;
+            ULONG                go = FALSE, size = 0;
 
-            if (fib = AllocDosObject(DOS_FIB,NULL))
+            if((fib = AllocDosObject(DOS_FIB,NULL)))
             {
                 if (Examine(lock,fib))
                 {
@@ -338,16 +381,16 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
                     STRPTR buf;
 
                     /* Alloc whole file buf */
-                    if (buf = AllocMem(size+1,MEMF_ANY))
+                    if((buf = AllocMem(size+1,MEMF_ANY)))
                     {
                         BPTR file;
 
-                        if (file = Open(fname,MODE_OLDFILE))
+                        if((file = Open(fname,MODE_OLDFILE)))
                         {
-                            ULONG r;
+                            LONG r;
 
                             r = Read(file,buf,size);
-                            if (r>=0)
+                            if(r >= 0)
                             {
                                 buf[r] = 0;
 
@@ -363,7 +406,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
                                     STRPTR                  cname;
 
                                     /* Get used codeset */
-                                    get(data->codesetsObj,MUIA_Textinput_Contents,&cname);
+                                    get(data->codesetsObj, MUIA_Textinput_Contents, (ULONG)&cname);
                                     codeset = CodesetsFindA(cname,NULL);
 
                                     /* Convert */
@@ -412,7 +455,7 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
     set(_app(obj),MUIA_Application_Sleep,TRUE);
 
     /* Get editor text */
-    if (text = (STRPTR)DoSuperMethod(cl,obj,MUIM_TextEditor_ExportText))
+    if((text = (STRPTR)DoSuperMethod(cl,obj,MUIM_TextEditor_ExportText)))
     {
         struct codeset *codeset;
         UTF8           *utf8;
@@ -420,11 +463,11 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
         ULONG                   dlen;
 
         /* Get current user codeset */
-        get(data->codesetsObj,MUIA_Textinput_Contents,&cname);
+        get(data->codesetsObj, MUIA_Textinput_Contents, (ULONG)&cname);
         codeset = CodesetsFindA(cname,NULL);
 
         /* Convert text as utf8 */
-        if (utf8 = CodesetsUTF8Create(CODESETSA_Source,text,CODESETSA_Codeset,codeset,CODESETSA_DestLenPtr,&dlen,TAG_DONE))
+        if((utf8 = CodesetsUTF8Create(CODESETSA_Source,text,CODESETSA_Codeset,codeset,CODESETSA_DestLenPtr,&dlen,TAG_DONE)))
         {
             /* Save converted text to a file */
 
@@ -436,7 +479,7 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
                 strcpy(fname,data->req->fr_Drawer);
                 AddPart(fname,data->req->fr_File,sizeof(fname));
 
-                if (file = Open(fname,MODE_NEWFILE))
+                if((file = Open(fname,MODE_NEWFILE)))
                 {
                     Write(file,utf8,dlen);
                     Close(file);
@@ -460,8 +503,7 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
 ** Editor dispatcher
 */
 
-static ULONG ASM SAVEDS
-editorDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+DISPATCHERPROTO(editorDispatcher)
 {
     switch (msg->MethodID)
     {
@@ -522,9 +564,9 @@ static struct NewMenu appMenu[] =
 static ULONG
 mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
-    Object *strip, *win, *codesets, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
+    Object *strip, *win, *codesets = NULL, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
 
-    if (obj = (Object *)DoSuperNew(cl,obj,
+    if((obj = (Object *)DoSuperNew(cl,obj,
                 MUIA_Application_Title,        "Codesets Demo1",
                 MUIA_Application_Version,      "$VER: CodesetsDemo1 1.0 (10.11.2004)",
                 MUIA_Application_Copyright,    "Copyright 2004 by Alfonso Ranieri",
@@ -564,7 +606,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 
                     End,
                 End,
-                TAG_MORE,msg->ops_AttrList))
+                TAG_MORE,msg->ops_AttrList)))
     {
         struct appData *data = INST_DATA(cl,obj);
 
@@ -642,15 +684,14 @@ mappAbout(struct IClass *cl,Object *obj,Msg msg)
     {
         Object *ok;
 
-        if (data->about = WindowObject,
+        if((data->about = WindowObject,
                 MUIA_Window_RefWindow, data->win,
                 MUIA_Window_Title,     "About Codesets Demo1",
                 WindowContents, VGroup,
                     Child, TextObject,
-                        MUIA_Text_Contents, "\n\\
-Codesets Demo1\n\\
-Copyright 2004 by Alfonso Ranieri <alforan@tin.it>\n",
-
+                        MUIA_Text_Contents, "\n"
+                                            "Codesets Demo1\n"
+                                            "Copyright 2004 by Alfonso Ranieri <alforan@tin.it>\n",
                         MUIA_Text_PreParse, MUIX_C,
                     End,
                     Child, RectangleObject, MUIA_Weight, 0, MUIA_Rectangle_HBar, TRUE, End,
@@ -660,7 +701,7 @@ Copyright 2004 by Alfonso Ranieri <alforan@tin.it>\n",
                         Child, RectangleObject, MUIA_Weight, 200, End,
                     End,
                 End,
-            End)
+            End))
         {
             DoSuperMethod(cl,obj,OM_ADDMEMBER,data->about);
 
@@ -695,10 +736,10 @@ mappAboutMUI(struct IClass *cl,Object *obj,Msg msg)
 
     if (!data->aboutMUI)
     {
-        if (data->aboutMUI = AboutmuiObject,
+        if((data->aboutMUI = AboutmuiObject,
                 MUIA_Aboutmui_Application, obj,
                 MUIA_Window_RefWindow,     data->win,
-            End)
+            End))
         {
             DoMethod(data->aboutMUI,MUIM_Notify,MUIA_Window_CloseRequest,TRUE,obj,5,
                 MUIM_Application_PushMethod,obj,2,MUIM_App_DisposeWin,data->aboutMUI);
@@ -734,8 +775,7 @@ mappOpenMUIConfigWindow(struct IClass *cl,Object *obj,Msg msg)
 ** App dispatcher
 */
 
-static ULONG ASM SAVEDS
-appDispatcher(REG(a0) struct IClass *cl,REG(a2) Object *obj,REG(a1) Msg msg)
+DISPATCHERPROTO(appDispatcher)
 {
     switch (msg->MethodID)
     {
@@ -758,72 +798,89 @@ main(int argc,char **argv)
 {
     int res = RETURN_FAIL;
 
-    /* Open codesets.library */
-    if (CodesetsBase = OpenLibrary("codesets.library",1))
+    if((IntuitionBase = (APTR)OpenLibrary("intuition.library", 39)) &&  // open intuition.library
+       GETINTERFACE(IIntuition, IntuitionBase))
     {
-        /* Open muimaster.library */
-        if (MUIMasterBase = OpenLibrary("muimaster.library",19))
+      if((UtilityBase = OpenLibrary("utility.library", 39)) &&      // open utility.library
+         GETINTERFACE(IUtility, UtilityBase))
+      {
+        if((CodesetsBase = OpenLibrary(CODESETSNAME, CODESETSVER)) && // open codesets.library
+           GETINTERFACE(ICodesets, CodesetsBase))
         {
-            /* Create classes */
-            if ((appClass = MUI_CreateCustomClass(NULL,MUIC_Application,NULL,sizeof(struct appData),appDispatcher)) &&
-                (popupCodesetsClass = MUI_CreateCustomClass(NULL,MUIC_Popobject,NULL,0,popupDispatcher)) &&
-                (editorClass = MUI_CreateCustomClass(NULL,MUIC_TextEditor,NULL,sizeof(struct editorData),editorDispatcher)))
+            /* Open muimaster.library */
+            if((MUIMasterBase = OpenLibrary("muimaster.library",19)) &&
+               GETINTERFACE(IMUIMaster, MUIMasterBase))
             {
-                Object *app;
-
-                /* Create application */
-                if (app = appObject, End)
+                /* Create classes */
+                if ((appClass = MUI_CreateCustomClass(NULL,MUIC_Application,NULL,sizeof(struct appData),appDispatcher)) &&
+                    (popupCodesetsClass = MUI_CreateCustomClass(NULL,MUIC_Popobject,NULL,0,popupDispatcher)) &&
+                    (editorClass = MUI_CreateCustomClass(NULL,MUIC_TextEditor,NULL,sizeof(struct editorData),editorDispatcher)))
                 {
-                    /* Here we go */
-                    ULONG sigs = 0;
+                    Object *app;
 
-                    while (DoMethod(app,MUIM_Application_NewInput,&sigs)!=MUIV_Application_ReturnID_Quit)
+                    /* Create application */
+                    if((app = appObject, End))
                     {
-                        if (sigs)
+                        /* Here we go */
+                        ULONG sigs = 0;
+
+                        while (DoMethod(app,MUIM_Application_NewInput,&sigs) != (ULONG)MUIV_Application_ReturnID_Quit)
                         {
-                            sigs = Wait(sigs | SIGBREAKF_CTRL_C);
-                            if (sigs & SIGBREAKF_CTRL_C) break;
+                            if (sigs)
+                            {
+                                sigs = Wait(sigs | SIGBREAKF_CTRL_C);
+                                if (sigs & SIGBREAKF_CTRL_C) break;
+                            }
                         }
+
+                        MUI_DisposeObject(app);
+
+                        res = RETURN_OK;
+                    }
+                    else
+                    {
+                        printf("%s: can't create application\n",argv[0]);
                     }
 
-                    MUI_DisposeObject(app);
-
-                    res = RETURN_OK;
+                    MUI_DeleteCustomClass(popupCodesetsClass);
+                    MUI_DeleteCustomClass(editorClass);
+                    MUI_DeleteCustomClass(appClass);
                 }
                 else
                 {
-                    printf("%s: can't create application\n",argv[0]);
+                    if (appClass)
+                    {
+                        if (popupCodesetsClass) MUI_DeleteCustomClass(popupCodesetsClass);
+                        MUI_DeleteCustomClass(appClass);
+                    }
+
+                    printf("%s: can't create custom classes\n",argv[0]);
                 }
 
-                MUI_DeleteCustomClass(popupCodesetsClass);
-                MUI_DeleteCustomClass(editorClass);
-                MUI_DeleteCustomClass(appClass);
+                DROPINTERFACE(IMUIMaster);
+                CloseLibrary(MUIMasterBase);
             }
             else
             {
-                if (appClass)
-                {
-                    if (popupCodesetsClass) MUI_DeleteCustomClass(popupCodesetsClass);
-                    MUI_DeleteCustomClass(appClass);
-                }
-
-                printf("%s: can't create custom classes\n",argv[0]);
+                printf("%s: Can't open muimaster.library ver 19 or higher\n",argv[0]);
+                res = RETURN_ERROR;
             }
 
-            CloseLibrary(MUIMasterBase);
+            DROPINTERFACE(ICodesets);
+            CloseLibrary(CodesetsBase);
         }
         else
         {
-            printf("%s: Can't open muimaster.library ver 19 or higher\n",argv[0]);
+            printf("%s: Can't open codesets.library ver %d or higher.\n", argv[0], CODESETSVER);
             res = RETURN_ERROR;
         }
 
-        CloseLibrary(CodesetsBase);
-    }
-    else
-    {
-        printf("%s: Can't open codesets.library ver 1 or higher\n",argv[0]);
-        res = RETURN_ERROR;
+        DROPINTERFACE(IUtility);
+        CloseLibrary(UtilityBase);
+      }
+
+      DROPINTERFACE(IIntuition);
+      CloseLibrary((struct Library *)IntuitionBase);
     }
 
     return res;
