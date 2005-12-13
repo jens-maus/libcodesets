@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2001-2004 Unicode, Inc.
  *
@@ -21,25 +20,23 @@
  * remains attached.
  */
 
-/***********************************************************************
+/* ---------------------------------------------------------------------
 
     Conversions between UTF32, UTF-16, and UTF-8. Source code file.
     Author: Mark E. Davis, 1994.
     Rev History: Rick McGowan, fixes & updates May 2001.
     Sept 2001: fixed const & error conditions per
-    mods suggested by S. Parent & A. Lillich.
+        mods suggested by S. Parent & A. Lillich.
     June 2002: Tim Dodd added detection and handling of incomplete
-    source sequences, enhanced error detection, added casts
-    to eliminate compiler warnings.
+        source sequences, enhanced error detection, added casts
+        to eliminate compiler warnings.
     July 2003: slight mods to back out aggressive FFFE detection.
     Jan 2004: updated switches in from-UTF8 conversions.
     Oct 2004: updated to use UNI_MAX_LEGAL_UTF32 in UTF-32 conversions.
 
-    Nov 2004: ported to AmigaOS by Alfonso Ranieri <alforan@tin.it>
-
     See the header file "ConvertUTF.h" for complete documentation.
 
-***********************************************************************/
+------------------------------------------------------------------------ */
 
 #include "lib.h"
 #include "convertUTF.h"
@@ -65,70 +62,73 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
                             REG(a3, UTF16 * targetEnd),
                             REG(d0, ULONG flags))
 {
-    ULONG result = CONVRES_ConversionOK;
-    const UTF32 *source = *sourceStart;
-    UTF16 *target = *targetStart;
+  ULONG result = CONVRES_ConversionOK;
+  const UTF32 *source = *sourceStart;
+  UTF16 *target = *targetStart;
 
-    while (source < sourceEnd)
+  while(source < sourceEnd)
+  {
+    UTF32 ch;
+
+    if(target >= targetEnd)
     {
-        UTF32 ch;
+      result = CONVRES_TargetExhausted;
+      break;
+    }
 
-        if (target >= targetEnd)
+    ch = *source++;
+    if(ch <= UNI_MAX_BMP)
+    {
+      /* Target is a character <= 0xFFFF */
+      /* UTF-16 surrogate values are illegal in UTF-32; 0xffff or 0xfffe are both reserved values */
+      if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
+      {
+        if(flags == CONVFLG_StrictConversion)
         {
-            result = CONVRES_TargetExhausted;
-            break;
-        }
-        ch = *source++;
-        if (ch <= UNI_MAX_BMP)
-        {
-            /* Target is a character <= 0xFFFF */
-            /* UTF-16 surrogate values are illegal in UTF-32; 0xffff or 0xfffe are both reserved values */
-            if (ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
-            {
-                if (flags == CONVFLG_StrictConversion)
-                {
-                    --source;   /* return to the illegal value itself */
-                    result = CONVRES_SourceIllegal;
-                    break;
-                }
-                else
-                {
-                    *target++ = UNI_REPLACEMENT_CHAR;
-                }
-            }
-            else
-            {
-                *target++ = (UTF16) ch; /* normal case */
-            }
-        }
-        else if (ch > UNI_MAX_LEGAL_UTF32)
-        {
-            if (flags == CONVFLG_StrictConversion)
-            {
-                result = CONVRES_SourceIllegal;
-            }
-            else
-            {
-                *target++ = UNI_REPLACEMENT_CHAR;
-            }
+          --source;   /* return to the illegal value itself */
+          result = CONVRES_SourceIllegal;
+          break;
         }
         else
         {
-            /* target is a character in range 0xFFFF - 0x10FFFF. */
-            if (target + 1 >= targetEnd)
-            {
-                --source;      /* Back up source pointer! */
-                result = CONVRES_TargetExhausted;
-                break;
-            }
-            ch -= halfBase;
-            *target++ = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
-            *target++ = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
+          *target++ = UNI_REPLACEMENT_CHAR;
         }
+      }
+      else
+      {
+        *target++ = (UTF16)ch; /* normal case */
+      }
     }
-    *sourceStart = source;
-    *targetStart = target;
-    return result;
+    else if(ch > UNI_MAX_LEGAL_UTF32)
+    {
+      if(flags == CONVFLG_StrictConversion)
+      {
+        result = CONVRES_SourceIllegal;
+      }
+      else
+      {
+        *target++ = UNI_REPLACEMENT_CHAR;
+      }
+    }
+    else
+    {
+      /* target is a character in range 0xFFFF - 0x10FFFF. */
+      if(target + 1 >= targetEnd)
+      {
+        --source;      /* Back up source pointer! */
+        result = CONVRES_TargetExhausted;
+        break;
+      }
+      ch -= halfBase;
+      *target++ = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
+      *target++ = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
+    }
+  }
+
+  *sourceStart = source;
+  *targetStart = target;
+
+  return result;
 }
 
 LIBSTUB(CodesetsConvertUTF32toUTF16, ULONG, REG(a0, const UTF32 ** sourceStart),
@@ -247,22 +247,14 @@ LIBSTUB(CodesetsConvertUTF16toUTF32, ULONG, REG(a0, const UTF16 ** sourceStart),
  * allowed in earlier algorithms.
  */
 const char trailingBytesForUTF8[256] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4,
-        4, 4, 4, 5, 5, 5, 5
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
 };
 
 /*
@@ -270,8 +262,8 @@ const char trailingBytesForUTF8[256] = {
  * This table contains as many values as there might be trailing bytes
  * in a UTF-8 sequence.
  */
-static const UTF32 offsetsFromUTF8[6] =
-    { 0x00000000UL, 0x00003080UL, 0x000E2080UL,
+static const UTF32 offsetsFromUTF8[6] = {
+    0x00000000UL, 0x00003080UL, 0x000E2080UL,
     0x03C82080UL, 0xFA082080UL, 0x82082080UL
 };
 
@@ -282,8 +274,7 @@ static const UTF32 offsetsFromUTF8[6] =
  * (I.e., one byte sequence, two byte... etc.). Remember that sequencs
  * for *legal* UTF-8 will be 4 or fewer bytes total.
  */
-static const UTF8 firstByteMark[7] =
-    { 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
+static const UTF8 firstByteMark[7] = { 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
 
 /***********************************************************************/
 

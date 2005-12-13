@@ -37,72 +37,20 @@
 /* search a sorted array in O(log n) e.g.
    BIN_SEARCH(strings,0,sizeof(strings)/sizeof(strings[0]),strcmp(key,array[mid]),res); */
 #define BIN_SEARCH(array,low,high,compare,result) \
-    {\
-        int l = low;\
-        int h = high;\
-        int m = (low+high)/2;\
-        result = NULL;\
-        while (l<=h)\
-        {\
-            int c = compare;\
-            if (!c){ result = &array[m]; break; }\
-            if (c < 0) h = m - 1;\
-            else l = m + 1;\
-            m = (l + h)/2;\
-        }\
-    }
-
-/***********************************************************************/
-
-static int
-mystrncmp(STRPTR str1,STRPTR str2,int len)
-{
-    while (len)
-    {
-        int d;
-
-        if ((d = *str1++ - *str2++)) return d;
-        len--;
-    }
-
-    return 0;
-}
-
-/***********************************************************************/
-
-static int
-mystricmp(STRPTR str1,STRPTR str2)
-{
-    if (!str1)
-    {
-        if (str2) return -1;
-
-        return 0;
-    }
-
-    if (!str2) return 1;
-
-    return stricmp(str1,str2);
-}
-
-/***********************************************************************/
-
-static int
-mystrnicmp(STRPTR str1,STRPTR str2,int n)
-{
-    if (!n) return 0;
-
-    if (!str1)
-    {
-        if (str2) return -1;
-
-        return 0;
-    }
-
-    if (!str2) return 1;
-
-    return strnicmp(str1,str2,n);
-}
+	{\
+		int l = low;\
+		int h = high;\
+		int m = (low+high)/2;\
+		result = NULL;\
+		while (l<=h)\
+		{\
+			int c = compare;\
+			if (!c){ result = &array[m]; break; }\
+			if (c < 0) h = m - 1;\
+			else l = m + 1;\
+			m = (l + h)/2;\
+		}\
+	}
 
 /***********************************************************************/
 
@@ -167,7 +115,7 @@ readLine(BPTR fh,STRPTR buf,int size)
 static STRPTR
 getConfigItem(STRPTR buf,STRPTR item,int len)
 {
-    if (!mystrnicmp(buf,item,len))
+    if(!strnicmp(buf, item, len))
     {
         UBYTE c;
 
@@ -345,7 +293,7 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
                     {
                       while(isspace(*p)) p++;
 
-                      if(!mystrnicmp(p,"U+",2))
+                      if(!strnicmp(p, "U+", 2))
                       {
                         p += 2;
                         codeset->table[i].ucs4 = strtol((const char *)p,(char **)&p,16);
@@ -370,10 +318,9 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
                 codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)(&codeset->table[i].utf8[1]);
             }
 
-            copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-            qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-
-            ADDTAIL(codesetsList,&codeset->node);
+            memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
+            qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+            AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
 
             res = TRUE;
         }
@@ -391,277 +338,358 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
  */
 
 ULONG
-codesetsInit (struct MinList * codesetsList)
+codesetsInit(struct MinList * codesetsList)
 {
-    struct codeset       *codeset;
-    UTF32                         src;
-    struct FileInfoBlock *fib;
-    int                  i;
+  struct codeset       *codeset;
+  UTF32                src;
+  struct FileInfoBlock *fib;
+  int                  i;
 
-    ObtainSemaphore(&CodesetsBase->poolSem);
+  ObtainSemaphore(&CodesetsBase->poolSem);
 
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset))))
+  //
+  // now we go and initialize our internally supported codesets
+  //
+
+  // ISO-8859-1 + EURO
+  if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-1 + Euro");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("West European (with EURO)");
+  codeset->read_only 	      = 1;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i==164)
+      src = 0x20AC; /* the EURO sign */
+    else
+      src = i;
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+	memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-1
+  if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-1");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("West European");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8 *dest_ptr = &codeset->table[i].utf8[1];
+
+    src = i;
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof (codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-2
+  if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-2");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("Central/East European");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_2_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr,dest_ptr+6, CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-3
+  if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-3");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("South European");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_3_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-4
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-4");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("North European");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_4_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // KOI8-R
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	            = mystrdup("KOI8-R");
+  codeset->alt_name 	        = NULL;
+  codeset->characterization   = mystrdup("Russian");
+  codeset->read_only 	        = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0x80)
+      src = i;
+    else
+      src = koi8r_to_ucs4[i-0x80];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-5
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-5");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("Slavic languages");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_5_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-9
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	      = mystrdup("ISO-8859-9");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("Turkish");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_9_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-15
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("ISO-8859-15");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("West European II");
+  codeset->read_only 	      = 0;
+  for(i = 0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = iso_8859_15_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof (codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // ISO-8859-16
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+	codeset->name             = mystrdup("ISO-8859-16");
+	codeset->alt_name         = NULL;
+	codeset->characterization = mystrdup("South-Eastern European");
+	codeset->read_only        = 0;
+	for(i=0;i<256;i++)
+	{
+    UTF32 *src_ptr = &src;
+    UTF8 *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i < 0xa0)
+      src = i;
+		else
+      src = iso_8859_16_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+		codeset->table[i].utf8[0] = (ULONG)dest_ptr - (ULONG)&codeset->table[i].utf8[1];
+	}
+	memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
+	qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // AmigaPL
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+  codeset->name 	      = mystrdup("AmigaPL");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("AmigaPL");
+  codeset->read_only 	      = 1;
+  for(i=0; i<256; i++)
+  {
+    UTF32 *src_ptr = &src;
+    UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i<0xa0)
+      src = i;
+    else
+      src = amigapl_to_ucs4[i-0xa0];
+
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+  }
+  memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+  qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // Amiga-1251
+  if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
+	codeset->name             = mystrdup("Amiga-1251");
+	codeset->alt_name         = NULL;
+	codeset->characterization = mystrdup("Amiga-1251");
+	codeset->read_only        = 1;
+	for(i=0; i<256; i++)
+	{
+    UTF32 *src_ptr = &src;
+    UTF8 *dest_ptr = &codeset->table[i].utf8[1];
+
+    if(i < 0xa0)
+      src = i;
+    else
+      src = amiga1251_to_ucs4[i-0xa0];
+		
+    codeset->table[i].code = i;
+    codeset->table[i].ucs4 = src;
+    CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CONVFLG_StrictConversion);
+    *dest_ptr = 0;
+    codeset->table[i].utf8[0] = (char*)dest_ptr - (char*)&codeset->table[i].utf8[1];
+	}
+	memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+	qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+	AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+  // and last but not least we try to walk to the LIBS:Charsets
+  // directory on our own and readin our own charset tables
+  if((fib = AllocDosObject(DOS_FIB,NULL)))
+  {
+    BPTR dir;
+
+    if((dir = Lock("LIBS:Charsets",SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
     {
-        ReleaseSemaphore(&CodesetsBase->poolSem);
-        return FALSE;
+      BPTR oldDir = CurrentDir(dir);
+
+      while(ExNext(dir,fib))
+      {
+        if(fib->fib_DirEntryType>=0)
+          continue;
+
+        codesetsReadTable(codesetsList,fib->fib_FileName);
+      }
+
+      CurrentDir(oldDir);
     }
 
-    codeset->name 	      = mystrdup("ISO-8859-1 + Euro");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("West European (with EURO)");
-    codeset->read_only 	      = 1;
+    if(dir)
+      UnLock(dir);
 
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+    FreeDosObject(DOS_FIB,fib);
+  }
 
-        if (i==164) src = 0x20AC; /* the EURO sign */
-        else src = i;
+end:
+  ReleaseSemaphore(&CodesetsBase->poolSem);
 
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-1");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("West European");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8 *dest_ptr = &codeset->table[i].utf8[1];
-
-        src = i;
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof (codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-2");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("Central/East European");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_2_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-3");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("South European");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_3_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-4");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("North European");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_4_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("KOI8-R");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("Russian");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0x80) src = i;
-        else src = koi8r_to_ucs4[i-0x80];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-5");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("Slavic languages");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_5_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-9");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("Turkish");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_9_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("ISO-8859-15");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("West European II");
-    codeset->read_only 	      = 0;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = iso_8859_15_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof (codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if (!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
-    codeset->name 	      = mystrdup("AmigaPL");
-    codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("AmigaPL");
-    codeset->read_only 	      = 1;
-
-    for (i = 0; i<256; i++)
-    {
-        UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-        if (i<0xa0) src = i;
-        else src = amigapl_to_ucs4[i-0xa0];
-        codeset->table[i].code = i;
-        codeset->table[i].ucs4 = src;
-        CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-        *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
-    }
-    copymem(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-    ADDTAIL(codesetsList,&codeset->node);
-
-    if((fib = AllocDosObject(DOS_FIB,NULL)))
-    {
-        BPTR dir;
-
-        if ((dir = Lock("LIBS:Charsets",SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
-        {
-            BPTR oldDir = CurrentDir(dir);
-
-            while(ExNext(dir,fib))
-            {
-                if (fib->fib_DirEntryType>=0) continue;
-                codesetsReadTable(codesetsList,fib->fib_FileName);
-            }
-
-            CurrentDir(oldDir);
-        }
-
-        if (dir) UnLock(dir);
-
-        FreeDosObject(DOS_FIB,fib);
-    }
-
-  end:
-    ReleaseSemaphore(&CodesetsBase->poolSem);
-
-    return TRUE;
+  return codeset != NULL;
 }
 
 /**************************************************************************/
@@ -672,15 +700,16 @@ codesetsInit (struct MinList * codesetsList)
 void
 codesetsCleanup(struct MinList *codesetsList)
 {
-    struct codeset *code;
+  struct codeset *code;
 
-    while((code = (struct codeset *)RemHead(LIST(codesetsList))))
-    {
-        if (code->name) freeArbitrateVecPooled(code->name);
-        if (code->alt_name) freeArbitrateVecPooled(code->alt_name);
-        if (code->characterization) freeArbitrateVecPooled(code->characterization);
-        freeArbitrateVecPooled(code);
-    }
+  while((code = (struct codeset *)RemHead((struct List *)codesetsList)))
+  {
+    if(code->name) freeArbitrateVecPooled(code->name);
+    if(code->alt_name) freeArbitrateVecPooled(code->alt_name);
+    if(code->characterization) freeArbitrateVecPooled(code->characterization);
+
+    freeArbitrateVecPooled(code);
+  }
 }
 
 /**************************************************************************/
@@ -720,7 +749,7 @@ codesetsFind(struct MinList *codesetsList,STRPTR name)
         struct codeset *mstate, *succ;
 
         for(mstate = (struct codeset *)codesetsList->mlh_Head; (succ = (struct codeset *)mstate->node.mln_Succ); mstate = succ)
-            if (!mystricmp(name,mstate->name) || !mystricmp(name,mstate->alt_name))
+            if (!stricmp(name, mstate->name) || !stricmp(name, mstate->alt_name))
                 break;
 
         if (succ) res = mstate;
@@ -1119,7 +1148,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 {
                     int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
 
-                    BIN_SEARCH(codeset->table_sorted, 0, 255, mystrncmp((char*)str, (char*)codeset->table_sorted[m].utf8+1, lenStr), f);
+                    BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)str, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
                     if (f) d = f->code;
                     else d = '_';

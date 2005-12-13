@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2005-12-14  Jens Langner <Jens.Langner@light-speed.de>
+
+    * codesets.c, codesets_table.h: updated internal codesets
+      implementations in accordance to the latest implementation in
+      SimpleMail. Now codesets.library also supports the Amiga-1251
+      and ISO-8859-16.
+    * misc: did some general housekeeping code cleanups.
+
 2005-12-11  Jens Langner <Jens.Langner@light-speed.de>
 
     * developer/examples: ported the demo1.c application to all our
