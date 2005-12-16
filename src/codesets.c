@@ -148,24 +148,27 @@ getConfigItem(STRPTR buf,STRPTR item,int len)
 STRPTR *LIBFUNC
 CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
 {
-    STRPTR *array;
+  STRPTR *array;
 
-    if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
-    {
-        struct codeset *code, *succ;
-        int            i;
+  ENTER();
 
-        ObtainSemaphoreShared(&CodesetsBase->libSem);
+  if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
+  {
+    struct codeset *code, *succ;
+    int            i;
 
-        for (i = 0, code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
-            array[i] = code->name;
+    ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-        array[i] = NULL;
+    for(i = 0, code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
+      array[i] = code->name;
 
-        ReleaseSemaphore(&CodesetsBase->libSem);
-    }
+    array[i] = NULL;
 
-    return array;
+    ReleaseSemaphore(&CodesetsBase->libSem);
+  }
+
+  RETURN(array);
+  return array;
 }
 
 LIBSTUB(CodesetsSupportedA, STRPTR*, REG(a0, struct TagItem *attrs))
@@ -197,7 +200,12 @@ void LIBFUNC
 CodesetsFreeA(REG(a0, APTR obj),
               REG(a1, UNUSED struct TagItem *attrs))
 {
-    if (obj) freeArbitrateVecPooled(obj);
+  ENTER();
+
+  if(obj)
+    freeArbitrateVecPooled(obj);
+
+  LEAVE();
 }
 
 LIBSTUB(CodesetsFreeA, void, REG(a0, APTR obj), REG(a1, struct TagItem *attrs))
@@ -246,108 +254,112 @@ codesetsCmpUnicode(struct single_convert *arg1,struct single_convert *arg2)
 static ULONG
 codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 {
-    char buf[512];
-    BPTR  fh;
-    ULONG res = FALSE;
+  char buf[512];
+  BPTR  fh;
+  ULONG res = FALSE;
 
-    if((fh = Open(name, MODE_OLDFILE)))
+  ENTER();
+
+  if((fh = Open(name, MODE_OLDFILE)))
+  {
+    struct codeset *codeset;
+
+    if((codeset = (struct codeset *)allocVecPooled(CodesetsBase->pool,sizeof(struct codeset))))
     {
-        struct codeset *codeset;
+      int i;
 
-        if((codeset = (struct codeset *)allocVecPooled(CodesetsBase->pool,sizeof(struct codeset))))
+      memset(codeset,0,sizeof(struct codeset));
+
+      for(i = 0; i<256; i++)
+        codeset->table[i].code = codeset->table[i].ucs4 = i;
+
+      while(readLine(fh, buf, sizeof(buf)))
+      {
+        STRPTR result;
+
+        if(*buf=='#')
+          continue;
+
+        if((result = getConfigItem(buf,ITEM_STANDARD,strlen(ITEM_STANDARD))))
+          codeset->name = mystrdup(result);
+        else if((result = getConfigItem(buf,ITEM_ALTSTANDARD,strlen(ITEM_ALTSTANDARD))))
+          codeset->alt_name = mystrdup(result);
+        else if((result = getConfigItem(buf,ITEM_READONLY,strlen(ITEM_READONLY))))
+          codeset->read_only = !!atoi(result);
+        else if((result = getConfigItem(buf,ITEM_CHARACTERIZATION,strlen(ITEM_CHARACTERIZATION))))
         {
-            int i;
+          if((result[0]=='_') && (result[1]=='(') && (result[2]=='"'))
+          {
+            STRPTR end = strchr(result + 3, '"');
 
-            memset(codeset,0,sizeof(struct codeset));
+            if(end)
+              codeset->characterization = mystrndup(result+3,end-(result+3));
+          }
+        }
+        else
+        {
+          STRPTR p = buf;
+          int fmt2 = 0;
 
-            for (i = 0; i<256; i++)
-                codeset->table[i].code = codeset->table[i].ucs4 = i;
+          if((*p=='=') || (fmt2 = ((*p=='0') || (*(p+1)=='x'))))
+          {
+            p++;
+            p += fmt2;
 
-            while(readLine(fh, buf, sizeof(buf)))
+            i = strtol((const char *)p,(char **)&p,16);
+            if(i>0 && i<256)
             {
-                STRPTR result;
+              while(isspace(*p)) p++;
 
-                if (*buf=='#') continue;
-
-                if((result = getConfigItem(buf,ITEM_STANDARD,strlen(ITEM_STANDARD))))
-                  codeset->name = mystrdup(result);
-                else if((result = getConfigItem(buf,ITEM_ALTSTANDARD,strlen(ITEM_ALTSTANDARD))))
-                  codeset->alt_name = mystrdup(result);
-                else if((result = getConfigItem(buf,ITEM_READONLY,strlen(ITEM_READONLY))))
-                  codeset->read_only = !!atoi(result);
-                else if((result = getConfigItem(buf,ITEM_CHARACTERIZATION,strlen(ITEM_CHARACTERIZATION))))
-                {
-                  if((result[0]=='_') && (result[1]=='(') && (result[2]=='"'))
-                  {
-                    STRPTR end = strchr(result + 3, '"');
-
-                    if (end)
-                      codeset->characterization = mystrndup(result+3,end-(result+3));
-                  }
-                }
-                else
-                {
-                  STRPTR p = buf;
-                  int fmt2 = 0;
-
-                  if((*p=='=') || (fmt2 = ((*p=='0') || (*(p+1)=='x'))))
-                  {
-                    p++;
-                    p += fmt2;
-
-                    i = strtol((const char *)p,(char **)&p,16);
-                    if(i>0 && i<256)
-                    {
-                      while(isspace(*p)) p++;
-
-                      if(!strnicmp(p, "U+", 2))
-                      {
-                        p += 2;
-                        codeset->table[i].ucs4 = strtol((const char *)p,(char **)&p,16);
-                      }
-                      else
-                      {
-                        if(*p!='#')
-                          codeset->table[i].ucs4 = strtol((const char *)p,(char **)&p,0);
-                      }
-                    }
-                  }
-                }
-            }
-
-            // check if there is not already codeset with the same name in here
-            if(!(codesetsFind(codesetsList, codeset->name)))
-            {
-              for(i=0; i<256; i++)
+              if(!strnicmp(p, "U+", 2))
               {
-                UTF32 src = codeset->table[i].ucs4, *src_ptr = &src;
-                UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-
-                CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
-                *dest_ptr = 0;
-                codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)(&codeset->table[i].utf8[1]);
+                p += 2;
+                codeset->table[i].ucs4 = strtol((const char *)p,(char **)&p,16);
               }
-
-              memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
-              qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
-              AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
-
-              res = TRUE;
+              else
+              {
+                if(*p!='#')
+                  codeset->table[i].ucs4 = strtol((const char *)p,(char **)&p,0);
+              }
             }
-            else
-            {
-              // cleanup
-              if(codeset->name)             freeArbitrateVecPooled(codeset->name);
-              if(codeset->alt_name)         freeArbitrateVecPooled(codeset->alt_name);
-              if(codeset->characterization) freeArbitrateVecPooled(codeset->characterization);
-              freeArbitrateVecPooled(codeset);
-            }
+          }
+        }
+      }
+
+      // check if there is not already codeset with the same name in here
+      if(!(codesetsFind(codesetsList, codeset->name)))
+      {
+        for(i=0; i<256; i++)
+        {
+          UTF32 src = codeset->table[i].ucs4, *src_ptr = &src;
+          UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+
+          CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CONVFLG_StrictConversion);
+          *dest_ptr = 0;
+          codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)(&codeset->table[i].utf8[1]);
         }
 
-        Close(fh);
+        memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
+        qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+        AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+
+        res = TRUE;
+      }
+      else
+      {
+        // cleanup
+        if(codeset->name)             freeArbitrateVecPooled(codeset->name);
+        if(codeset->alt_name)         freeArbitrateVecPooled(codeset->alt_name);
+        if(codeset->characterization) freeArbitrateVecPooled(codeset->characterization);
+        freeArbitrateVecPooled(codeset);
+      }
     }
 
-    return res;
+    Close(fh);
+  }
+
+  RETURN(res);
+  return res;
 }
 
 /**************************************************************************/
@@ -366,6 +378,8 @@ codesetsInit(struct MinList * codesetsList)
   #if defined(__amigaos4__)
   int                  nextMIB = 3;
   #endif
+
+  ENTER();
 
   ObtainSemaphore(&CodesetsBase->poolSem);
 
@@ -800,6 +814,7 @@ codesetsInit(struct MinList * codesetsList)
 end:
   ReleaseSemaphore(&CodesetsBase->poolSem);
 
+  RETURN(codeset != 0);
   return codeset != NULL;
 }
 
@@ -813,6 +828,8 @@ codesetsCleanup(struct MinList *codesetsList)
 {
   struct codeset *code;
 
+  ENTER();
+
   while((code = (struct codeset *)RemHead((struct List *)codesetsList)))
   {
     if(code->name) freeArbitrateVecPooled(code->name);
@@ -821,6 +838,8 @@ codesetsCleanup(struct MinList *codesetsList)
 
     freeArbitrateVecPooled(code);
   }
+
+  LEAVE();
 }
 
 /**************************************************************************/
@@ -830,6 +849,8 @@ defaultCodeset(ULONG sem)
 {
   char buf[256];
   struct codeset *codeset;
+
+  ENTER();
 
   if(sem)
     ObtainSemaphoreShared(&CodesetsBase->libSem);
@@ -843,6 +864,7 @@ defaultCodeset(ULONG sem)
   if(sem)
     ReleaseSemaphore(&CodesetsBase->libSem);
 
+  RETURN(codeset);
   return codeset;
 }
 
@@ -856,6 +878,8 @@ struct codeset *
 codesetsFind(struct MinList *codesetsList,STRPTR name)
 {
   struct codeset *res = NULL;
+
+  ENTER();
 
   if(name && *name)
   {
@@ -871,6 +895,7 @@ codesetsFind(struct MinList *codesetsList,STRPTR name)
       res = mstate;
   }
 
+  RETURN(res);
   return res;
 }
 
@@ -880,22 +905,25 @@ struct codeset *LIBFUNC
 CodesetsSetDefaultA(REG(a0, STRPTR name),
                     REG(a1, struct TagItem *attrs))
 {
-    struct codeset *codeset;
+  struct codeset *codeset;
 
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
+  ENTER();
 
-    if((codeset = codesetsFind(&CodesetsBase->codesets,name)))
-    {
-        ULONG flags;
+  ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-        flags = GVF_SAVE_VAR | (GetTagData(CODESETSA_Save,FALSE,attrs) ? GVF_GLOBAL_ONLY : 0);
+  if((codeset = codesetsFind(&CodesetsBase->codesets,name)))
+  {
+    ULONG flags;
 
-        SetVar("codeset_default",codeset->name,strlen(codeset->name),flags);
-    }
+    flags = GVF_SAVE_VAR | (GetTagData(CODESETSA_Save,FALSE,attrs) ? GVF_GLOBAL_ONLY : 0);
 
-    ReleaseSemaphore(&CodesetsBase->libSem);
+    SetVar("codeset_default",codeset->name,strlen(codeset->name),flags);
+  }
 
-    return codeset;
+  ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
 }
 
 LIBSTUB(CodesetsSetDefaultA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
@@ -926,18 +954,21 @@ LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
 struct codeset *LIBFUNC
 CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
-    struct codeset *codeset;
+  struct codeset *codeset;
 
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
+  ENTER();
 
-    codeset = codesetsFind(&CodesetsBase->codesets,name);
+  ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-    if (!codeset && GetTagData(CODESETSA_NoFail,TRUE,attrs))
-        codeset = defaultCodeset(FALSE);
+  codeset = codesetsFind(&CodesetsBase->codesets,name);
 
-    ReleaseSemaphore(&CodesetsBase->libSem);
+  if(!codeset && GetTagData(CODESETSA_NoFail,TRUE,attrs))
+    codeset = defaultCodeset(FALSE);
 
-    return codeset;
+  ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
 }
 
 LIBSTUB(CodesetsFindA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
@@ -972,54 +1003,60 @@ LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
 struct codeset *
 codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *error_ptr)
 {
-    struct codeset *codeset, *best_codeset = NULL;
-    int            best_errors = text_len;
+  struct codeset *codeset, *best_codeset = NULL;
+  int            best_errors = text_len;
 
-    codeset = (struct codeset *)codesetsList->mlh_Head;
+  codeset = (struct codeset *)codesetsList->mlh_Head;
 
-    while (codeset)
+  while(codeset)
+  {
+    if(!codeset->read_only)
     {
-        if (!codeset->read_only)
+      struct single_convert conv;
+      STRPTR       text_ptr = text;
+      int          i, errors = 0;
+
+      for(i = 0; i<text_len; i++)
+      {
+        unsigned char c = *text_ptr++;
+
+        if(c)
         {
-            struct single_convert conv;
-            STRPTR       text_ptr = text;
-            int          i, errors = 0;
+          int len = trailingBytesForUTF8[c];
 
-            for (i = 0; i<text_len; i++)
-            {
-                unsigned char c = *text_ptr++;
+          conv.utf8[1] = c;
+          strncpy((char*)&conv.utf8[2], text_ptr, len);
+          conv.utf8[2+len] = 0;
+          text_ptr += len;
 
-                if (c)
-                {
-                    int len = trailingBytesForUTF8[c];
-
-                    conv.utf8[1] = c;
-                    strncpy((char*)&conv.utf8[2], text_ptr, len);
-                    conv.utf8[2+len] = 0;
-                    text_ptr += len;
-
-                    if (!bsearch(&conv,codeset->table_sorted,256,sizeof(codeset->table_sorted[0]),(APTR)codesetsCmpUnicode))
-                        errors++;
-                }
-                else break;
-            }
-
-            if (errors<best_errors)
-            {
-                best_codeset = codeset;
-                best_errors = errors;
-            }
-
-            if (!best_errors) break;
+          if(!bsearch(&conv,codeset->table_sorted,256,sizeof(codeset->table_sorted[0]),(APTR)codesetsCmpUnicode))
+            errors++;
         }
+        else
+          break;
+      }
 
-        codeset = (struct codeset *)codeset->node.mln_Succ;
+      if(errors<best_errors)
+      {
+        best_codeset = codeset;
+        best_errors = errors;
+      }
+
+      if(!best_errors)
+        break;
     }
 
-    if (!best_codeset) best_codeset = defaultCodeset(FALSE);
-    if (error_ptr) *error_ptr = best_errors;
+    codeset = (struct codeset *)codeset->node.mln_Succ;
+  }
 
-    return best_codeset;
+  if(!best_codeset)
+    best_codeset = defaultCodeset(FALSE);
+
+  if(error_ptr)
+    *error_ptr = best_errors;
+
+  RETURN(best_codeset);
+  return best_codeset;
 }
 
 /**************************************************************************/
@@ -1030,15 +1067,18 @@ CodesetsFindBestA(REG(a0, STRPTR text),
                   REG(a1, ULONG *error_ptr),
                   REG(a2, UNUSED struct TagItem *attrs))
 {
-    struct codeset *codeset;
+  struct codeset *codeset;
 
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
+  ENTER();
 
-    codeset = codesetsFindBest(&CodesetsBase->codesets,text,text_len,(int *)error_ptr);
+  ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-    ReleaseSemaphore(&CodesetsBase->libSem);
+  codeset = codesetsFindBest(&CodesetsBase->codesets,text,text_len,(int *)error_ptr);
 
-    return codeset;
+  ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
 }
 
 LIBSTUB(CodesetsFindBestA, struct codeset *, REG(a0, STRPTR text),
@@ -1079,20 +1119,24 @@ LIBSTUBVA(CodesetsFindBest, struct codeset *, REG(a0, STRPTR text),
 ULONG LIBFUNC
 CodesetsUTF8Len(REG(a0, UTF8 *str))
 {
-    int           len;
-    unsigned char c;
+  int           len;
+  unsigned char c;
 
-    if (!str) return 0;
+  ENTER();
 
-    len = 0;
+  if(!str)
+    return 0;
 
-    while ((c = *str++))
-    {
-        len++;
-        str += trailingBytesForUTF8[c];
-    }
+  len = 0;
 
-    return (ULONG)len;
+  while((c = *str++))
+  {
+    len++;
+    str += trailingBytesForUTF8[c];
+  }
+
+  RETURN((ULONG)len);
+  return (ULONG)len;
 }
 
 LIBSTUB(CodesetsUTF8Len, ULONG, REG(a0, UTF8* str))
@@ -1110,25 +1154,29 @@ ULONG LIBFUNC
 CodesetsStrLenA(REG(a0, STRPTR str),
                 REG(a1, struct TagItem *attrs))
 {
-    struct codeset *codeset;
-    int            len, res;
-    STRPTR         src;
-    UBYTE          c;
+  struct codeset *codeset;
+  int            len, res;
+  STRPTR         src;
+  UBYTE          c;
 
-    if (!str) return 0;
+  ENTER();
 
-    if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
-      codeset = defaultCodeset(TRUE);
+  if(!str)
+    return 0;
 
-    len = GetTagData(CODESETSA_SourceLen,UINT_MAX,attrs);
+  if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
+    codeset = defaultCodeset(TRUE);
 
-    src = str;
-    res = 0;
+  len = GetTagData(CODESETSA_SourceLen,UINT_MAX,attrs);
 
-    while (((c = *src++) && (len--)))
-        res += codeset->table[c].utf8[0];
+  src = str;
+  res = 0;
 
-    return (ULONG)res;
+  while(((c = *src++) && (len--)))
+    res += codeset->table[c].utf8[0];
+
+  RETURN((ULONG)res);
+  return (ULONG)res;
 }
 
 LIBSTUB(CodesetsStrLenA, ULONG, REG(a0, STRPTR str),
@@ -1166,156 +1214,167 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
 STRPTR LIBFUNC
 CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 {
-    UTF8   *str;
-    STRPTR dest;
-    ULONG  *destLenPtr;
-    ULONG  n;
+  UTF8   *str;
+  STRPTR dest;
+  ULONG  *destLenPtr;
+  ULONG  n;
 
-    str = (UTF8 *)GetTagData(CODESETSA_Source, 0, attrs);
-    if (!str) return NULL;
+  ENTER();
 
-    dest = NULL;
-    n    = 0;
+  str = (UTF8 *)GetTagData(CODESETSA_Source, 0, attrs);
+  if(!str)
+    return NULL;
 
-    if (str)
+  dest = NULL;
+  n    = 0;
+
+  if(str)
+  {
+    struct convertMsg              msg;
+    struct codeset        *codeset;
+    struct Hook           *hook;
+    struct single_convert *f;
+    char                 	         buf[256];
+    STRPTR                destIter = NULL, b = NULL;
+    ULONG                 destLen;
+    int                   i = 0;
+
+    hook    = (struct Hook *)GetTagData(CODESETSA_DestHook, 0, attrs);
+    destLen = GetTagData(CODESETSA_DestLen,0,attrs);
+
+    if(hook)
     {
-        struct convertMsg              msg;
-        struct codeset        *codeset;
-        struct Hook           *hook;
-        struct single_convert *f;
-        char                 	         buf[256];
-        STRPTR                destIter = NULL, b = NULL;
-        ULONG                 destLen;
-        int                   i = 0;
+      if(destLen<16 || destLen>sizeof(buf)) destLen = sizeof(buf);
 
-        hook    = (struct Hook *)GetTagData(CODESETSA_DestHook, 0, attrs);
-        destLen = GetTagData(CODESETSA_DestLen,0,attrs);
+      msg.state = CODESETV_Translating;
+      b = buf;
+      i = 0;
+    }
+    else
+    {
+      APTR                   pool;
+      struct SignalSemaphore *sem;
 
-        if (hook)
+      //if (destLen==0) return NULL;
+
+      if(!(dest = (STRPTR)GetTagData(CODESETSA_Dest, 0, attrs)) ||
+        GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
+      {
+        ULONG len;
+        UBYTE c, *s;
+
+        len = 0;
+        s   = str;
+
+        while ((c = *s++))
         {
-            if (destLen<16 || destLen>sizeof(buf)) destLen = sizeof(buf);
-
-            msg.state = CODESETV_Translating;
-            b = buf;
-            i = 0;
+            len++;
+            s += trailingBytesForUTF8[c];
         }
-        else
+
+        if(!dest || (destLen<len+1))
         {
-            APTR                   pool;
-            struct SignalSemaphore *sem;
-
-            //if (destLen==0) return NULL;
-
-            if(!(dest = (STRPTR)GetTagData(CODESETSA_Dest, 0, attrs)) ||
-                GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
+          if((pool = (APTR)GetTagData(CODESETSA_Pool, 0, attrs)))
+          {
+            if((sem = (struct SignalSemaphore *)GetTagData(CODESETSA_PoolSem, 0, attrs)))
             {
-                ULONG len;
-                UBYTE c, *s;
-
-                len = 0;
-                s   = str;
-
-                while ((c = *s++))
-                {
-                    len++;
-                    s += trailingBytesForUTF8[c];
-                }
-
-                if(!dest || (destLen<len+1))
-                {
-                    if((pool = (APTR)GetTagData(CODESETSA_Pool, 0, attrs)))
-                    {
-                        if((sem = (struct SignalSemaphore *)GetTagData(CODESETSA_PoolSem, 0, attrs)))
-                        {
-                            ObtainSemaphore(sem);
-                        }
-
-                        dest = allocVecPooled(pool,len+1);
-
-                        if (sem) ReleaseSemaphore(sem);
-                    }
-                    else dest = allocArbitrateVecPooled(len+1);
-
-                    destLen  = len+1;
-                }
-
-                if (!dest) return NULL;
+              ObtainSemaphore(sem);
             }
 
-            destIter = dest;
+            dest = allocVecPooled(pool,len+1);
+
+            if(sem)
+              ReleaseSemaphore(sem);
+          }
+          else
+            dest = allocArbitrateVecPooled(len+1);
+
+          destLen  = len+1;
         }
 
-        if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
-          codeset = defaultCodeset(TRUE);
+        if(!dest)
+          return NULL;
+      }
 
-        for (; ; n++)
-        {
-            UBYTE c, d;
-
-            if(!hook)
-            {
-                if(n>=destLen-1)
-                  break;
-            }
-
-            if((c = *str))
-            {
-                if (c>127)
-                {
-                    int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
-
-                    BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)str, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
-
-                    if (f) d = f->code;
-                    else d = '_';
-
-                    str += lenAdd;
-                }
-                else d = c;
-
-                if (hook)
-                {
-                    *b++ = d;
-                    i++;
-
-                    if (i%(destLen-1)==0)
-                    {
-                        *b = 0;
-                        msg.len = i;
-                        CallHookPkt(hook,&msg,buf);
-
-                        b  = buf;
-                        *b = 0;
-                        i  = 0;
-                    }
-                }
-                else
-                {
-                    *destIter++ = d;
-                }
-
-                str++;
-            }
-            else break;
-        }
-
-        if (hook)
-        {
-            msg.state = CODESETV_End;
-            msg.len   = i;
-            *b        = 0;
-            CallHookPkt(hook,&msg,buf);
-        }
-        else
-        {
-            *destIter = 0;
-        }
+      destIter = dest;
     }
 
-    if((destLenPtr = (ULONG *)GetTagData(CODESETSA_DestLenPtr, 0, attrs)))
-      *destLenPtr = n;
+    if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
+      codeset = defaultCodeset(TRUE);
 
-    return dest;
+    for(;;n++)
+    {
+      UBYTE c, d;
+
+      if(!hook)
+      {
+        if(n>=destLen-1)
+          break;
+      }
+
+      if((c = *str))
+      {
+        if(c>127)
+        {
+          int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
+
+          BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)str, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
+
+          if(f)
+            d = f->code;
+          else
+            d = '_';
+
+          str += lenAdd;
+        }
+        else
+          d = c;
+
+        if(hook)
+        {
+          *b++ = d;
+          i++;
+
+          if(i%(destLen-1)==0)
+          {
+            *b = 0;
+            msg.len = i;
+            CallHookPkt(hook, &msg, buf);
+
+            b  = buf;
+            *b = 0;
+            i  = 0;
+          }
+        }
+        else
+        {
+          *destIter++ = d;
+        }
+
+        str++;
+      }
+      else
+        break;
+    }
+
+    if(hook)
+    {
+      msg.state = CODESETV_End;
+      msg.len   = i;
+      *b        = 0;
+      CallHookPkt(hook,&msg,buf);
+    }
+    else
+    {
+      *destIter = 0;
+    }
+  }
+
+  if((destLenPtr = (ULONG *)GetTagData(CODESETSA_DestLenPtr, 0, attrs)))
+    *destLenPtr = n;
+
+  RETURN(dest);
+  return dest;
 }
 
 LIBSTUB(CodesetsUTF8ToStrA, STRPTR, REG(a0, struct TagItem *attrs))
@@ -1351,135 +1410,143 @@ LIBSTUBVA(CodesetsUTF8ToStr, STRPTR, ...)
 UTF8 *LIBFUNC
 CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 {
-    UTF8   *from;
-    UTF8   *dest;
-    ULONG  fromLen, *destLenPtr;
-    ULONG  n;
+  UTF8   *from;
+  UTF8   *dest;
+  ULONG  fromLen, *destLenPtr;
+  ULONG  n;
 
-    dest = NULL;
-    n    = 0;
+  ENTER();
 
-    from = (UTF8*)GetTagData(CODESETSA_Source, 0, attrs);
-    fromLen = GetTagData(CODESETSA_SourceLen, UINT_MAX, attrs);
+  dest = NULL;
+  n    = 0;
 
-    if (from && fromLen)
+  from = (UTF8*)GetTagData(CODESETSA_Source, 0, attrs);
+  fromLen = GetTagData(CODESETSA_SourceLen, UINT_MAX, attrs);
+
+  if(from && fromLen)
+  {
+    struct convertMsg       msg;
+    struct codeset *codeset;
+    struct Hook    *hook;
+    ULONG          destLen;
+    int            i = 0;
+    UBYTE                		buf[256];
+    UBYTE          *src, *destPtr = NULL, *b = NULL, c;
+
+    if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
+      codeset = defaultCodeset(TRUE);
+
+    hook    = (struct Hook *)GetTagData(CODESETSA_DestHook, 0, attrs);
+    destLen = GetTagData(CODESETSA_DestLen,0,attrs);
+
+    if(hook)
     {
-        struct convertMsg       msg;
-        struct codeset *codeset;
-        struct Hook    *hook;
-        ULONG          destLen;
-        int            i = 0;
-        UBYTE                		buf[256];
-        UBYTE          *src, *destPtr = NULL, *b = NULL, c;
+      if(destLen<16 || destLen>sizeof(buf))
+        destLen = sizeof(buf);
 
-        if(!(codeset = (struct codeset *)GetTagData(CODESETSA_Codeset, 0, attrs)))
-          codeset = defaultCodeset(TRUE);
+      msg.state = CODESETV_Translating;
+      b = buf;
+      i = 0;
+    }
+    else
+    {
+      if(!(dest = (UTF8*)GetTagData(CODESETSA_Dest, 0, attrs)) ||
+        GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
+      {
+        ULONG len, flen;
 
-        hook    = (struct Hook *)GetTagData(CODESETSA_DestHook, 0, attrs);
-        destLen = GetTagData(CODESETSA_DestLen,0,attrs);
+        flen = fromLen;
+        len  = 0;
+        src  = from;
 
-        if (hook)
+        while(((c = *src++) && (flen--)))
+          len += codeset->table[c].utf8[0];
+
+        if(!dest || (destLen<len+1))
         {
-            if (destLen<16 || destLen>sizeof(buf)) destLen = sizeof(buf);
+          APTR                   pool;
+          struct SignalSemaphore *sem;
 
-            msg.state = CODESETV_Translating;
-            b = buf;
-            i = 0;
-        }
-        else
-        {
-            if(!(dest = (UTF8*)GetTagData(CODESETSA_Dest, 0, attrs)) ||
-                GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
+          if((pool = (APTR)GetTagData(CODESETSA_Pool, 0, attrs)))
+          {
+            if((sem = (struct SignalSemaphore *)GetTagData(CODESETSA_PoolSem, 0, attrs)))
             {
-                ULONG len, flen;
-
-                flen = fromLen;
-                len  = 0;
-                src  = from;
-
-                while (((c = *src++) && (flen--)))
-                    len += codeset->table[c].utf8[0];
-
-                if(!dest || (destLen<len+1))
-                {
-                    APTR                   pool;
-                    struct SignalSemaphore *sem;
-
-                    if((pool = (APTR)GetTagData(CODESETSA_Pool, 0, attrs)))
-                    {
-                        if((sem = (struct SignalSemaphore *)GetTagData(CODESETSA_PoolSem, 0, attrs)))
-                        {
-                            ObtainSemaphore(sem);
-                        }
-
-                        dest = allocVecPooled(pool,len+1);
-
-                        if (sem) ReleaseSemaphore(sem);
-                    }
-                    else dest = allocArbitrateVecPooled(len+1);
-
-                    destLen  = len;
-                 }
-
-                 if (!dest) return NULL;
+              ObtainSemaphore(sem);
             }
 
-            destPtr = (UBYTE*)dest;
+            dest = allocVecPooled(pool,len+1);
+
+            if(sem)
+              ReleaseSemaphore(sem);
+          }
+          else
+            dest = allocArbitrateVecPooled(len+1);
+
+          destLen  = len;
         }
 
-        for (src = from; fromLen && (c = *src); src++, fromLen--)
-        {
-            UTF8* utf8_seq;
+        if(!dest)
+          return NULL;
+      }
 
-            for (utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
-            {
-                if (!hook)
-                {
-                    if (n>=destLen) break;
-                }
-
-                if (hook)
-                {
-                    *b++ = c;
-                    i++;
-
-                    if (i%(destLen-1)==0)
-                    {
-                        *b = 0;
-                        msg.len = i;
-                        CallHookPkt(hook,&msg,buf);
-
-                        b  = buf;
-                        *b = 0;
-                        i  = 0;
-                    }
-                }
-                else
-                {
-                    *destPtr++ = c;
-                }
-
-                n++;
-            }
-        }
-
-        if (hook)
-        {
-            msg.state = CODESETV_End;
-            msg.len   = i;
-            *b = 0;
-            CallHookPkt(hook,&msg,buf);
-        }
-        else
-        {
-            *destPtr = 0;
-        }
+      destPtr = (UBYTE*)dest;
     }
 
-    if((destLenPtr = (ULONG *)GetTagData(CODESETSA_DestLenPtr, 0, attrs)))
-        *destLenPtr = n;
+    for(src = from; fromLen && (c = *src); src++, fromLen--)
+    {
+      UTF8* utf8_seq;
 
-    return dest;
+      for(utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
+      {
+        if(!hook)
+        {
+          if(n>=destLen)
+            break;
+        }
+
+        if(hook)
+        {
+          *b++ = c;
+          i++;
+
+          if(i%(destLen-1)==0)
+          {
+            *b = 0;
+            msg.len = i;
+            CallHookPkt(hook,&msg,buf);
+
+            b  = buf;
+            *b = 0;
+            i  = 0;
+          }
+        }
+        else
+        {
+          *destPtr++ = c;
+        }
+
+        n++;
+      }
+    }
+
+    if(hook)
+    {
+      msg.state = CODESETV_End;
+      msg.len   = i;
+      *b = 0;
+      CallHookPkt(hook,&msg,buf);
+    }
+    else
+    {
+      *destPtr = 0;
+    }
+  }
+
+  if((destLenPtr = (ULONG *)GetTagData(CODESETSA_DestLenPtr, 0, attrs)))
+    *destLenPtr = n;
+
+  RETURN(dest);
+  return dest;
 }
 
 LIBSTUB(CodesetsUTF8CreateA, UTF8*, REG(a0, struct TagItem *attrs))
@@ -1510,87 +1577,97 @@ LIBSTUBVA(CodesetsUTF8Create, UTF8*, ...)
 static int
 parseUtf8(STRPTR *ps)
 {
-    STRPTR s = *ps;
-    int    wc, n, i;
+  STRPTR s = *ps;
+  int    wc, n, i;
 
-    if (*s<0x80)
+  ENTER();
+
+  if(*s<0x80)
+  {
+    *ps = s+1;
+
+    RETURN(*s);
+    return *s;
+  }
+
+  if(*s<0xc2)
+  {
+    RETURN(-1);
+    return -1;
+  }
+  else
+  {
+    if(*s<0xe0)
     {
-        *ps = s+1;
-
-        return *s;
-    }
-
-    if (*s<0xc2)
-    {
+      if((s[1] & 0xc0)!=0x80)
+      {
+        RETURN(-1);
         return -1;
+      }
+
+      *ps = s+2;
+
+      RETURN(((s[0] & 0x1f)<<6) | (s[1] & 0x3f));
+      return ((s[0] & 0x1f)<<6) | (s[1] & 0x3f);
     }
     else
     {
-        if (*s<0xe0)
+      if(*s<0xf0)
+      {
+        n = 3;
+      }
+      else
+      {
+        if(*s<0xf8)
         {
-            if ((s[1] & 0xc0)!=0x80)
-            {
-                return -1;
-            }
-
-            *ps = s+2;
-
-            return ((s[0] & 0x1f)<<6) | (s[1] & 0x3f);
+          n = 4;
         }
         else
         {
-            if (*s<0xf0)
+          if(*s<0xfc)
+          {
+            n = 5;
+          }
+          else
+          {
+            if(*s<0xfe)
             {
-                n = 3;
+              n = 6;
             }
             else
             {
-                if (*s<0xf8)
-                {
-                    n = 4;
-                }
-                else
-                {
-                    if (*s<0xfc)
-                    {
-                        n = 5;
-                    }
-                    else
-                    {
-                        if (*s<0xfe)
-                        {
-                            n = 6;
-                        }
-                        else
-                        {
-                            return -1;
-                        }
-                    }
-                }
+              RETURN(-1);
+              return -1;
             }
+          }
         }
+      }
     }
+  }
 
-    wc = *s++ & ((1<<(7-n))-1);
+  wc = *s++ & ((1<<(7-n))-1);
 
-    for (i = 1; i<n; i++)
+  for(i = 1; i<n; i++)
+  {
+    if((*s & 0xc0) != 0x80)
     {
-        if ((*s & 0xc0) != 0x80)
-        {
-            return -1;
-        }
-
-        wc = (wc << 6) | (*s++ & 0x3f);
+      RETURN(-1);
+      return -1;
     }
 
-    if (wc < (1 << (5 * n - 4)))
-    {
-        return -1;
-    }
+    wc = (wc << 6) | (*s++ & 0x3f);
+  }
 
-    *ps = s;
+  if(wc < (1 << (5 * n - 4)))
+  {
+    RETURN(-1);
+    return -1;
+  }
 
-    return wc;
+  *ps = s;
+
+  RETURN(wc);
+  return wc;
 }
 
 #define GOOD_UCS(c) \
@@ -1600,18 +1677,22 @@ parseUtf8(STRPTR *ps)
 ULONG LIBFUNC
 CodesetsIsValidUTF8(REG(a0, STRPTR s))
 {
-    STRPTR       t = s;
-    int n;
+  ENTER();
 
-    while ((n = parseUtf8(&t)))
+  STRPTR  t = s;
+  int n;
+
+  while((n = parseUtf8(&t)))
+  {
+    if(!GOOD_UCS(n))
     {
-        if (!GOOD_UCS(n))
-        {
-            return 0;
-        }
+      RETURN(FALSE);
+      return FALSE;
     }
+  }
 
-    return 1;
+  RETURN(TRUE);
+  return TRUE;
 }
 
 LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
@@ -1630,6 +1711,8 @@ CodesetsFreeVecPooledA(REG(a0, APTR pool),
                        REG(a1, APTR mem),
                        REG(a2, struct TagItem *attrs))
 {
+  ENTER();
+
   if(pool && mem)
   {
     struct SignalSemaphore *sem;
@@ -1642,6 +1725,8 @@ CodesetsFreeVecPooledA(REG(a0, APTR pool),
     if(sem)
       ReleaseSemaphore(sem);
   }
+
+  LEAVE();
 }
 
 LIBSTUB(CodesetsFreeVecPooledA, void, REG(a0, APTR pool),
