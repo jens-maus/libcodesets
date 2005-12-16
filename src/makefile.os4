@@ -49,7 +49,7 @@ REDEFINE = -DCoerceMethod=ICoerceMethod -DDoMethod=IDoMethod \
 CFLAGS   = -pipe -I. -I../include $(CPU) $(CPUFLAGS) $(WARN) $(OPTFLAGS) \
            $(DEBUG) -D__USE_INLINE__ $(REDEFINE) -c
 LDFLAGS  = $(CPU) -nostartfiles
-LDLIBS   =
+LDLIBS   = -ldebug
 
 # CPU and DEBUG can be defined outside, defaults to above
 # using e.g. "make DEBUG= CPU=-mcpu=603e" produces optimized non-debug PPC-603e version
@@ -68,7 +68,8 @@ OBJS = $(OBJDIR)/libinit.o    \
        $(OBJDIR)/utils.o      \
        $(OBJDIR)/base64.o     \
        $(OBJDIR)/convertUTF.o \
-       $(OBJDIR)/codesets.o
+       $(OBJDIR)/codesets.o   \
+       $(OBJDIR)/debug.o
 
 #
 all: $(BINDIR) $(OBJDIR) $(TARGET)

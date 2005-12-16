@@ -65,7 +65,8 @@ OBJS = $(OBJDIR)/libinit.o    \
        $(OBJDIR)/utils.o      \
        $(OBJDIR)/base64.o     \
        $(OBJDIR)/convertUTF.o \
-       $(OBJDIR)/codesets.o
+       $(OBJDIR)/codesets.o   \
+       $(OBJDIR)/debug.o
 
 #
 all: $(BINDIR) $(OBJDIR) $(TARGET)
