@@ -5,6 +5,21 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2005-12-16  Jens Langner <Jens.Langner@light-speed.de>
+
+    * codesets.c: if running on AmigaOS4, codesets.library will now
+      automatically query diskfont.library for the existing codesets
+      and also load all existing mapping tables accordingly. It will
+      also check if all internally known codesets are already present
+      and if one of it was not loaded through diskfont.library, the
+      internal mapping tables will be used as well.
+    * debug.c,h: added a whole debugging output system adapted and
+      relicensed from the YAM project. Now an environment variable
+      can be usd (ENV:codesets.library.debug) to place debugging
+      tags and allow to differniate which output should be displayed
+      during runtime and which one not. This should hopefully make
+      the debugging of the library much more easier.
+
 2005-12-14  Jens Langner <Jens.Langner@light-speed.de>
 
     * codesets.c, codesets_table.h: updated internal codesets

@@ -38,6 +38,14 @@
 #define DROPINTERFACE(iface)
 #endif
 
+// special flagging macros
+#define isFlagSet(v,f)      (((v) & (f)) == (f))  // return TRUE if the flag is set
+#define hasFlag(v,f)        (((v) & (f)) != 0)    // return TRUE if one of the flags in f is set in v
+#define isFlagClear(v,f)    (((v) & (f)) == 0)    // return TRUE if flag f is not set in v
+#define SET_FLAG(v,f)       ((v) |= (f))          // set the flag f in v
+#define CLEAR_FLAG(v,f)     ((v) &= ~(f))         // clear the flag f in v
+#define MASK_FLAG(v,f)      ((v) &= (f))          // mask the variable v with flag f bitwise
+
 /****************************************************************************/
 
 #endif /* _MACROS_H */

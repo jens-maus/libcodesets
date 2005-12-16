@@ -1,10 +1,24 @@
-/*
-**
-** Copyright 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-**
-** Released under the terms of the LGPL II.
-**
-**/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005      by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ $Id$
+
+***************************************************************************/
 
 #include "lib.h"
 
@@ -14,14 +28,20 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 
+#if defined(DEBUG)
+#include "debug.h"
+#endif
+
 #if defined(__amigaos4__)
 struct Library    *DOSBase = NULL;
 struct Library    *UtilityBase = NULL;
 struct Library    *LocaleBase = NULL;
+struct Library    *DiskfontBase = NULL;
 
 struct DOSIFace*      IDOS = NULL;
 struct UtilityIFace*  IUtility = NULL;
 struct LocaleIFace*   ILocale = NULL;
+struct DiskfontIFace* IDiskfont = NULL;
 #elif defined(__MORPHOS__)
 struct DosLibrary *DOSBase = NULL;
 struct Library    *UtilityBase = NULL;
@@ -43,6 +63,15 @@ freeBase(struct LibraryHeader *lib)
     CloseLibrary((struct Library *)LocaleBase);
     LocaleBase = NULL;
   }
+
+  #if defined(__amigaos4__)
+  if(DiskfontBase)
+  {
+    DROPINTERFACE(IDiskfont);
+    CloseLibrary((struct Library *)DiskfontBase);
+    LocaleBase = NULL;
+  }
+  #endif
 
   if(lib->pool)
   {
@@ -158,23 +187,36 @@ initBase(struct LibraryHeader *lib)
     if((UtilityBase = OpenLibrary("utility.library", 37)) &&
        GETINTERFACE(IUtility, UtilityBase))
     {
-      if((lib->pool = CreatePool(MEMF_ANY, 4096, 512)))
+      // setup the debugging stuff
+      #if defined(DEBUG)
+      SetupDebug();
+      #endif
+
+      #if defined(__amigaos4__)
+      if((DiskfontBase = OpenLibrary("diskfont.library", 50)) &&
+        GETINTERFACE(IDiskfont, DiskfontBase))
       {
-        if(codesetsInit(&lib->codesets))
+      #endif
+        if((lib->pool = CreatePool(MEMF_ANY, 4096, 512)))
         {
-          lib->systemCodeset = (struct codeset *)lib->codesets.mlh_Head;
-
-          if((LocaleBase = (APTR)OpenLibrary("locale.library", 37)) &&
-             GETINTERFACE(ILocale, LocaleBase))
+          if(codesetsInit(&lib->codesets))
           {
-            getSystemCodeset(lib);
+            lib->systemCodeset = (struct codeset *)lib->codesets.mlh_Head;
+
+            if((LocaleBase = (APTR)OpenLibrary("locale.library", 37)) &&
+               GETINTERFACE(ILocale, LocaleBase))
+            {
+              getSystemCodeset(lib);
+            }
+
+            lib->flags |= BASEFLG_Init;
+
+            return TRUE;
           }
-
-          lib->flags |= BASEFLG_Init;
-
-          return TRUE;
         }
+      #if defined(__amigaos4__)
       }
+      #endif
     }
   }
 
