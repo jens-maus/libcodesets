@@ -23,14 +23,15 @@
 #include "lib.h"
 
 #include <clib/alib_protos.h>
+#include <diskfont/glyph.h>
+#include <diskfont/diskfonttag.h>
+#include <proto/diskfont.h>
 #include <proto/locale.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
 
-#if defined(DEBUG)
 #include "debug.h"
-#endif
 
 #if defined(__amigaos4__)
 struct Library    *DOSBase = NULL;
@@ -57,6 +58,8 @@ struct LocaleBase *LocaleBase = NULL;
 void
 freeBase(struct LibraryHeader *lib)
 {
+  ENTER();
+
   if(LocaleBase)
   {
     DROPINTERFACE(ILocale);
@@ -94,6 +97,8 @@ freeBase(struct LibraryHeader *lib)
   }
 
   lib->flags &= ~BASEFLG_Init;
+
+  LEAVE();
 }
 
 /***********************************************************************/
@@ -113,65 +118,148 @@ static const struct loc locs[] =
   { "dansk",        5,  "ISO-8859-1 + Euro" },
   { "deutsch",      7,  "ISO-8859-1 + Euro" },
   { "english",      7,  "ISO-8859-1 + Euro" },
+  { "esperanto",    9,  "ISO-8859-3"        },
+  { "eesti",        5,  "ISO-8859-15"       },
   { "español",      7,  "ISO-8859-1 + Euro" },
   { "farsi",        5,  "ISO-8859-1"        },
   { "français",     8,  "ISO-8859-1 + Euro" },
+  { "gaeilge",      7,  "ISO-8859-15"       },
+  { "galego",       6,  "ISO-8859-1 + Euro" },
   { "greek",        5,  "ISO-8859-7"        },
   { "hrvatski",     8,  "ISO-8859-2"        },
   { "italiano",     8,  "ISO-8859-1 + Euro" },
+  { "lietuvi",      7,  "ISO-8859-13"       },
   { "magyar",       6,  "ISO-8859-2"        },
-  { "nederlands",  10,  "ISO-8859-4"        },
+  { "nederlands",  10,  "ISO-8859-1 + Euro" },
   { "nihongo",      7,  "ISO-8859-1"        },
   { "norsk",        5,  "ISO-8859-1 + Euro" },
   { "polski",       6,  "ISO-8859-2"        },
   { "português",    9,  "ISO-8859-1 + Euro" },
   { "russian",      7,  "Amiga-1251"        },
+  { "shqip",        5,  "ISO-8859-1"        },
   { "slovak",       6,  "ISO-8859-2"        },
   { "slovensko",    9,  "ISO-8859-2"        },
   { "srpski",       6,  "ISO-8859-2"        },
-  { "suomi",        5,  "ISO-8859-9"        },
-  { "svenska",      7,  "ISO-8859-1"        },
+  { "suomi",        5,  "ISO-8859-1"        },
+  { "svenska",      7,  "ISO-8859-1 + Euro" },
   { "türkçe",       6,  "ISO-8859-9"        },
+  { NULL,           0,  NULL                }
 };
 
 static void
 getSystemCodeset(struct LibraryHeader *lib)
 {
-  struct Locale *locale;
+  struct codeset *foundCodeset = NULL;
 
-  if((locale = OpenLocale(NULL)))
+  ENTER();
+
+  // before we go any query the system via locale.library (which
+  // might not be so accurate) we try different other means of
+  // finding the codeset/charset of the system
+  #ifdef __amigaos4__
   {
-    struct codeset *codeset;
-    struct loc     *loc = NULL;
-    STRPTR         ln;
-    ULONG          found = FALSE;
-    int            low, high;
+    LONG default_charset = GetDiskFontCtrl(DFCTRL_CHARSET);
+		char *charset = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
 
-    ln = locale->loc_LanguageName;
+    foundCodeset = codesetsFind(&lib->codesets, charset);
 
-    for(low = 0, high = (sizeof(locs)/sizeof(struct loc))-1; low<=high; )
+    D(DBF_STARTUP, "%s system default codeset: '%s' (diskfont)", foundCodeset ? "found" : "not found", charset);
+  }
+  #endif
+
+  // if we still do not have our default charset we try to load
+  // it from and environment variable ENVARC:CHARSET
+  if(foundCodeset == NULL)
+  {
+    char charset[80];
+    charset[0] = '\0';
+
+    if(GetVar("CHARSET", charset, sizeof(charset), 0) > 0)
     {
-      int mid = (low+high)>>1, cond;
-
-      loc = (struct loc *)&locs[mid];
-
-      if(!(cond = strnicmp(ln, loc->name, loc->len)))
-      {
-        found = TRUE;
-        break;
-      }
-
-      if(cond<0)
-        high = mid-1;
-      else
-        low = mid+1;
+      foundCodeset = codesetsFind(&lib->codesets, charset);
     }
 
-    CloseLocale(locale);
-
-    if(found && (codeset = codesetsFind(&lib->codesets, loc->codesetName)))
-      lib->systemCodeset = codeset;
+    D(DBF_STARTUP, "%s system default codeset: '%s' (ENV:CHARSET)", foundCodeset ? "found" : "not found", charset);
   }
+
+  // and if even the CHARSET environment variable didn't work
+  // out we check the LANGUAGE env variable against our own
+  // internal fallback list
+  if(foundCodeset == NULL)
+  {
+    char language[80];
+
+    if(GetVar("LANGUAGE", language, sizeof(language), 0) > 0)
+    {
+      int i;
+      struct loc *curLoc = NULL;
+      BOOL found = FALSE;
+
+      for(i=0;;i++)
+      {
+        curLoc = (struct loc *)&locs[i];
+        if(curLoc == NULL || curLoc->name == NULL)
+          break;
+
+        if(!strnicmp(language, curLoc->name, curLoc->len))
+        {
+          found = TRUE;
+          break;
+        }
+      }
+
+      if(found)
+        foundCodeset = codesetsFind(&lib->codesets, curLoc->codesetName);
+    }
+
+    D(DBF_STARTUP, "%s system default codeset: '%s' (ENV:LANGUAGE)", foundCodeset ? "found" : "not found",
+                                                                     foundCodeset ? foundCodeset->name : "?");
+  }
+
+  // and the very last check we do to find out the system's charset is
+  // to use locale.library.
+  if(foundCodeset == NULL)
+  {
+    struct Locale *locale;
+
+    if((locale = OpenLocale(NULL)))
+    {
+      int i;
+      char *language = locale->loc_LanguageName;
+      struct loc *curLoc = NULL;
+      BOOL found = FALSE;
+
+      for(i=0;;i++)
+      {
+        curLoc = (struct loc *)&locs[i];
+        if(curLoc == NULL || curLoc->name == NULL)
+          break;
+
+        if(!strnicmp(language, curLoc->name, curLoc->len))
+        {
+          found = TRUE;
+          break;
+        }
+      }
+
+      CloseLocale(locale);
+
+      if(found)
+        foundCodeset = codesetsFind(&lib->codesets, curLoc->codesetName);
+    }
+
+    D(DBF_STARTUP, "%s system default codeset: '%s' (locale)", foundCodeset ? "found" : "not found",
+                                                               foundCodeset ? foundCodeset->name : "?");
+  }
+
+  // and if even that very last test didn't work out we
+  // can just take the ISO-8859-1 charset as the fallback default
+  if(foundCodeset == NULL)
+    lib->systemCodeset = codesetsFind(&lib->codesets, "ISO-8859-1");
+  else
+    lib->systemCodeset = foundCodeset;
+
+  LEAVE();
 }
 
 /***********************************************************************/
@@ -179,6 +267,8 @@ getSystemCodeset(struct LibraryHeader *lib)
 ULONG
 initBase(struct LibraryHeader *lib)
 {
+  ENTER();
+
   NewList((struct List *)&lib->codesets);
 
   if((DOSBase = (APTR)OpenLibrary("dos.library", 37)) &&
@@ -222,6 +312,7 @@ initBase(struct LibraryHeader *lib)
 
   freeBase(lib);
 
+  RETURN(FALSE);
   return FALSE;
 }
 

@@ -7,6 +7,15 @@ $Source$
 
 2005-12-16  Jens Langner <Jens.Langner@light-speed.de>
 
+    * init.c: changed the system default charset identification routines
+      to use the GetDiskFontCtrl() function on AmigaOS4 to find out
+      the currently active system charset. In addition, if this
+      identification fails it will try to find out the charset by falling
+      back to checking ENV:CHARSET, then using ENV:LANGUAGE to parse ther
+      internal language<>codeset list and if this also fails it will
+      directly use locale.library to find out the language to check
+      our own internal fallback tables for default charset<>language
+      mapping.
     * codesets.c: if running on AmigaOS4, codesets.library will now
       automatically query diskfont.library for the existing codesets
       and also load all existing mapping tables accordingly. It will
