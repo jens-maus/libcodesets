@@ -105,11 +105,13 @@ freeBase(struct LibraryHeader *lib)
 
 struct loc
 {
-    STRPTR name;
-    ULONG  len;
-    STRPTR codesetName;
+  STRPTR name;
+  ULONG  len;
+  STRPTR codesetName;
 };
 
+// table with the default LANGUAGE<>CHARSET mapping we
+// are using in codesets.library.
 static const struct loc locs[] =
 {
   { "bosanski",     8,  "ISO-8859-2"        },
@@ -121,7 +123,6 @@ static const struct loc locs[] =
   { "esperanto",    9,  "ISO-8859-3"        },
   { "eesti",        5,  "ISO-8859-15"       },
   { "español",      7,  "ISO-8859-1 + Euro" },
-  { "farsi",        5,  "ISO-8859-1"        },
   { "français",     8,  "ISO-8859-1 + Euro" },
   { "gaeilge",      7,  "ISO-8859-15"       },
   { "galego",       6,  "ISO-8859-1 + Euro" },
@@ -131,12 +132,10 @@ static const struct loc locs[] =
   { "lietuvi",      7,  "ISO-8859-13"       },
   { "magyar",       6,  "ISO-8859-2"        },
   { "nederlands",  10,  "ISO-8859-1 + Euro" },
-  { "nihongo",      7,  "ISO-8859-1"        },
   { "norsk",        5,  "ISO-8859-1 + Euro" },
   { "polski",       6,  "ISO-8859-2"        },
   { "português",    9,  "ISO-8859-1 + Euro" },
   { "russian",      7,  "Amiga-1251"        },
-  { "shqip",        5,  "ISO-8859-1"        },
   { "slovak",       6,  "ISO-8859-2"        },
   { "slovensko",    9,  "ISO-8859-2"        },
   { "srpski",       6,  "ISO-8859-2"        },

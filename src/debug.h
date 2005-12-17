@@ -77,6 +77,7 @@
 // debug flags
 #define DBF_ALWAYS   (1<<0)
 #define DBF_STARTUP  (1<<1)     // for startup/shutdown events
+#define DBF_UTF      (1<<2)     // for the UTF conversion routines.
 #define DBF_ALL      0xffffffff
 
 void SetupDebug(void);

@@ -78,6 +78,7 @@ void SetupDebug(void)
 		{
 			{ "always",   DBF_ALWAYS  },
 			{ "startup",  DBF_STARTUP },
+			{ "utf",      DBF_UTF     },
 			{ "all",      DBF_ALL     },
 			{ NULL,       0           }
 		};
