@@ -1,15 +1,27 @@
 #ifndef LIBRARIES_CODESETS_H
 #define LIBRARIES_CODESETS_H
 
-/*
-**  $VER: codesets.h 5.3 (5.5.2005)
-**  Includes Release 5.3
-**
-**  Written by Alfonso [alfie] Ranieri <alforan@tin.it>.
-**
-**  Released under the terms of the
-**  LGPL version 2.
-*/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005-2006 by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ $Id$
+
+***************************************************************************/
 
 #ifndef EXEC_SEMAPHORES_H
 #include <exec/semaphores.h>
@@ -37,16 +49,16 @@
 */
 
 #define CODESETSNAME    "codesets.library"
-#define CODESETSVER     4
+#define CODESETSVER     6
 
 /***********************************************************************/
 /*
  * Types
  */
 
-typedef unsigned long   UTF32;   /* at least 32 bits */
-typedef unsigned short  UTF16;   /* at least 16 bits */
-typedef unsigned char   UTF8;    /* typically 8 bits */
+typedef unsigned long  UTF32;   /* at least 32 bits */
+typedef unsigned short UTF16;   /* at least 16 bits */
+typedef unsigned char  UTF8;    /* typically 8 bits */
 
 /***********************************************************************/
 /*
@@ -55,9 +67,9 @@ typedef unsigned char   UTF8;    /* typically 8 bits */
 
 struct single_convert
 {
-    unsigned char code; /* the code in this representation */
-    UTF8 utf8[8];       /* the utf8 string, first byte is alway the length of the string */
-    unsigned int  ucs4; /* the full 32 bit unicode */
+  unsigned char code; /* the code in this representation */
+  UTF8 utf8[8];       /* the utf8 string, first byte is alway the length of the string */
+  unsigned int  ucs4; /* the full 32 bit unicode */
 };
 
 /***********************************************************************/
@@ -67,29 +79,29 @@ struct single_convert
 
 struct codeset
 {
-    struct MinNode          node;
-    char                    *name;
-    char                    *alt_name;
-    char                    *characterization;
-    int                     read_only;
-    struct single_convert   table[256];
-    struct single_convert   table_sorted[256];
+  struct MinNode          node;
+  char                    *name;
+  char                    *alt_name;
+  char                    *characterization;
+  int                     read_only;
+  struct single_convert   table[256];
+  struct single_convert   table_sorted[256];
 };
 
 /***********************************************************************/
 
 enum
 {
-    CONVRES_ConversionOK,       /* conversion successful */
-    CONVRES_SourceExhausted,    /* partial character in source, but hit end */
-    CONVRES_TargetExhausted,    /* insuff. room in target for conversion */
-    CONVRES_SourceIllegal       /* source sequence is illegal/malformed */
+  CONVRES_ConversionOK,    /* conversion successful */
+  CONVRES_SourceExhausted, /* partial character in source, but hit end */
+  CONVRES_TargetExhausted, /* insuff. room in target for conversion */
+  CONVRES_SourceIllegal    /* source sequence is illegal/malformed */
 };
 
 enum
 {
-    CONVFLG_StrictConversion = 0,
-    CONVFLG_LenientConversion
+  CONVFLG_StrictConversion = 0,
+  CONVFLG_LenientConversion
 };
 
 /***********************************************************************/
@@ -131,25 +143,25 @@ enum
 
 enum
 {
-    B64_ERROR_OK = 0,
-    B64_ERROR_MEM,
-    B64_ERROR_DOS,
-    B64_ERROR_INCOMPLETE,
-    B64_ERROR_ILLEGAL,
+  B64_ERROR_OK = 0,
+  B64_ERROR_MEM,
+  B64_ERROR_DOS,
+  B64_ERROR_INCOMPLETE,
+  B64_ERROR_ILLEGAL,
 };
 
 /***********************************************************************/
 
 struct convertMsg
 {
-    ULONG state;
-    ULONG len;
+  ULONG state;
+  ULONG len;
 };
 
 enum
 {
-    CODESETV_Translating,
-    CODESETV_End,
+  CODESETV_Translating,
+  CODESETV_End,
 };
 
 /***********************************************************************/
