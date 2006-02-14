@@ -299,7 +299,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   base->libBase.lib_Flags        = LIBF_CHANGED | LIBF_SUMUSED;
   base->libBase.lib_Version      = VERSION;
   base->libBase.lib_Revision     = REVISION;
-  base->libBase.lib_IdString     = (char *)UserLibID;
+  base->libBase.lib_IdString     = (char *)(UserLibID+7);
 
   base->sysBase = (APTR)SysBase;
   base->segList = librarySegment;
