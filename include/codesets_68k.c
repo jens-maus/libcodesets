@@ -336,6 +336,32 @@ static ULONG stub_CodesetsIsValidUTF8PPC(ULONG *regarray)
 }
 STATIC CONST struct EmuTrap stub_CodesetsIsValidUTF8 = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_CodesetsIsValidUTF8PPC };
 
+static void stub_CodesetsFreeVecPooledAPPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	Self->CodesetsFreeVecPooledA(
+		(APTR)regarray[8],
+		(APTR)regarray[9],
+		(struct TagItem *)regarray[10]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsFreeVecPooledA = { TRAPINST, TRAPTYPENR, (ULONG (*)(ULONG *))stub_CodesetsFreeVecPooledAPPC };
+
+static STRPTR stub_CodesetsConvertStrAPPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	return Self->CodesetsConvertStrA(
+		(struct TagItem *)regarray[8]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsConvertStrA = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_CodesetsConvertStrAPPC };
+
 CONST CONST_APTR VecTable68K[] =
 {
 	&stub_Open,
@@ -363,5 +389,7 @@ CONST CONST_APTR VecTable68K[] =
 	&stub_CodesetsDecodeB64A,
 	&stub_CodesetsStrLenA,
 	&stub_CodesetsIsValidUTF8,
+	&stub_CodesetsFreeVecPooledA,
+	&stub_CodesetsConvertStrA,
 	(CONST_APTR)-1
 };

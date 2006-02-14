@@ -45,6 +45,10 @@ STRUCTURE CodesetsIFace, InterfaceData_SIZE
 	    FPTR ICodesets_CodesetsStrLenA
 	    FPTR ICodesets_CodesetsStrLen
 	    FPTR ICodesets_CodesetsIsValidUTF8
+	    FPTR ICodesets_CodesetsFreeVecPooledA
+	    FPTR ICodesets_CodesetsFreeVecPooled
+	    FPTR ICodesets_CodesetsConvertStrA
+	    FPTR ICodesets_CodesetsConvertStr
 	LABEL CodesetsIFace_SIZE
 
 #endif

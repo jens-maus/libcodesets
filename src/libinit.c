@@ -26,6 +26,8 @@
 #include <exec/resident.h>
 #include <proto/exec.h>
 
+#include "debug.h"
+
 /****************************************************************************/
 
 
@@ -75,7 +77,9 @@ static const char UserLibID[]   = VERSTAG;
                   LFUNC_VA_(CodesetsStrLen)               \
                   LFUNC_FA_(CodesetsIsValidUTF8)          \
                   LFUNC_FA_(CodesetsFreeVecPooledA)       \
-                  LFUNC_VA_(CodesetsFreeVecPooled)
+                  LFUNC_VA_(CodesetsFreeVecPooled)        \
+                  LFUNC_FA_(CodesetsConvertStrA)          \
+                  LFUNC_VA_(CodesetsConvertStr)
 
 
 /****************************************************************************/
@@ -285,6 +289,8 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
 
   SysBase = (APTR)sb;
 
+  D(DBF_STARTUP, "LibInit()");
+
   // cleanup the library header structure beginning with the
   // library base.
   base->libBase.lib_Node.ln_Type = NT_LIBRARY;
@@ -306,6 +312,14 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   // set the CodesetsBase
   CodesetsBase = base;
 
+  ObtainSemaphore(&base->libSem);
+  if(!initBase(base))
+  {
+    ReleaseSemaphore(&base->libSem);
+    return(NULL);
+  }
+  ReleaseSemaphore(&base->libSem);
+
   return(base);
 }
 
@@ -325,18 +339,19 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 #endif
   struct LibraryHeader *res;
 
+  D(DBF_STARTUP, "LibOpen()");
+
   ObtainSemaphore(&base->libSem);
 
   base->libBase.lib_Flags &= ~LIBF_DELEXP;
 	base->libBase.lib_OpenCnt++;
 
-  if(!(base->flags & BASEFLG_Init) && !initBase(base))
-  {
-    base->libBase.lib_OpenCnt--;
-    res = NULL;
-  }
-  else
-    res = base;
+  // on each LibOpen() we make sure we check PROGDIR:Charsets
+  // for private charset definitions.
+  codesetsPrivateInit(&base->privateCodesets, FindTask(NULL));
+
+  // return the base address on success.
+  res = base;
 
   ReleaseSemaphore(&base->libSem);
 
@@ -364,11 +379,17 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 #endif
   BPTR rc;
 
+  D(DBF_STARTUP, "LibExpunge()");
+
   ObtainSemaphore(&base->libSem);
 
   if(base->libBase.lib_OpenCnt == 0)
   {
     SysBase = (APTR)base->sysBase;
+
+    // free all resources
+    freeBase(base);
+
     rc = base->segList;
 
     Remove((struct Node *)base);
@@ -401,14 +422,18 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 #endif
   BPTR rc = 0;
 
+  D(DBF_STARTUP, "LibClose()");
+
   ObtainSemaphore(&base->libSem);
 
-  if(base->libBase.lib_OpenCnt > 0 &&
-     --base->libBase.lib_OpenCnt == 0)
+  if(base->libBase.lib_OpenCnt > 0)
 	{
-    freeBase(base);
+    // make sure we cleanup the private codeset list of
+    // this task
+    codesetsPrivateCleanup(&base->privateCodesets, FindTask(NULL));
 
-		if(base->libBase.lib_Flags & LIBF_DELEXP)
+		if(--base->libBase.lib_OpenCnt == 0 &&
+       base->libBase.lib_Flags & LIBF_DELEXP)
     {
       #if defined(__amigaos4__)
       rc = LibExpunge(Self);

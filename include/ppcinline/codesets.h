@@ -169,4 +169,22 @@
 	LP1(0x96, ULONG, CodesetsIsValidUTF8, STRPTR, str, a0, \
 	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
 
+#define CodesetsFreeVecPooledA(pool, mem, attrs) \
+	LP3(0x9c, void, CodesetsFreeVecPooledA, APTR, pool, a0, APTR, mem, a1, struct TagItem *, attrs, a2, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#ifndef NO_PPCINLINE_STDARG
+#define CodesetsFreeVecPooled(pool, mem, tags...) \
+	({ULONG _tags[] = {tags}; CodesetsFreeVecPooled((pool), (mem), (struct TagItem *) _tags);})
+#endif
+
+#define CodesetsConvertStrA(attrs) \
+	LP1(0xa2, STRPTR, CodesetsConvertStrA, struct TagItem *, attrs, a0, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#ifndef NO_PPCINLINE_STDARG
+#define CodesetsConvertStr(tags...) \
+	({ULONG _tags[] = {tags}; CodesetsConvertStrA((struct TagItem *) _tags);})
+#endif
+
 #endif /*  _PPCINLINE_CODESETS_H  */

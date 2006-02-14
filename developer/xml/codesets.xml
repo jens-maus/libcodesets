@@ -139,5 +139,21 @@
 		<method name="CodesetsIsValidUTF8" result="ULONG">
 			<arg name="str" type="STRPTR"/>
 		</method>
+		<method name="CodesetsFreeVecPooledA" result="void">
+			<arg name="pool" type="APTR"/>
+			<arg name="mem" type="APTR"/>
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsFreeVecPooled" result="void">
+			<arg name="pool" type="APTR"/>
+			<arg name="mem" type="APTR"/>
+			<vararg name="attrs" type="Tag"/>
+		</method>
+		<method name="CodesetsConvertStrA" result="STRPTR">
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsConvertStr" result="STRPTR">
+			<vararg name="attrs" type="Tag"/>
+		</method>
 	</interface>
 </library>

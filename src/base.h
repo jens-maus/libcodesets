@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005      by codesets.library Open Source Team
+ Copyright (C) 2005-2006 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -31,19 +31,14 @@ struct LibraryHeader
   APTR                    pool;
   struct SignalSemaphore  poolSem;
   ULONG                   flags;
-  struct MinList          codesets;
-  struct codeset          *systemCodeset;
+  struct MinList          codesets;       // exec list with all internal codesets.
+  struct MinList          privateCodesets;// exec list of task private codesets.
+  struct codeset          *systemCodeset; // ptr to the system's default codeset
+  struct codeset          *utf8Codeset;   // ptr to the fake utf8 codeset
 };
 
 /***************************************************************************/
 
 extern struct LibraryHeader* CodesetsBase;
-
-/***************************************************************************/
-
-enum
-{
-    BASEFLG_Init = 1<<0,
-};
 
 /***************************************************************************/

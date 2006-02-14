@@ -32,11 +32,9 @@ STRPTR * CodesetsSupported(Tag attrs, ...) (a0)
 struct codeset * CodesetsFindA(STRPTR name, struct TagItem * attrs) (a0,a1)
 ==varargs
 struct codeset * CodesetsFind(STRPTR name, Tag attrs, ...) (a0,a1)
-struct codeset * CodesetsFindBestA(STRPTR text, ULONG text_len, ULONG * error_ptr,
-	struct TagItem * attrs) (a0,d0,a1,a2)
+struct codeset * CodesetsFindBestA(STRPTR text, ULONG text_len, ULONG * error_ptr, struct TagItem * attrs) (a0,d0,a1,a2)
 ==varargs
-struct codeset * CodesetsFindBest(STRPTR text, ULONG text_len, ULONG * error_ptr, Tag attrs,
-	...) (a0,d0,a1,a2)
+struct codeset * CodesetsFindBest(STRPTR text, ULONG text_len, ULONG * error_ptr, Tag attrs, ...) (a0,d0,a1,a2)
 ULONG CodesetsUTF8Len(const UTF8 *str) (a0)
 STRPTR CodesetsUTF8ToStrA(struct TagItem * attrs) (a0)
 ==varargs
@@ -54,4 +52,10 @@ ULONG CodesetsStrLenA(STRPTR str, struct TagItem * attrs) (a0,a1)
 ==varargs
 ULONG CodesetsStrLen(STRPTR str, Tag attrs, ...) (a0,a1)
 ULONG CodesetsIsValidUTF8(STRPTR str) (a0)
+void CodesetsFreeVecPooledA(APTR pool, APTR mem, struct TagItem *attrs) (a0,a1,a2)
+==varargs
+void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag attrs, ...) (a0,a1,a2)
+STRPTR CodesetsConvertStrA(struct TagItem * attrs) (a0)
+==varargs
+STRPTR CodesetsConvertStr(Tag attrs, ...) (a0)
 ==end

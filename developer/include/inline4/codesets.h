@@ -95,5 +95,17 @@
 #define CodesetsStrLen(vargs...) ICodesets->CodesetsStrLen(## vargs) 
 #endif
 #define CodesetsIsValidUTF8(str) ICodesets->CodesetsIsValidUTF8(str) 
+#define CodesetsFreeVecPooledA(pool, mem, attrs) ICodesets->CodesetsFreeVecPooledA(pool, mem, attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsFreeVecPooled(pool, ...) ICodesets->CodesetsFreeVecPooled(pool, __VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsFreeVecPooled(pool, vargs...) ICodesets->CodesetsFreeVecPooled(pool, ## vargs) 
+#endif
+#define CodesetsConvertStrA(attrs) ICodesets->CodesetsConvertStrA(attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsConvertStr(...) ICodesets->CodesetsConvertStr(__VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsConvertStr(...) ICodesets->CodesetsConvertStr(## vargs) 
+#endif
 
 #endif /* INLINE4_CODESETS_H */

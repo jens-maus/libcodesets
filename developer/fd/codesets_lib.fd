@@ -23,4 +23,6 @@ CodesetsEncodeB64A(attrs)(a0)
 CodesetsDecodeB64A(attrs)(a0)
 CodesetsStrLenA(str,attrs)(a0,a1)
 CodesetsIsValidUTF8(str)(a0)
+CodesetsFreeVecPooledA(pool,mem,attrs)(a0,a1,a2)
+CodesetsConvertStrA(str)(a0)
 ##end

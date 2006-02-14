@@ -126,6 +126,8 @@ enum
 #define CODESETSA_AllocIfNeeded       CODESETSLIB_TAG(10)
 #define CODESETSA_Save                CODESETSLIB_TAG(11)
 #define CODESETSA_NoFail              CODESETSLIB_TAG(12)
+#define CODESETSA_SourceCodeset       CODESETSLIB_TAG(13)
+#define CODESETSA_DestCodeset         CODESETSLIB_TAG(14)
 
 #define CODESETSA_B64SourceString     CODESETSLIB_TAG(20)
 #define CODESETSA_B64SourceLen        CODESETSLIB_TAG(21)

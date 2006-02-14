@@ -59,5 +59,9 @@ STRPTR CodesetsUTF8ToStr(Tag tag1, ...);
 UTF8 *CodesetsUTF8CreateA(struct TagItem *attrs);
 UTF8 *CodesetsUTF8Create(Tag tag1, ...);
 ULONG CodesetsIsValidUTF8(STRPTR str);
+void CodesetsFreeVecPooledA(APTR pool, APTR mem, struct TagItem *attrs);
+void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag tag1, ...);
+STRPTR CodesetsConvertStrA(struct TagItem *attrs);
+STRPTR CodesetsConvertStr(Tag tag1, ...);
 
 #endif /* CLIB_CODESETS_PROTOS_H */

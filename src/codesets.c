@@ -39,10 +39,11 @@
 
 #include "debug.h"
 
-/***********************************************************************/
+/**************************************************************************/
 
-/* search a sorted array in O(log n) e.g.
-   BIN_SEARCH(strings,0,sizeof(strings)/sizeof(strings[0]),strcmp(key,array[mid]),res); */
+/// BIN_SEARCH()
+// search a sorted array in O(log n) e.g.
+// BIN_SEARCH(strings,0,sizeof(strings)/sizeof(strings[0]),strcmp(key,array[mid]),res);
 #define BIN_SEARCH(array,low,high,compare,result) \
 	{\
 		int l = low;\
@@ -59,8 +60,11 @@
 		}\
 	}
 
-/***********************************************************************/
+///
 
+/**************************************************************************/
+
+/// mystrdup()
 static STRPTR
 mystrdup(STRPTR str)
 {
@@ -77,9 +81,11 @@ mystrdup(STRPTR str)
 
     return new;
 }
+///
 
-/***********************************************************************/
+/**************************************************************************/
 
+/// mystrndup()
 static STRPTR
 mystrndup(STRPTR str1,int n)
 {
@@ -95,9 +101,11 @@ mystrndup(STRPTR str1,int n)
 
     return dest;
 }
+///
 
-/***********************************************************************/
+/**************************************************************************/
 
+/// readLine()
 static ULONG
 readLine(BPTR fh,STRPTR buf,int size)
 {
@@ -116,9 +124,11 @@ readLine(BPTR fh,STRPTR buf,int size)
 
     return TRUE;
 }
+///
 
-/***********************************************************************/
+/**************************************************************************/
 
+/// getConfigItem()
 static STRPTR
 getConfigItem(STRPTR buf,STRPTR item,int len)
 {
@@ -142,9 +152,11 @@ getConfigItem(STRPTR buf,STRPTR item,int len)
 
     return NULL;
 }
+///
 
-/***********************************************************************/
+/**************************************************************************/
 
+/// CodesetsSupportedA()
 STRPTR *LIBFUNC
 CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
 {
@@ -194,8 +206,11 @@ LIBSTUBVA(CodesetsSupported, STRPTR*, ...)
 }
 #endif
 
+///
+
 /**************************************************************************/
 
+/// CodesetsFreeA()
 void LIBFUNC
 CodesetsFreeA(REG(a0, APTR obj),
               REG(a1, UNUSED struct TagItem *attrs))
@@ -228,29 +243,29 @@ LIBSTUBVA(CodesetsFree, void, REG(a0, APTR obj), ...)
 }
 #endif
 
+///
+
 /**************************************************************************/
 
-/*
- * The compare function
- */
-
+/// codesetsCmpUnicode()
+// The compare function
 static int
 codesetsCmpUnicode(struct single_convert *arg1,struct single_convert *arg2)
 {
   return strcmp((char*)arg1->utf8+1, (char*)arg2->utf8+1);
 }
+///
 
 /**************************************************************************/
-/*
- * Reads a coding table and adds it
- */
 
+/// codesetsReadTable()
 
 #define ITEM_STANDARD           "Standard"
 #define ITEM_ALTSTANDARD        "AltStandard"
 #define ITEM_READONLY           "ReadOnly"
 #define ITEM_CHARACTERIZATION   "Characterization"
 
+// Reads a coding table and adds it
 static ULONG
 codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 {
@@ -259,6 +274,8 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
   ULONG res = FALSE;
 
   ENTER();
+
+  D(DBF_STARTUP, "trying to fetch charset table from file '%s'...", name);
 
   if((fh = Open(name, MODE_OLDFILE)))
   {
@@ -282,6 +299,8 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 
         if((result = getConfigItem(buf,ITEM_STANDARD,strlen(ITEM_STANDARD))))
           codeset->name = mystrdup(result);
+        else if(codeset->name == NULL) // a valid file starts with standard and nothing else!!
+          break;
         else if((result = getConfigItem(buf,ITEM_ALTSTANDARD,strlen(ITEM_ALTSTANDARD))))
           codeset->alt_name = mystrdup(result);
         else if((result = getConfigItem(buf,ITEM_READONLY,strlen(ITEM_READONLY))))
@@ -295,6 +314,8 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
             if(end)
               codeset->characterization = mystrndup(result+3,end-(result+3));
           }
+          else
+            codeset->characterization = mystrdup(result);
         }
         else
         {
@@ -327,7 +348,7 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
       }
 
       // check if there is not already codeset with the same name in here
-      if(!(codesetsFind(codesetsList, codeset->name)))
+      if(codeset->name != NULL && !(codesetsFind(codesetsList, codeset->name)))
       {
         for(i=0; i<256; i++)
         {
@@ -361,14 +382,13 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
   RETURN(res);
   return res;
 }
+///
 
 /**************************************************************************/
 
-/*
- * Initialized and loads the codesets
- */
-
-ULONG
+/// codesetsInit()
+// Initialized and loads the codesets
+BOOL
 codesetsInit(struct MinList * codesetsList)
 {
   struct codeset       *codeset = NULL;
@@ -382,6 +402,16 @@ codesetsInit(struct MinList * codesetsList)
   ENTER();
 
   ObtainSemaphore(&CodesetsBase->poolSem);
+
+  // to make the list of the supported codesets complete we also add a
+  // fake 'UTF-8' only so that our users can query for that codeset as well.
+  if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
+  codeset->name 	          = mystrdup("UTF-8");
+  codeset->alt_name 	      = NULL;
+  codeset->characterization = mystrdup("Unicode");
+  codeset->read_only 	      = 0;
+  AddTail((struct List *)codesetsList, (struct Node *)&codeset->node);
+  CodesetsBase->utf8Codeset = codeset;
 
   // on AmigaOS4 we can use diskfont.library to inquire charset information as
   // it comes with a quite rich implementation of different charsets.
@@ -400,7 +430,7 @@ codesetsInit(struct MinList * codesetsList)
     mapTable = (ULONG *)ObtainCharsetInfo(DFCS_NUMBER, curMIB, DFCS_MAPTABLE);
     mimename = (char *)ObtainCharsetInfo(DFCS_NUMBER, curMIB, DFCS_MIMENAME);
     ianaName = (char *)ObtainCharsetInfo(DFCS_NUMBER, curMIB, DFCS_NAME);
-    if(mapTable && mimename)
+    if(mapTable && mimename && !(codesetsFind(codesetsList, mimename)))
     {
       D(DBF_STARTUP, "loading charset '%s' from diskfont.library...", mimename);
 
@@ -818,11 +848,91 @@ end:
   return codeset != NULL;
 }
 
-/**************************************************************************/
-/*
- * Cleanup the memory for the codeset
- */
+///
 
+/**************************************************************************/
+
+/// codesetsPrivateInit()
+// Initialized and load charset tables from PROGDIR:Charset also
+BOOL
+codesetsPrivateInit(struct MinList *privateCodesetsList, struct Task *curTask)
+{
+  struct MinNode *curNode;
+  struct FileInfoBlock *fib;
+  struct privateCodeset *newcs;
+
+  ENTER();
+
+  D(DBF_STARTUP, "loading charsets from 'PROGDIR:Charsets' for Task 0x%08lx... ", curTask);
+
+  ObtainSemaphore(&CodesetsBase->poolSem);
+
+  // before we try to init the private codeset table of task curTask we have a look
+  // that a privatelist doesn't already exist for task curTask
+  for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ; curNode = curNode->mln_Succ)
+  {
+    struct privateCodeset *curCodeset = (struct privateCodeset *)curNode;
+
+    if(curCodeset->task == curTask)
+    {
+      W(DBF_STARTUP, "there is already a private charset table for task 0x%08lx.", curTask);
+
+      RETURN(FALSE);
+      return FALSE;
+    }
+  }
+
+  // if we arrived here we go and generate a new privateCodeset list
+  if(!(newcs = allocVecPooled(CodesetsBase->pool, sizeof(struct privateCodeset))))
+  {
+    RETURN(FALSE);
+    return FALSE;
+  }
+
+  // initial the new private codeset list and put it into a separate list
+  NewList((struct List *)&newcs->codesets);
+  newcs->task = curTask;
+  AddTail((struct List *)privateCodesetsList, (struct Node *)&newcs->node);
+
+  // we try to walk through the PROGDIR:Charsets directory on our own and readin our
+  // own charset tables
+  if((fib = AllocDosObject(DOS_FIB, NULL)))
+  {
+    BPTR dir;
+
+    if((dir = Lock("PROGDIR:Charsets", SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
+    {
+      BPTR oldDir = CurrentDir(dir);
+
+      while(ExNext(dir, fib))
+      {
+        if(fib->fib_DirEntryType>=0)
+          continue;
+
+        codesetsReadTable(&newcs->codesets, fib->fib_FileName);
+      }
+
+      CurrentDir(oldDir);
+    }
+
+    if(dir)
+      UnLock(dir);
+
+    FreeDosObject(DOS_FIB,fib);
+  }
+
+  ReleaseSemaphore(&CodesetsBase->poolSem);
+
+  RETURN(IsListEmpty((struct List *)&newcs->codesets) == FALSE);
+  return IsListEmpty((struct List *)&newcs->codesets) == FALSE;
+}
+
+///
+
+/**************************************************************************/
+
+/// codesetsCleanup()
+// Cleanup the memory for the codeset
 void
 codesetsCleanup(struct MinList *codesetsList)
 {
@@ -842,8 +952,52 @@ codesetsCleanup(struct MinList *codesetsList)
   LEAVE();
 }
 
+///
+
 /**************************************************************************/
 
+/// codesetsPrivateCleanup()
+// Cleanup the memory for the private codeset a task reserved during OpenLibrary
+void
+codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task)
+{
+  struct MinNode *curNode;
+
+  ENTER();
+
+  D(DBF_STARTUP, "trying to free private codesetslist of task 0x%08lx...", task);
+
+  for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ;)
+  {
+    struct privateCodeset *pcs = (struct privateCodeset *)curNode;
+
+    // before we remove the node we have to save the pointer to the next one
+    curNode = curNode->mln_Succ;
+
+    if(task == NULL || pcs->task == task)
+    {
+      D(DBF_STARTUP, "cleaning up private codesets list for task 0x%08lx...", pcs->task);
+
+      codesetsCleanup(&pcs->codesets);
+
+      // Remove node from list
+      Remove((struct Node *)pcs);
+
+      freeArbitrateVecPooled(pcs);
+
+      if(task != NULL)
+        break;
+    }
+  }
+
+  LEAVE();
+}
+
+///
+
+/**************************************************************************/
+
+/// defaultCodeset()
 static struct codeset *
 defaultCodeset(ULONG sem)
 {
@@ -867,13 +1021,12 @@ defaultCodeset(ULONG sem)
   RETURN(codeset);
   return codeset;
 }
+///
 
 /**************************************************************************/
 
-/*
- * Returns the given codeset.
- */
-
+/// codesetsFind()
+// Returns the given codeset.
 struct codeset *
 codesetsFind(struct MinList *codesetsList,STRPTR name)
 {
@@ -898,9 +1051,11 @@ codesetsFind(struct MinList *codesetsList,STRPTR name)
   RETURN(res);
   return res;
 }
+///
 
 /**************************************************************************/
 
+/// CodesetsSetDefaultA()
 struct codeset *LIBFUNC
 CodesetsSetDefaultA(REG(a0, STRPTR name),
                     REG(a1, struct TagItem *attrs))
@@ -949,8 +1104,11 @@ LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
 }
 #endif
 
+///
+
 /**************************************************************************/
 
+/// CodesetsFindA()
 struct codeset *LIBFUNC
 CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
@@ -993,13 +1151,12 @@ LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
   return cs;
 }
 #endif
+///
 
 /**************************************************************************/
 
-/*
- * Returns the best codeset for the given text
- */
-
+/// codesetsFindBest()
+// Returns the best codeset for the given text
 struct codeset *
 codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *error_ptr)
 {
@@ -1010,7 +1167,7 @@ codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *erro
 
   while(codeset)
   {
-    if(!codeset->read_only)
+    if(!codeset->read_only && codeset != CodesetsBase->utf8Codeset)
     {
       struct single_convert conv;
       STRPTR       text_ptr = text;
@@ -1058,9 +1215,11 @@ codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *erro
   RETURN(best_codeset);
   return best_codeset;
 }
+///
 
 /**************************************************************************/
 
+/// CodesetsFindBestA()
 struct codeset *LIBFUNC
 CodesetsFindBestA(REG(a0, STRPTR text),
                   REG(d0, ULONG text_len),
@@ -1108,14 +1267,13 @@ LIBSTUBVA(CodesetsFindBest, struct codeset *, REG(a0, STRPTR text),
   return cs;
 }
 #endif
+///
 
 /**************************************************************************/
 
-/*
- * Returns the number of characters a utf8 string has. This is not
- * identically with the size of memory is required to hold the string.
- */
-
+/// CodesetsUTF8Len()
+// Returns the number of characters a utf8 string has. This is not
+// identically with the size of memory is required to hold the string.
 ULONG LIBFUNC
 CodesetsUTF8Len(REG(a0, UTF8 *str))
 {
@@ -1147,9 +1305,11 @@ LIBSTUB(CodesetsUTF8Len, ULONG, REG(a0, UTF8* str))
   return CodesetsUTF8Len(str);
   #endif
 }
+///
 
 /**************************************************************************/
 
+/// CodesetsStrLenA()
 ULONG LIBFUNC
 CodesetsStrLenA(REG(a0, STRPTR str),
                 REG(a1, struct TagItem *attrs))
@@ -1202,15 +1362,15 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
   return res;
 }
 #endif
+///
 
 /**************************************************************************/
-/*
- * Converts a UTF8 string to a given charset. Return the number of bytes
- * written to dest excluding the NULL byte (which is always ensured by this
- * function; it means a NULL str will produce "" as dest; anyway you should
- * check NULL str to not waste your time!).
- */
 
+/// CodesetsUTF8ToStrA()
+// Converts an UTF8 string to a given charset. Return the number of bytes
+// written to dest excluding the NULL byte (which is always ensured by this
+// function; it means a NULL str will produce "" as dest; anyway you should
+// check NULL str to not waste your time!).
 STRPTR LIBFUNC
 CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 {
@@ -1230,11 +1390,11 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
   if(str)
   {
-    struct convertMsg              msg;
+    struct convertMsg     msg;
     struct codeset        *codeset;
     struct Hook           *hook;
     struct single_convert *f;
-    char                 	         buf[256];
+    char                 	buf[256];
     STRPTR                destIter = NULL, b = NULL;
     ULONG                 destLen;
     int                   i = 0;
@@ -1244,7 +1404,8 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
     if(hook)
     {
-      if(destLen<16 || destLen>sizeof(buf)) destLen = sizeof(buf);
+      if(destLen<16 || destLen>sizeof(buf))
+        destLen = sizeof(buf);
 
       msg.state = CODESETV_Translating;
       b = buf;
@@ -1254,8 +1415,6 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     {
       APTR                   pool;
       struct SignalSemaphore *sem;
-
-      //if (destLen==0) return NULL;
 
       if(!(dest = (STRPTR)GetTagData(CODESETSA_Dest, 0, attrs)) ||
         GetTagData(CODESETSA_AllocIfNeeded,TRUE,attrs))
@@ -1400,13 +1559,14 @@ LIBSTUBVA(CodesetsUTF8ToStr, STRPTR, ...)
 }
 #endif
 
-/**************************************************************************/
-/*
- * Converts a string and a charset to an UTF8. Returns the UTF8.
- * If a destination hook is supplied always return 0.
- * If from is NULL, it returns NULL and doesn't call the hook.
- */
+///
 
+/**************************************************************************/
+
+/// CodesetsUTF8CreateA()
+// Converts a string and a charset to an UTF8. Returns the UTF8.
+// If a destination hook is supplied always return 0.
+// If from is NULL, it returns NULL and doesn't call the hook.
 UTF8 *LIBFUNC
 CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 {
@@ -1572,8 +1732,162 @@ LIBSTUBVA(CodesetsUTF8Create, UTF8*, ...)
 }
 #endif
 
+///
+
 /**************************************************************************/
 
+/// CodesetsConvertStrA()
+// Converts a given string from one source Codeset to a given destination
+// codeset and returns the convert string
+STRPTR LIBFUNC
+CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
+{
+  STRPTR srcStr;
+  STRPTR dstStr = NULL;
+  ULONG srcLen;
+  ULONG dstLen = 0;
+
+  ENTER();
+
+  // get the ptr to the src string we want to convert
+  // from the source codeset to the dest codeset.
+  srcStr = (STRPTR)GetTagData(CODESETSA_Source, 0, attrs);
+  srcLen = GetTagData(CODESETSA_SourceLen, UINT_MAX, attrs);
+
+  if(srcStr != NULL && srcLen > 0)
+  {
+    struct codeset *srcCodeset;
+    struct codeset *dstCodeset;
+
+    // get the pointer to the codeset in which the src string is encoded
+    if(!(srcCodeset = (struct codeset *)GetTagData(CODESETSA_SourceCodeset, 0, attrs)))
+      srcCodeset = defaultCodeset(TRUE);
+
+    // get the pointer to the codeset in which the dst string should be encoded
+    if(!(dstCodeset = (struct codeset *)GetTagData(CODESETSA_DestCodeset, 0, attrs)))
+      dstCodeset = defaultCodeset(TRUE);
+
+    D(DBF_UTF, "srcCodeset: '%s' dstCodeset: '%s'", srcCodeset->name, dstCodeset->name);
+
+    // check that the user didn't supplied the very same codeset
+    // or otherwise a conversion is not required.
+    if(srcCodeset != NULL && dstCodeset != NULL && srcCodeset != dstCodeset)
+    {
+      BOOL utf8Create = FALSE;
+      BOOL strCreate = FALSE;
+      UTF8 *utf8str;
+      ULONG utf8strLen = 0;
+      ULONG *destLenPtr;
+
+      // if the source codeset is UTF-8 we don't have to use the UTF8Create()
+      // function and can directly call the UTF8ToStr() function
+      if(srcCodeset != CodesetsBase->utf8Codeset)
+      {
+        struct TagItem tags[] = { { CODESETSA_Codeset,     (ULONG)srcCodeset  },
+                                  { CODESETSA_Source,      (ULONG)srcStr      },
+                                  { CODESETSA_SourceLen,   srcLen             },
+                                  { CODESETSA_DestLenPtr,  (ULONG)&utf8strLen },
+                                  { TAG_DONE,              0                  } };
+
+        utf8str = CodesetsUTF8CreateA((struct TagItem *)&tags[0]);
+
+        utf8Create = TRUE;
+      }
+      else
+      {
+        utf8str = (UTF8 *)srcStr;
+        utf8strLen = strlen(srcStr);
+      }
+
+      // in case the destination codeset is UTF-8 we don't have to actually
+      // use the UTF8ToStr() function and can immediately return our
+      // UTF8 string
+      if(utf8str && utf8strLen > 0 && dstCodeset != CodesetsBase->utf8Codeset)
+      {
+        struct TagItem tags[] = { { CODESETSA_Codeset,     (ULONG)dstCodeset  },
+                                  { CODESETSA_Source,      (ULONG)utf8str     },
+                                  { CODESETSA_SourceLen,   utf8strLen         },
+                                  { CODESETSA_DestLenPtr,  (ULONG)&dstLen     },
+                                  { TAG_DONE,              0                  } };
+
+        dstStr = CodesetsUTF8ToStrA((struct TagItem *)&tags[0]);
+
+        strCreate = TRUE;
+      }
+      else
+      {
+        dstStr = (STRPTR)utf8str;
+        dstLen = utf8strLen;
+      }
+
+      D(DBF_UTF, "srcStr: %lx srcLen: %ld dstStr: %lx dstLen: %ld utf8create: %ld strCreate: %ld", srcStr, srcLen,
+                                                                                                   dstStr, dstLen,
+                                                                                                   utf8Create,
+                                                                                                   strCreate);
+
+      // if everything was successfull we can go and finalize everything
+      if(dstStr != NULL && utf8str != NULL)
+      {
+        // as the conversion was a two way pass we have to either free the
+        // memory of the utf8 string or not
+        if(utf8Create && strCreate)
+          CodesetsFreeA(utf8str, NULL);
+
+        // if the user wants to be informed abour the length
+        // of our destination string we store the length now in the supplied ptr.
+        if((destLenPtr = (ULONG *)GetTagData(CODESETSA_DestLenPtr, 0, attrs)))
+          *destLenPtr = dstLen;
+
+        D(DBF_UTF, "successfully converted string with len %ld", dstLen);
+      }
+      else
+      {
+        W(DBF_ALWAYS, "an error occurred while trying to convert a string");
+
+        // free all memory in case the conversion didn't work out
+        if(utf8Create && utf8str)
+          CodesetsFreeA(utf8str, NULL);
+
+        if(strCreate && dstStr)
+          CodesetsFreeA(dstStr, NULL);
+
+        dstStr = NULL;
+      }
+    }
+  }
+
+  RETURN(dstStr);
+  return dstStr;
+}
+
+LIBSTUB(CodesetsConvertStrA, STRPTR, REG(a0, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsConvertStrA((struct TagItem *)REG_A0);
+  #else
+  return CodesetsConvertStrA(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsConvertStr, STRPTR, ...)
+{
+  STRPTR res;
+  VA_LIST args;
+
+  VA_START(args, self);
+  res = CodesetsConvertStrA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
+///
+
+/**************************************************************************/
+
+/// parseUtf8()
 static int
 parseUtf8(STRPTR *ps)
 {
@@ -1703,9 +2017,11 @@ LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
   return CodesetsIsValidUTF8(s);
   #endif
 }
+///
 
-/***********************************************************************/
+/**************************************************************************/
 
+/// CodesetsFreeVecPooledA()
 void LIBFUNC
 CodesetsFreeVecPooledA(REG(a0, APTR pool),
                        REG(a1, APTR mem),
@@ -1751,5 +2067,6 @@ LIBSTUBVA(CodesetsFreeVecPooled, void, REG(a0, APTR pool),
   VA_END(args);
 }
 #endif
+///
 
-/***********************************************************************/
+/**************************************************************************/

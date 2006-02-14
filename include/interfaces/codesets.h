@@ -59,6 +59,10 @@ struct CodesetsIFace
 	ULONG APICALL (*CodesetsStrLenA)(struct CodesetsIFace *Self, STRPTR str, struct TagItem * attrs);
 	ULONG APICALL (*CodesetsStrLen)(struct CodesetsIFace *Self, STRPTR str, ...);
 	ULONG APICALL (*CodesetsIsValidUTF8)(struct CodesetsIFace *Self, STRPTR str);
+	void APICALL (*CodesetsFreeVecPooledA)(struct CodesetsIFace *Self, APTR pool, APTR mem, struct TagItem * attrs);
+	void APICALL (*CodesetsFreeVecPooled)(struct CodesetsIFace *Self, APTR pool, APTR mem, ...);
+	STRPTR APICALL (*CodesetsConvertStrA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	STRPTR APICALL (*CodesetsConvertStr)(struct CodesetsIFace *Self, ...);
 };
 
 #endif /* CODESETS_INTERFACE_DEF_H */

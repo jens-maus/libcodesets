@@ -5,6 +5,24 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2006-02-14  Jens Langner <Jens.Langner@light-speed.de>
+
+    * misc: implemented a private codeset management facility. Now
+      codeset.library will automatically scan an eventually existing
+      PROGDIR:Charsets and if present will load those codesets in a
+      per-task private list of codesets which will be added to the
+      global list of supported codesets as well.
+    * misc: implemented new CodesetsConvertStrA() library function which
+      will allow to specify a source and destination codeset as well as
+      a source string. The source string is then automatically converted
+      to the supplied destination string. This in turn should give a
+      plenty transparent method to convert strings from one codeset
+      to another.
+    * added the UTF-8 codeset to the internal list of supported codesets.
+      However, as the UTF-8 codeset is a very central codeset it is
+      treated special in such case that if UTF8Create() is used with a
+      string that is already encoded in UTF8, false will be returned.
+
 2005-12-16  Jens Langner <Jens.Langner@light-speed.de>
 
     * init.c: changed the system default charset identification routines

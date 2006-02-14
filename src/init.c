@@ -60,6 +60,15 @@ freeBase(struct LibraryHeader *lib)
 {
   ENTER();
 
+  D(DBF_STARTUP, "freeing all resources of codesets.library");
+
+  // first we make sure we free all elements of the private list
+  codesetsPrivateCleanup(&lib->privateCodesets, NULL);
+
+  // cleanup also the internal public codesets list
+  codesetsCleanup(&lib->codesets);
+
+  // close locale.library
   if(LocaleBase)
   {
     DROPINTERFACE(ILocale);
@@ -68,6 +77,7 @@ freeBase(struct LibraryHeader *lib)
   }
 
   #if defined(__amigaos4__)
+  // close diskfont.library
   if(DiskfontBase)
   {
     DROPINTERFACE(IDiskfont);
@@ -76,12 +86,14 @@ freeBase(struct LibraryHeader *lib)
   }
   #endif
 
+  // delete our private memory pool
   if(lib->pool)
   {
     DeletePool(lib->pool);
     lib->pool = NULL;
   }
 
+  // close utility.library
   if(UtilityBase)
   {
     DROPINTERFACE(IUtility);
@@ -89,14 +101,13 @@ freeBase(struct LibraryHeader *lib)
     UtilityBase = NULL;
   }
 
+  // close dos.library
   if(DOSBase)
   {
     DROPINTERFACE(IDOS);
     CloseLibrary((struct Library *)DOSBase);
     DOSBase = NULL;
   }
-
-  lib->flags &= ~BASEFLG_Init;
 
   LEAVE();
 }
@@ -269,6 +280,7 @@ initBase(struct LibraryHeader *lib)
   ENTER();
 
   NewList((struct List *)&lib->codesets);
+  NewList((struct List *)&lib->privateCodesets);
 
   if((DOSBase = (APTR)OpenLibrary("dos.library", 37)) &&
      GETINTERFACE(IDOS, DOSBase))
@@ -297,8 +309,6 @@ initBase(struct LibraryHeader *lib)
             {
               getSystemCodeset(lib);
             }
-
-            lib->flags |= BASEFLG_Init;
 
             return TRUE;
           }

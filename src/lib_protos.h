@@ -30,20 +30,20 @@ void freeBase(struct LibraryHeader* lib);
 ULONG initBase(struct LibraryHeader* lib);
 
 /* utils.c */
-APTR allocVecPooled ( APTR pool , ULONG size );
-void freeVecPooled ( APTR pool , APTR mem );
-APTR allocArbitratePooled ( ULONG s );
-void freeArbitratePooled ( APTR mem , ULONG s );
-APTR allocArbitrateVecPooled ( ULONG size );
-void freeArbitrateVecPooled ( APTR mem );
-int countNodes ( struct MinList *List );
+APTR allocVecPooled(APTR pool, ULONG size);
+void freeVecPooled(APTR pool, APTR mem);
+APTR allocArbitratePooled(ULONG s);
+void freeArbitratePooled(APTR mem , ULONG s);
+APTR allocArbitrateVecPooled(ULONG size);
+void freeArbitrateVecPooled(APTR mem);
+int countNodes(struct MinList *List);
 
 #ifdef __MORPHOS__
-void sprintf ( STRPTR buf , STRPTR fmt , ...) __attribute((varargs68k));
-int snprintf ( STRPTR buf , int size , STRPTR fmt , ...) __attribute((varargs68k));
+void sprintf(STRPTR buf, STRPTR fmt, ...) __attribute((varargs68k));
+int snprintf(STRPTR buf, int size, STRPTR fmt, ...) __attribute((varargs68k));
 #elif !defined(__amigaos4__)
-void STDARGS sprintf ( STRPTR to , STRPTR fmt , ...);
-int STDARGS snprintf ( STRPTR buf , int size , STRPTR fmt , ...);
+void STDARGS sprintf(STRPTR to, STRPTR fmt, ...);
+int STDARGS snprintf(STRPTR buf, int size, STRPTR fmt, ...);
 #endif
 
 /* base64.c */
@@ -63,10 +63,12 @@ LIBPROTO(CodesetsConvertUTF32toUTF8,  ULONG, REG(a0, const UTF32 **sourceStart),
 LIBPROTO(CodesetsConvertUTF8toUTF32,  ULONG, REG(a0, const UTF8 **sourceStart), REG(a1, const UTF8 *sourceEnd), REG(a2, UTF32 **targetStart), REG(a3, UTF32 *targetEnd), REG(d0, ULONG flags));
 
 /* codesets.c */
-ULONG codesetsInit ( struct MinList *codesetsList );
-void codesetsCleanup ( struct MinList *codesetsList );
-struct codeset *codesetsFind ( struct MinList *codesetsList , STRPTR name );
-struct codeset *codesetsFindBest ( struct MinList *codesetsList , STRPTR text , int text_len , int *error_ptr );
+BOOL codesetsInit(struct MinList *codesetsList);
+BOOL codesetsPrivateInit(struct MinList *privatCodesetsList, struct Task *task);
+void codesetsCleanup(struct MinList *codesetsList);
+void codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task);
+struct codeset *codesetsFind(struct MinList *codesetsList, STRPTR name);
+struct codeset *codesetsFindBest(struct MinList *codesetsList, STRPTR text, int text_len, int *error_ptr);
 
 LIBPROTO(CodesetsSupportedA,  STRPTR *, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsSupported, STRPTR *, ...);
@@ -80,6 +82,8 @@ LIBPROTO(CodesetsFindBestA,   struct codeset *, REG(a0, STRPTR text) , REG(d0, U
 LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a0, STRPTR text) , REG(d0, ULONG text_len) , REG(a1, ULONG *error_ptr), ...);
 LIBPROTO(CodesetsStrLenA,     ULONG, REG(a0, STRPTR str), REG(a1, struct TagItem *attrs));
 LIBPROTOVA(CodesetsStrLen,    ULONG, REG(a0, STRPTR str), ...);
+LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsConvertStr,STRPTR, ...);
 LIBPROTO(CodesetsUTF8ToStrA,  STRPTR, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsUTF8ToStr, STRPTR, ...);
 LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a0, struct TagItem *attrs));
