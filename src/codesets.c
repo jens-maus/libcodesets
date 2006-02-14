@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005      by codesets.library Open Source Team
+ Copyright (C) 2005-2006 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -61,9 +61,6 @@
 	}
 
 ///
-
-/**************************************************************************/
-
 /// mystrdup()
 static STRPTR
 mystrdup(STRPTR str)
@@ -82,9 +79,6 @@ mystrdup(STRPTR str)
     return new;
 }
 ///
-
-/**************************************************************************/
-
 /// mystrndup()
 static STRPTR
 mystrndup(STRPTR str1,int n)
@@ -102,9 +96,6 @@ mystrndup(STRPTR str1,int n)
     return dest;
 }
 ///
-
-/**************************************************************************/
-
 /// readLine()
 static ULONG
 readLine(BPTR fh,STRPTR buf,int size)
@@ -125,9 +116,6 @@ readLine(BPTR fh,STRPTR buf,int size)
     return TRUE;
 }
 ///
-
-/**************************************************************************/
-
 /// getConfigItem()
 static STRPTR
 getConfigItem(STRPTR buf,STRPTR item,int len)
@@ -153,99 +141,165 @@ getConfigItem(STRPTR buf,STRPTR item,int len)
     return NULL;
 }
 ///
-
-/**************************************************************************/
-
-/// CodesetsSupportedA()
-STRPTR *LIBFUNC
-CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
+/// parseUtf8()
+static int
+parseUtf8(STRPTR *ps)
 {
-  STRPTR *array;
+  STRPTR s = *ps;
+  int    wc, n, i;
 
   ENTER();
 
-  if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
+  if(*s<0x80)
   {
-    struct codeset *code, *succ;
-    int            i;
+    *ps = s+1;
 
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
-
-    for(i = 0, code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
-      array[i] = code->name;
-
-    array[i] = NULL;
-
-    ReleaseSemaphore(&CodesetsBase->libSem);
+    RETURN(*s);
+    return *s;
   }
 
-  RETURN(array);
-  return array;
+  if(*s<0xc2)
+  {
+    RETURN(-1);
+    return -1;
+  }
+  else
+  {
+    if(*s<0xe0)
+    {
+      if((s[1] & 0xc0)!=0x80)
+      {
+        RETURN(-1);
+        return -1;
+      }
+
+      *ps = s+2;
+
+      RETURN(((s[0] & 0x1f)<<6) | (s[1] & 0x3f));
+      return ((s[0] & 0x1f)<<6) | (s[1] & 0x3f);
+    }
+    else
+    {
+      if(*s<0xf0)
+      {
+        n = 3;
+      }
+      else
+      {
+        if(*s<0xf8)
+        {
+          n = 4;
+        }
+        else
+        {
+          if(*s<0xfc)
+          {
+            n = 5;
+          }
+          else
+          {
+            if(*s<0xfe)
+            {
+              n = 6;
+            }
+            else
+            {
+              RETURN(-1);
+              return -1;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  wc = *s++ & ((1<<(7-n))-1);
+
+  for(i = 1; i<n; i++)
+  {
+    if((*s & 0xc0) != 0x80)
+    {
+      RETURN(-1);
+      return -1;
+    }
+
+    wc = (wc << 6) | (*s++ & 0x3f);
+  }
+
+  if(wc < (1 << (5 * n - 4)))
+  {
+    RETURN(-1);
+    return -1;
+  }
+
+  *ps = s;
+
+  RETURN(wc);
+  return wc;
 }
 
-LIBSTUB(CodesetsSupportedA, STRPTR*, REG(a0, struct TagItem *attrs))
-{
-  #ifdef __MORPHOS__
-  return CodesetsSupportedA((struct TagItem *)REG_A0);
-  #else
-  return CodesetsSupportedA(attrs);
-  #endif
-}
+#define GOOD_UCS(c) \
+     ((c) >= 160 && ((c) & ~0x3ff) != 0xd800 && \
+      (c) != 0xfeff && (c) != 0xfffe && (c) != 0xffff)
 
-#ifdef __amigaos4__
-LIBSTUBVA(CodesetsSupported, STRPTR*, ...)
-{
-  STRPTR* res;
-  VA_LIST args;
-
-  VA_START(args, self);
-  res = CodesetsSupportedA(VA_ARG(args, struct TagItem *));
-  VA_END(args);
-
-  return res;
-}
-#endif
-
-///
-
-/**************************************************************************/
-
-/// CodesetsFreeA()
-void LIBFUNC
-CodesetsFreeA(REG(a0, APTR obj),
-              REG(a1, UNUSED struct TagItem *attrs))
+ULONG LIBFUNC
+CodesetsIsValidUTF8(REG(a0, STRPTR s))
 {
   ENTER();
 
-  if(obj)
-    freeArbitrateVecPooled(obj);
+  STRPTR  t = s;
+  int n;
 
-  LEAVE();
+  while((n = parseUtf8(&t)))
+  {
+    if(!GOOD_UCS(n))
+    {
+      RETURN(FALSE);
+      return FALSE;
+    }
+  }
+
+  RETURN(TRUE);
+  return TRUE;
 }
 
-LIBSTUB(CodesetsFreeA, void, REG(a0, APTR obj), REG(a1, struct TagItem *attrs))
+LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
 {
   #ifdef __MORPHOS__
-  return CodesetsFreeA((APTR)REG_A0,(struct TagItem *)REG_A1);
+  return CodesetsIsValidUTF8((STRPTR)REG_A0);
   #else
-  return CodesetsFreeA(obj, attrs);
+  return CodesetsIsValidUTF8(s);
   #endif
 }
-
-#ifdef __amigaos4__
-LIBSTUBVA(CodesetsFree, void, REG(a0, APTR obj), ...)
-{
-  VA_LIST args;
-
-  VA_START(args, obj);
-  CodesetsFreeA(obj, VA_ARG(args, struct TagItem *));
-  VA_END(args);
-}
-#endif
-
 ///
 
 /**************************************************************************/
+
+/// defaultCodeset()
+static struct codeset *
+defaultCodeset(ULONG sem)
+{
+  char buf[256];
+  struct codeset *codeset;
+
+  ENTER();
+
+  if(sem)
+    ObtainSemaphoreShared(&CodesetsBase->libSem);
+
+  *buf = 0;
+  GetVar("codeset_default",buf,sizeof(buf),GVF_GLOBAL_ONLY);
+
+  if(!*buf || !(codeset = codesetsFind(&CodesetsBase->codesets,buf)))
+    codeset = CodesetsBase->systemCodeset;
+
+  if(sem)
+    ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
+}
+///
 
 /// codesetsCmpUnicode()
 // The compare function
@@ -255,9 +309,6 @@ codesetsCmpUnicode(struct single_convert *arg1,struct single_convert *arg2)
   return strcmp((char*)arg1->utf8+1, (char*)arg2->utf8+1);
 }
 ///
-
-/**************************************************************************/
-
 /// codesetsReadTable()
 
 #define ITEM_STANDARD           "Standard"
@@ -383,9 +434,6 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
   return res;
 }
 ///
-
-/**************************************************************************/
-
 /// codesetsInit()
 // Initialized and loads the codesets
 BOOL
@@ -829,7 +877,7 @@ codesetsInit(struct MinList * codesetsList)
         src = i;
       else
         src = amiga1251_to_ucs4[i-0xa0];
-		
+
       codeset->table[i].code = i;
       codeset->table[i].ucs4 = src;
       CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CONVFLG_StrictConversion);
@@ -849,9 +897,6 @@ end:
 }
 
 ///
-
-/**************************************************************************/
-
 /// codesetsPrivateInit()
 // Initialized and load charset tables from PROGDIR:Charset also
 BOOL
@@ -928,9 +973,6 @@ codesetsPrivateInit(struct MinList *privateCodesetsList, struct Task *curTask)
 }
 
 ///
-
-/**************************************************************************/
-
 /// codesetsCleanup()
 // Cleanup the memory for the codeset
 void
@@ -953,9 +995,6 @@ codesetsCleanup(struct MinList *codesetsList)
 }
 
 ///
-
-/**************************************************************************/
-
 /// codesetsPrivateCleanup()
 // Cleanup the memory for the private codeset a task reserved during OpenLibrary
 void
@@ -994,37 +1033,6 @@ codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task)
 }
 
 ///
-
-/**************************************************************************/
-
-/// defaultCodeset()
-static struct codeset *
-defaultCodeset(ULONG sem)
-{
-  char buf[256];
-  struct codeset *codeset;
-
-  ENTER();
-
-  if(sem)
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
-
-  *buf = 0;
-  GetVar("codeset_default",buf,sizeof(buf),GVF_GLOBAL_ONLY);
-
-  if(!*buf || !(codeset = codesetsFind(&CodesetsBase->codesets,buf)))
-    codeset = CodesetsBase->systemCodeset;
-
-  if(sem)
-    ReleaseSemaphore(&CodesetsBase->libSem);
-
-  RETURN(codeset);
-  return codeset;
-}
-///
-
-/**************************************************************************/
-
 /// codesetsFind()
 // Returns the given codeset.
 struct codeset *
@@ -1052,109 +1060,6 @@ codesetsFind(struct MinList *codesetsList,STRPTR name)
   return res;
 }
 ///
-
-/**************************************************************************/
-
-/// CodesetsSetDefaultA()
-struct codeset *LIBFUNC
-CodesetsSetDefaultA(REG(a0, STRPTR name),
-                    REG(a1, struct TagItem *attrs))
-{
-  struct codeset *codeset;
-
-  ENTER();
-
-  ObtainSemaphoreShared(&CodesetsBase->libSem);
-
-  if((codeset = codesetsFind(&CodesetsBase->codesets,name)))
-  {
-    ULONG flags;
-
-    flags = GVF_SAVE_VAR | (GetTagData(CODESETSA_Save,FALSE,attrs) ? GVF_GLOBAL_ONLY : 0);
-
-    SetVar("codeset_default",codeset->name,strlen(codeset->name),flags);
-  }
-
-  ReleaseSemaphore(&CodesetsBase->libSem);
-
-  RETURN(codeset);
-  return codeset;
-}
-
-LIBSTUB(CodesetsSetDefaultA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
-{
-  #ifdef __MORPHOS__
-  return CodesetsSetDefaultA((STRPTR)REG_A0,(struct TagItem *)REG_A1);
-  #else
-  return CodesetsSetDefaultA(name, attrs);
-  #endif
-}
-
-#ifdef __amigaos4__
-LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
-{
-  struct codeset *cs;
-  VA_LIST args;
-
-  VA_START(args, name);
-  cs = CodesetsSetDefaultA(name, VA_ARG(args, struct TagItem *));
-  VA_END(args);
-
-  return cs;
-}
-#endif
-
-///
-
-/**************************************************************************/
-
-/// CodesetsFindA()
-struct codeset *LIBFUNC
-CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
-{
-  struct codeset *codeset;
-
-  ENTER();
-
-  ObtainSemaphoreShared(&CodesetsBase->libSem);
-
-  codeset = codesetsFind(&CodesetsBase->codesets,name);
-
-  if(!codeset && GetTagData(CODESETSA_NoFail,TRUE,attrs))
-    codeset = defaultCodeset(FALSE);
-
-  ReleaseSemaphore(&CodesetsBase->libSem);
-
-  RETURN(codeset);
-  return codeset;
-}
-
-LIBSTUB(CodesetsFindA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
-{
-  #ifdef __MORPHOS__
-  return CodesetsFindA((STRPTR)REG_A0,(struct TagItem *)REG_A1);
-  #else
-  return CodesetsFindA(name, attrs);
-  #endif
-}
-
-#ifdef __amigaos4__
-LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
-{
-  struct codeset *cs;
-  VA_LIST args;
-
-  VA_START(args, name);
-  cs = CodesetsFindA(name, VA_ARG(args, struct TagItem *));
-  VA_END(args);
-
-  return cs;
-}
-#endif
-///
-
-/**************************************************************************/
-
 /// codesetsFindBest()
 // Returns the best codeset for the given text
 struct codeset *
@@ -1219,6 +1124,185 @@ codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *erro
 
 /**************************************************************************/
 
+/// CodesetsSupportedA()
+STRPTR *LIBFUNC
+CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
+{
+  STRPTR *array;
+
+  ENTER();
+
+  if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
+  {
+    struct codeset *code, *succ;
+    int            i;
+
+    ObtainSemaphoreShared(&CodesetsBase->libSem);
+
+    for(i = 0, code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
+      array[i] = code->name;
+
+    array[i] = NULL;
+
+    ReleaseSemaphore(&CodesetsBase->libSem);
+  }
+
+  RETURN(array);
+  return array;
+}
+
+LIBSTUB(CodesetsSupportedA, STRPTR*, REG(a0, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsSupportedA((struct TagItem *)REG_A0);
+  #else
+  return CodesetsSupportedA(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsSupported, STRPTR*, ...)
+{
+  STRPTR* res;
+  VA_LIST args;
+
+  VA_START(args, self);
+  res = CodesetsSupportedA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
+///
+/// CodesetsFreeA()
+void LIBFUNC
+CodesetsFreeA(REG(a0, APTR obj),
+              REG(a1, UNUSED struct TagItem *attrs))
+{
+  ENTER();
+
+  if(obj)
+    freeArbitrateVecPooled(obj);
+
+  LEAVE();
+}
+
+LIBSTUB(CodesetsFreeA, void, REG(a0, APTR obj), REG(a1, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsFreeA((APTR)REG_A0,(struct TagItem *)REG_A1);
+  #else
+  return CodesetsFreeA(obj, attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsFree, void, REG(a0, APTR obj), ...)
+{
+  VA_LIST args;
+
+  VA_START(args, obj);
+  CodesetsFreeA(obj, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+}
+#endif
+
+///
+/// CodesetsSetDefaultA()
+struct codeset *LIBFUNC
+CodesetsSetDefaultA(REG(a0, STRPTR name),
+                    REG(a1, struct TagItem *attrs))
+{
+  struct codeset *codeset;
+
+  ENTER();
+
+  ObtainSemaphoreShared(&CodesetsBase->libSem);
+
+  if((codeset = codesetsFind(&CodesetsBase->codesets,name)))
+  {
+    ULONG flags;
+
+    flags = GVF_SAVE_VAR | (GetTagData(CODESETSA_Save,FALSE,attrs) ? GVF_GLOBAL_ONLY : 0);
+
+    SetVar("codeset_default",codeset->name,strlen(codeset->name),flags);
+  }
+
+  ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
+}
+
+LIBSTUB(CodesetsSetDefaultA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsSetDefaultA((STRPTR)REG_A0,(struct TagItem *)REG_A1);
+  #else
+  return CodesetsSetDefaultA(name, attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
+{
+  struct codeset *cs;
+  VA_LIST args;
+
+  VA_START(args, name);
+  cs = CodesetsSetDefaultA(name, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return cs;
+}
+#endif
+
+///
+/// CodesetsFindA()
+struct codeset *LIBFUNC
+CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+{
+  struct codeset *codeset;
+
+  ENTER();
+
+  ObtainSemaphoreShared(&CodesetsBase->libSem);
+
+  codeset = codesetsFind(&CodesetsBase->codesets,name);
+
+  if(!codeset && GetTagData(CODESETSA_NoFail,TRUE,attrs))
+    codeset = defaultCodeset(FALSE);
+
+  ReleaseSemaphore(&CodesetsBase->libSem);
+
+  RETURN(codeset);
+  return codeset;
+}
+
+LIBSTUB(CodesetsFindA, struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsFindA((STRPTR)REG_A0,(struct TagItem *)REG_A1);
+  #else
+  return CodesetsFindA(name, attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
+{
+  struct codeset *cs;
+  VA_LIST args;
+
+  VA_START(args, name);
+  cs = CodesetsFindA(name, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return cs;
+}
+#endif
+///
 /// CodesetsFindBestA()
 struct codeset *LIBFUNC
 CodesetsFindBestA(REG(a0, STRPTR text),
@@ -1268,9 +1352,6 @@ LIBSTUBVA(CodesetsFindBest, struct codeset *, REG(a0, STRPTR text),
 }
 #endif
 ///
-
-/**************************************************************************/
-
 /// CodesetsUTF8Len()
 // Returns the number of characters a utf8 string has. This is not
 // identically with the size of memory is required to hold the string.
@@ -1306,9 +1387,6 @@ LIBSTUB(CodesetsUTF8Len, ULONG, REG(a0, UTF8* str))
   #endif
 }
 ///
-
-/**************************************************************************/
-
 /// CodesetsStrLenA()
 ULONG LIBFUNC
 CodesetsStrLenA(REG(a0, STRPTR str),
@@ -1363,9 +1441,6 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
 }
 #endif
 ///
-
-/**************************************************************************/
-
 /// CodesetsUTF8ToStrA()
 // Converts an UTF8 string to a given charset. Return the number of bytes
 // written to dest excluding the NULL byte (which is always ensured by this
@@ -1560,9 +1635,6 @@ LIBSTUBVA(CodesetsUTF8ToStr, STRPTR, ...)
 #endif
 
 ///
-
-/**************************************************************************/
-
 /// CodesetsUTF8CreateA()
 // Converts a string and a charset to an UTF8. Returns the UTF8.
 // If a destination hook is supplied always return 0.
@@ -1733,9 +1805,6 @@ LIBSTUBVA(CodesetsUTF8Create, UTF8*, ...)
 #endif
 
 ///
-
-/**************************************************************************/
-
 /// CodesetsConvertStrA()
 // Converts a given string from one source Codeset to a given destination
 // codeset and returns the convert string
@@ -1884,143 +1953,6 @@ LIBSTUBVA(CodesetsConvertStr, STRPTR, ...)
 #endif
 
 ///
-
-/**************************************************************************/
-
-/// parseUtf8()
-static int
-parseUtf8(STRPTR *ps)
-{
-  STRPTR s = *ps;
-  int    wc, n, i;
-
-  ENTER();
-
-  if(*s<0x80)
-  {
-    *ps = s+1;
-
-    RETURN(*s);
-    return *s;
-  }
-
-  if(*s<0xc2)
-  {
-    RETURN(-1);
-    return -1;
-  }
-  else
-  {
-    if(*s<0xe0)
-    {
-      if((s[1] & 0xc0)!=0x80)
-      {
-        RETURN(-1);
-        return -1;
-      }
-
-      *ps = s+2;
-
-      RETURN(((s[0] & 0x1f)<<6) | (s[1] & 0x3f));
-      return ((s[0] & 0x1f)<<6) | (s[1] & 0x3f);
-    }
-    else
-    {
-      if(*s<0xf0)
-      {
-        n = 3;
-      }
-      else
-      {
-        if(*s<0xf8)
-        {
-          n = 4;
-        }
-        else
-        {
-          if(*s<0xfc)
-          {
-            n = 5;
-          }
-          else
-          {
-            if(*s<0xfe)
-            {
-              n = 6;
-            }
-            else
-            {
-              RETURN(-1);
-              return -1;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  wc = *s++ & ((1<<(7-n))-1);
-
-  for(i = 1; i<n; i++)
-  {
-    if((*s & 0xc0) != 0x80)
-    {
-      RETURN(-1);
-      return -1;
-    }
-
-    wc = (wc << 6) | (*s++ & 0x3f);
-  }
-
-  if(wc < (1 << (5 * n - 4)))
-  {
-    RETURN(-1);
-    return -1;
-  }
-
-  *ps = s;
-
-  RETURN(wc);
-  return wc;
-}
-
-#define GOOD_UCS(c) \
-     ((c) >= 160 && ((c) & ~0x3ff) != 0xd800 && \
-      (c) != 0xfeff && (c) != 0xfffe && (c) != 0xffff)
-
-ULONG LIBFUNC
-CodesetsIsValidUTF8(REG(a0, STRPTR s))
-{
-  ENTER();
-
-  STRPTR  t = s;
-  int n;
-
-  while((n = parseUtf8(&t)))
-  {
-    if(!GOOD_UCS(n))
-    {
-      RETURN(FALSE);
-      return FALSE;
-    }
-  }
-
-  RETURN(TRUE);
-  return TRUE;
-}
-
-LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
-{
-  #ifdef __MORPHOS__
-  return CodesetsIsValidUTF8((STRPTR)REG_A0);
-  #else
-  return CodesetsIsValidUTF8(s);
-  #endif
-}
-///
-
-/**************************************************************************/
-
 /// CodesetsFreeVecPooledA()
 void LIBFUNC
 CodesetsFreeVecPooledA(REG(a0, APTR pool),
