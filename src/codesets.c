@@ -272,6 +272,33 @@ LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
   #endif
 }
 ///
+/// findPrivateCodesetList()
+static struct MinList *
+findPrivateCodesetList(struct MinList *privateCodesetsList, struct Task *task)
+{
+  ENTER();
+  struct MinList *pList = NULL;
+  struct MinNode *curNode;
+
+  if(task != NULL)
+  {
+    for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ; curNode = curNode->mln_Succ)
+    {
+      struct privateCodeset *pcs = (struct privateCodeset *)curNode;
+
+      if(pcs->task == task)
+      {
+        pList = &pcs->codesets;
+        break;
+      }
+    }
+  }
+
+  RETURN(pList);
+  return pList;
+}
+
+///
 
 /**************************************************************************/
 
@@ -1036,7 +1063,7 @@ codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task)
 /// codesetsFind()
 // Returns the given codeset.
 struct codeset *
-codesetsFind(struct MinList *codesetsList,STRPTR name)
+codesetsFind(struct MinList *codesetsList, STRPTR name)
 {
   struct codeset *res = NULL;
 
@@ -1128,23 +1155,37 @@ codesetsFindBest(struct MinList *codesetsList,STRPTR text,int text_len,int *erro
 STRPTR *LIBFUNC
 CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
 {
-  STRPTR *array;
+  STRPTR *array = NULL;
+  struct Task *refTask;
 
   ENTER();
 
-  if((array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+1))))
+  // try to retrieve the RefTask attribute
+  if((refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
   {
-    struct codeset *code, *succ;
-    int            i;
+    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
 
-    ObtainSemaphoreShared(&CodesetsBase->libSem);
+    if(pcl != NULL &&
+       (array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+countNodes(pcl)+1))))
+    {
+      struct codeset *code;
+      struct codeset *succ;
+      int i=0;
 
-    for(i = 0, code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
-      array[i] = code->name;
+      ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-    array[i] = NULL;
+      // first we check our internal list
+      for(code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
+        array[i] = code->name;
 
-    ReleaseSemaphore(&CodesetsBase->libSem);
+      // then we also iterate through our private codesets list
+      for(code = (struct codeset *)pcl->mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
+        array[i] = code->name;
+
+      array[i] = NULL;
+
+      ReleaseSemaphore(&CodesetsBase->libSem);
+    }
   }
 
   RETURN(array);
@@ -1263,15 +1304,26 @@ LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
 struct codeset *LIBFUNC
 CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
-  struct codeset *codeset;
+  struct codeset *codeset = NULL;
+  struct Task *refTask = NULL;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  codeset = codesetsFind(&CodesetsBase->codesets,name);
+  // try to retrieve the RefTask attribute
+  if(name != NULL && (refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
+  {
+    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
 
-  if(!codeset && GetTagData(CODESETSA_NoFail,TRUE,attrs))
+    // first we search the private list and afterwards
+    // the internal one.
+    if(pcl == NULL || (codeset = codesetsFind(pcl, name)) == NULL)
+      codeset = codesetsFind(&CodesetsBase->codesets, name);
+  }
+
+  // check if we found something or not.
+  if(codeset == NULL && (attrs == NULL || GetTagData(CODESETSA_NoFail, TRUE, attrs)))
     codeset = defaultCodeset(FALSE);
 
   ReleaseSemaphore(&CodesetsBase->libSem);
@@ -1310,13 +1362,21 @@ CodesetsFindBestA(REG(a0, STRPTR text),
                   REG(a1, ULONG *error_ptr),
                   REG(a2, UNUSED struct TagItem *attrs))
 {
-  struct codeset *codeset;
+  struct codeset *codeset = NULL;
+  struct Task *refTask;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  codeset = codesetsFindBest(&CodesetsBase->codesets,text,text_len,(int *)error_ptr);
+  // try to retrieve the RefTask attribute
+  if((refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
+  {
+    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
+
+    if(pcl == NULL || (codeset = codesetsFindBest(pcl, text, text_len, (int *)error_ptr)) == NULL)
+      codeset = codesetsFindBest(&CodesetsBase->codesets, text, text_len, (int *)error_ptr);
+  }
 
   ReleaseSemaphore(&CodesetsBase->libSem);
 
