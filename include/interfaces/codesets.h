@@ -63,6 +63,13 @@ struct CodesetsIFace
 	void APICALL (*CodesetsFreeVecPooled)(struct CodesetsIFace *Self, APTR pool, APTR mem, ...);
 	STRPTR APICALL (*CodesetsConvertStrA)(struct CodesetsIFace *Self, struct TagItem * attrs);
 	STRPTR APICALL (*CodesetsConvertStr)(struct CodesetsIFace *Self, ...);
+	struct MinList * APICALL (*CodesetsListCreateA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	struct MinList * APICALL (*CodesetsListCreate)(struct CodesetsIFace *Self, ...);
+	void APICALL (*CodesetsListDelete)(struct CodesetsIFace *Self, struct MinList * codesetsList);
+	void APICALL (*CodesetsListAddA)(struct CodesetsIFace *Self, struct MinList * codesetsList, struct TagItem * attrs);
+	void APICALL (*CodesetsListAdd)(struct CodesetsIFace *Self, struct MinList * codesetsList, ...);
+	void APICALL (*CodesetsListRemoveA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	void APICALL (*CodesetsListRemove)(struct CodesetsIFace *Self, ...);
 };
 
 #endif /* CODESETS_INTERFACE_DEF_H */

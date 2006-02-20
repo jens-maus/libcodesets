@@ -22,7 +22,6 @@
 
 #include "lib.h"
 
-#include <clib/alib_protos.h>
 #include <diskfont/glyph.h>
 #include <diskfont/diskfonttag.h>
 #include <proto/diskfont.h>
@@ -61,9 +60,6 @@ freeBase(struct LibraryHeader *lib)
   ENTER();
 
   D(DBF_STARTUP, "freeing all resources of codesets.library");
-
-  // first we make sure we free all elements of the private list
-  codesetsPrivateCleanup(&lib->privateCodesets, NULL);
 
   // cleanup also the internal public codesets list
   codesetsCleanup(&lib->codesets);
@@ -278,9 +274,6 @@ ULONG
 initBase(struct LibraryHeader *lib)
 {
   ENTER();
-
-  NewList((struct List *)&lib->codesets);
-  NewList((struct List *)&lib->privateCodesets);
 
   if((DOSBase = (APTR)OpenLibrary("dos.library", 37)) &&
      GETINTERFACE(IDOS, DOSBase))

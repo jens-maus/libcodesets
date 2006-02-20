@@ -79,7 +79,14 @@ static const char UserLibID[]   = VERSTAG;
                   LFUNC_FA_(CodesetsFreeVecPooledA)       \
                   LFUNC_VA_(CodesetsFreeVecPooled)        \
                   LFUNC_FA_(CodesetsConvertStrA)          \
-                  LFUNC_VA_(CodesetsConvertStr)
+                  LFUNC_VA_(CodesetsConvertStr)           \
+                  LFUNC_FA_(CodesetsListCreateA)          \
+                  LFUNC_VA_(CodesetsListCreate)           \
+                  LFUNC_FA_(CodesetsListDelete)           \
+                  LFUNC_FA_(CodesetsListAddA)             \
+                  LFUNC_VA_(CodesetsListAdd)              \
+                  LFUNC_FA_(CodesetsListRemoveA)          \
+                  LFUNC_VA_(CodesetsListRemove)
 
 
 /****************************************************************************/
@@ -346,10 +353,6 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
   base->libBase.lib_Flags &= ~LIBF_DELEXP;
 	base->libBase.lib_OpenCnt++;
 
-  // on each LibOpen() we make sure we check PROGDIR:Charsets
-  // for private charset definitions.
-  codesetsPrivateInit(&base->privateCodesets, FindTask(NULL));
-
   // return the base address on success.
   res = base;
 
@@ -428,10 +431,6 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 
   if(base->libBase.lib_OpenCnt > 0)
 	{
-    // make sure we cleanup the private codeset list of
-    // this task
-    codesetsPrivateCleanup(&base->privateCodesets, FindTask(NULL));
-
 		if(--base->libBase.lib_OpenCnt == 0 &&
        base->libBase.lib_Flags & LIBF_DELEXP)
     {

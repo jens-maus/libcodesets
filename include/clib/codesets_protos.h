@@ -63,5 +63,12 @@ void CodesetsFreeVecPooledA(APTR pool, APTR mem, struct TagItem *attrs);
 void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag tag1, ...);
 STRPTR CodesetsConvertStrA(struct TagItem *attrs);
 STRPTR CodesetsConvertStr(Tag tag1, ...);
+struct MinList *CodesetsListCreateA(struct TagItem *attrs);
+struct MinList *CodesetsListCreate(Tag tag1, ...);
+void CodesetsListDelete(struct MinList *codesetsList);
+void CodesetsListAddA(struct MinList *codesetsList, struct TagItem *attrs);
+void CodesetsListAdd(struct MinList *codesetsList, ...);
+void CodesetsListRemoveA(struct TagItem *attrs);
+void CodesetsListRemove(Tag tag1, ...);
 
 #endif /* CLIB_CODESETS_PROTOS_H */

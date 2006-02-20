@@ -41,13 +41,4 @@
 
 /***********************************************************************/
 
-struct privateCodeset
-{
-  struct MinNode node;
-  struct MinList codesets;
-  struct Task *task;
-};
-
-/***********************************************************************/
-
 #endif /* _LIB_H */

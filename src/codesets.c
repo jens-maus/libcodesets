@@ -26,6 +26,8 @@
 
 #include "lib.h"
 
+#include <clib/alib_protos.h>
+
 #include <diskfont/glyph.h>
 #include <diskfont/diskfonttag.h>
 #include <proto/diskfont.h>
@@ -245,10 +247,10 @@ parseUtf8(STRPTR *ps)
 ULONG LIBFUNC
 CodesetsIsValidUTF8(REG(a0, STRPTR s))
 {
-  ENTER();
-
-  STRPTR  t = s;
+  STRPTR t = s;
   int n;
+
+  ENTER();
 
   while((n = parseUtf8(&t)))
   {
@@ -271,33 +273,6 @@ LIBSTUB(CodesetsIsValidUTF8, ULONG, REG(a0, STRPTR s))
   return CodesetsIsValidUTF8(s);
   #endif
 }
-///
-/// findPrivateCodesetList()
-static struct MinList *
-findPrivateCodesetList(struct MinList *privateCodesetsList, struct Task *task)
-{
-  ENTER();
-  struct MinList *pList = NULL;
-  struct MinNode *curNode;
-
-  if(task != NULL)
-  {
-    for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ; curNode = curNode->mln_Succ)
-    {
-      struct privateCodeset *pcs = (struct privateCodeset *)curNode;
-
-      if(pcs->task == task)
-      {
-        pList = &pcs->codesets;
-        break;
-      }
-    }
-  }
-
-  RETURN(pList);
-  return pList;
-}
-
 ///
 
 /**************************************************************************/
@@ -327,7 +302,6 @@ defaultCodeset(ULONG sem)
   return codeset;
 }
 ///
-
 /// codesetsCmpUnicode()
 // The compare function
 static int
@@ -353,7 +327,7 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
 
   ENTER();
 
-  D(DBF_STARTUP, "trying to fetch charset table from file '%s'...", name);
+  D(DBF_STARTUP, "trying to fetch charset file '%s'...", name);
 
   if((fh = Open(name, MODE_OLDFILE)))
   {
@@ -461,6 +435,50 @@ codesetsReadTable(struct MinList *codesetsList,STRPTR name)
   return res;
 }
 ///
+/// codesetsScanDir()
+static void
+codesetsScanDir(struct MinList *codesetsList, STRPTR dirPath)
+{
+  ENTER();
+
+  if(dirPath != NULL && dirPath[0] != '\0')
+  {
+    struct FileInfoBlock *fib;
+
+    D(DBF_STARTUP, "scanning directory '%s' for codesets tables", dirPath);
+
+    // we try to walk through the PROGDIR:Charsets directory on our own and readin our
+    // own charset tables
+    if((fib = AllocDosObject(DOS_FIB, NULL)))
+    {
+      BPTR dir;
+
+      if((dir = Lock(dirPath, SHARED_LOCK)) && Examine(dir, fib) && (fib->fib_DirEntryType >= 0))
+      {
+        BPTR oldDir = CurrentDir(dir);
+
+        while(ExNext(dir, fib))
+        {
+          if(fib->fib_DirEntryType >= 0)
+            continue;
+
+          codesetsReadTable(codesetsList, fib->fib_FileName);
+        }
+
+        CurrentDir(oldDir);
+      }
+
+      if(dir)
+        UnLock(dir);
+
+      FreeDosObject(DOS_FIB, fib);
+    }
+  }
+
+  LEAVE();
+}
+
+///
 /// codesetsInit()
 // Initialized and loads the codesets
 BOOL
@@ -477,6 +495,8 @@ codesetsInit(struct MinList * codesetsList)
   ENTER();
 
   ObtainSemaphore(&CodesetsBase->poolSem);
+
+  NewList((struct List *)&CodesetsBase->codesets);
 
   // to make the list of the supported codesets complete we also add a
   // fake 'UTF-8' only so that our users can query for that codeset as well.
@@ -924,82 +944,6 @@ end:
 }
 
 ///
-/// codesetsPrivateInit()
-// Initialized and load charset tables from PROGDIR:Charset also
-BOOL
-codesetsPrivateInit(struct MinList *privateCodesetsList, struct Task *curTask)
-{
-  struct MinNode *curNode;
-  struct FileInfoBlock *fib;
-  struct privateCodeset *newcs;
-
-  ENTER();
-
-  D(DBF_STARTUP, "loading charsets from 'PROGDIR:Charsets' for Task 0x%08lx... ", curTask);
-
-  ObtainSemaphore(&CodesetsBase->poolSem);
-
-  // before we try to init the private codeset table of task curTask we have a look
-  // that a privatelist doesn't already exist for task curTask
-  for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ; curNode = curNode->mln_Succ)
-  {
-    struct privateCodeset *curCodeset = (struct privateCodeset *)curNode;
-
-    if(curCodeset->task == curTask)
-    {
-      W(DBF_STARTUP, "there is already a private charset table for task 0x%08lx.", curTask);
-
-      RETURN(FALSE);
-      return FALSE;
-    }
-  }
-
-  // if we arrived here we go and generate a new privateCodeset list
-  if(!(newcs = allocVecPooled(CodesetsBase->pool, sizeof(struct privateCodeset))))
-  {
-    RETURN(FALSE);
-    return FALSE;
-  }
-
-  // initial the new private codeset list and put it into a separate list
-  NewList((struct List *)&newcs->codesets);
-  newcs->task = curTask;
-  AddTail((struct List *)privateCodesetsList, (struct Node *)&newcs->node);
-
-  // we try to walk through the PROGDIR:Charsets directory on our own and readin our
-  // own charset tables
-  if((fib = AllocDosObject(DOS_FIB, NULL)))
-  {
-    BPTR dir;
-
-    if((dir = Lock("PROGDIR:Charsets", SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
-    {
-      BPTR oldDir = CurrentDir(dir);
-
-      while(ExNext(dir, fib))
-      {
-        if(fib->fib_DirEntryType>=0)
-          continue;
-
-        codesetsReadTable(&newcs->codesets, fib->fib_FileName);
-      }
-
-      CurrentDir(oldDir);
-    }
-
-    if(dir)
-      UnLock(dir);
-
-    FreeDosObject(DOS_FIB,fib);
-  }
-
-  ReleaseSemaphore(&CodesetsBase->poolSem);
-
-  RETURN(IsListEmpty((struct List *)&newcs->codesets) == FALSE);
-  return IsListEmpty((struct List *)&newcs->codesets) == FALSE;
-}
-
-///
 /// codesetsCleanup()
 // Cleanup the memory for the codeset
 void
@@ -1016,44 +960,6 @@ codesetsCleanup(struct MinList *codesetsList)
     if(code->characterization) freeArbitrateVecPooled(code->characterization);
 
     freeArbitrateVecPooled(code);
-  }
-
-  LEAVE();
-}
-
-///
-/// codesetsPrivateCleanup()
-// Cleanup the memory for the private codeset a task reserved during OpenLibrary
-void
-codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task)
-{
-  struct MinNode *curNode;
-
-  ENTER();
-
-  D(DBF_STARTUP, "trying to free private codesetslist of task 0x%08lx...", task);
-
-  for(curNode = privateCodesetsList->mlh_Head; curNode->mln_Succ;)
-  {
-    struct privateCodeset *pcs = (struct privateCodeset *)curNode;
-
-    // before we remove the node we have to save the pointer to the next one
-    curNode = curNode->mln_Succ;
-
-    if(task == NULL || pcs->task == task)
-    {
-      D(DBF_STARTUP, "cleaning up private codesets list for task 0x%08lx...", pcs->task);
-
-      codesetsCleanup(&pcs->codesets);
-
-      // Remove node from list
-      Remove((struct Node *)pcs);
-
-      freeArbitrateVecPooled(pcs);
-
-      if(task != NULL)
-        break;
-    }
   }
 
   LEAVE();
@@ -1156,31 +1062,52 @@ STRPTR *LIBFUNC
 CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
 {
   STRPTR *array = NULL;
-  struct Task *refTask;
+  struct TagItem *tstate = attrs;
+  struct TagItem *tag;
+  int numCodesets;
 
   ENTER();
 
-  // try to retrieve the RefTask attribute
-  if((refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
+  // first we need to check how many codesets our supplied
+  // lists carry.
+  numCodesets = countNodes(&CodesetsBase->codesets);
+  while((tag = NextTagItem(&tstate)))
   {
-    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
+    if(tag->ti_Tag == CODESETSA_CodesetList && tag->ti_Data != 0)
+      numCodesets += countNodes((struct MinList *)tag->ti_Data);
+  }
 
-    if(pcl != NULL &&
-       (array = allocArbitrateVecPooled(sizeof(STRPTR)*(countNodes(&CodesetsBase->codesets)+countNodes(pcl)+1))))
+  // now that we know how many codesets we have in our lists we
+  // can put their names into our string arrays
+  if(numCodesets > 0)
+  {
+    if((array = allocArbitrateVecPooled((numCodesets+1)*sizeof(STRPTR))))
     {
       struct codeset *code;
       struct codeset *succ;
       int i=0;
 
+      // reset the tstate
+      tstate = attrs;
+
       ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-      // first we check our internal list
+      // first we walk through the internal codesets list and
+      // add the names
       for(code = (struct codeset *)CodesetsBase->codesets.mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
         array[i] = code->name;
 
       // then we also iterate through our private codesets list
-      for(code = (struct codeset *)pcl->mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
-        array[i] = code->name;
+      while((tag = NextTagItem(&tstate)))
+      {
+        if(tag->ti_Tag == CODESETSA_CodesetList && tag->ti_Data != 0)
+        {
+          struct MinList *list = (struct MinList *)tag->ti_Data;
+
+          for(code = (struct codeset *)list->mlh_Head; (succ = (struct codeset *)code->node.mln_Succ); code = succ, i++)
+            array[i] = code->name;
+        }
+      }
 
       array[i] = NULL;
 
@@ -1305,21 +1232,37 @@ struct codeset *LIBFUNC
 CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
-  struct Task *refTask = NULL;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  // try to retrieve the RefTask attribute
-  if(name != NULL && (refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
+  // if no name pointer was supplied we have to return
+  // the default codeset only.
+  if(name != NULL)
   {
-    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
+    // we first walk through our internal list and check if we
+    // can find the requested codeset
+    codeset = codesetsFind(&CodesetsBase->codesets, name);
 
-    // first we search the private list and afterwards
-    // the internal one.
-    if(pcl == NULL || (codeset = codesetsFind(pcl, name)) == NULL)
-      codeset = codesetsFind(&CodesetsBase->codesets, name);
+    if(codeset == NULL && attrs != NULL)
+    {
+      struct TagItem *tstate = attrs;
+      struct TagItem *tag;
+
+      // now we walk through our taglist and check if the user
+      // supplied
+      while((tag = NextTagItem(&tstate)))
+      {
+        if(tag->ti_Tag == CODESETSA_CodesetList && tag->ti_Data != 0)
+        {
+          struct MinList *list = (struct MinList *)tag->ti_Data;
+
+          if((codeset = codesetsFind(list, name)) != NULL)
+            break;
+        }
+      }
+    }
   }
 
   // check if we found something or not.
@@ -1360,22 +1303,40 @@ struct codeset *LIBFUNC
 CodesetsFindBestA(REG(a0, STRPTR text),
                   REG(d0, ULONG text_len),
                   REG(a1, ULONG *error_ptr),
-                  REG(a2, UNUSED struct TagItem *attrs))
+                  REG(a2, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
-  struct Task *refTask;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  // try to retrieve the RefTask attribute
-  if((refTask = (struct Task *)GetTagData(CODESETSA_RefTask, (ULONG)FindTask(NULL), attrs)))
+  // if no text pointer was supplied we have to return
+  // the default codeset only.
+  if(text != NULL)
   {
-    struct MinList *pcl = findPrivateCodesetList(&CodesetsBase->privateCodesets, refTask);
+    // we first walk through our internal list and check if we
+    // can find the requested codeset
+    codeset = codesetsFindBest(&CodesetsBase->codesets, text, text_len, (int *)error_ptr);
 
-    if(pcl == NULL || (codeset = codesetsFindBest(pcl, text, text_len, (int *)error_ptr)) == NULL)
-      codeset = codesetsFindBest(&CodesetsBase->codesets, text, text_len, (int *)error_ptr);
+    if(codeset == NULL && attrs != NULL)
+    {
+      struct TagItem *tstate = attrs;
+      struct TagItem *tag;
+
+      // now we walk through our taglist and check if the user
+      // supplied
+      while((tag = NextTagItem(&tstate)))
+      {
+        if(tag->ti_Tag == CODESETSA_CodesetList && tag->ti_Data != 0)
+        {
+          struct MinList *list = (struct MinList *)tag->ti_Data;
+
+          if((codeset = codesetsFindBest(list, text, text_len, (int *)error_ptr)) != NULL)
+            break;
+        }
+      }
+    }
   }
 
   ReleaseSemaphore(&CodesetsBase->libSem);
@@ -2059,6 +2020,278 @@ LIBSTUBVA(CodesetsFreeVecPooled, void, REG(a0, APTR pool),
   VA_END(args);
 }
 #endif
+///
+/// CodesetsListCreateA()
+struct MinList *LIBFUNC
+CodesetsListCreateA(REG(a0, struct TagItem *attrs))
+{
+  struct MinList *codesetsList = NULL;
+
+  ENTER();
+
+  ObtainSemaphore(&CodesetsBase->poolSem);
+
+  // no matter what, we create a codesets list we will return to the user
+  if((codesetsList = allocVecPooled(CodesetsBase->pool, sizeof(struct MinList))))
+  {
+    BOOL scanProgDir = TRUE;
+    BOOL forceProgDirScan = FALSE;
+    struct TagItem *tstate = attrs;
+    struct TagItem *tag;
+
+    // initialize the new private codeset list and put it into a separate list
+    NewList((struct List *)codesetsList);
+
+    // first we get the path of the directory from which we go
+    // and scan for charset tables from
+    while((tag = NextTagItem(&tstate)))
+    {
+      switch(tag->ti_Tag)
+      {
+        case CODESETSA_CodesetDir:
+        {
+          if(tag->ti_Data != 0)
+          {
+            scanProgDir = FALSE;
+            codesetsScanDir(codesetsList, (STRPTR)tag->ti_Data);
+          }
+          else
+            forceProgDirScan = TRUE;
+        }
+        break;
+
+        case CODESETSA_CodesetFile:
+        {
+          codesetsReadTable(codesetsList, (STRPTR)tag->ti_Data);
+        }
+        break;
+
+        case CODESETSA_Codeset:
+        {
+          struct codeset *cs = (struct codeset *)tag->ti_Data;
+
+          AddTail((struct List *)codesetsList, (struct Node *)&cs->node);
+        }
+        break;
+      }
+    }
+
+    // in case the user also wants us to scan PROGDIR:
+    // we do so
+    if(scanProgDir == TRUE || forceProgDirScan == TRUE)
+      codesetsScanDir(codesetsList, "PROGDIR:Charsets");
+  }
+
+  ReleaseSemaphore(&CodesetsBase->poolSem);
+
+  RETURN(codesetsList);
+  return codesetsList;
+}
+
+LIBSTUB(CodesetsListCreateA, struct MinList *, REG(a0, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsListCreateA((struct TagItem *)REG_A0);
+  #else
+  return CodesetsListCreateA(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsListCreate, struct MinList *, ...)
+{
+  struct MinList *res;
+  VA_LIST args;
+
+  VA_START(args, self);
+  res = CodesetsListCreateA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
+///
+/// CodesetsListDelete()
+void LIBFUNC
+CodesetsListDelete(REG(a0, struct MinList *codesetsList))
+{
+  ENTER();
+
+  if(codesetsList != NULL)
+  {
+    // cleanup the list
+    codesetsCleanup(codesetsList);
+
+    // then free the list itself
+    freeArbitrateVecPooled(codesetsList);
+  }
+
+  LEAVE();
+}
+
+LIBSTUB(CodesetsListDelete, void, REG(a0, struct MinList *codesetsList))
+{
+  #ifdef __MORPHOS__
+  return CodesetsListDelete((struct MinList *)REG_A0);
+  #else
+  return CodesetsListDelete(codesetsList);
+  #endif
+}
+///
+/// CodesetsListAddA()
+void LIBFUNC
+CodesetsListAddA(REG(a0, struct MinList *codesetsList),
+                 REG(a1, struct TagItem *attrs))
+{
+  ENTER();
+
+  ObtainSemaphore(&CodesetsBase->poolSem);
+
+  if(codesetsList != NULL)
+  {
+    struct TagItem *tstate = attrs;
+    struct TagItem *tag;
+
+    // now we iterate through or tagItems and see if the user
+    // wants to scan a whole directory or just adds a file.
+    while((tag = NextTagItem(&tstate)))
+    {
+      switch(tag->ti_Tag)
+      {
+        case CODESETSA_CodesetDir:
+        {
+          codesetsScanDir(codesetsList, (STRPTR)tag->ti_Data);
+        }
+        break;
+
+        case CODESETSA_CodesetFile:
+        {
+          codesetsReadTable(codesetsList, (STRPTR)tag->ti_Data);
+        }
+        break;
+
+        case CODESETSA_Codeset:
+        {
+          struct codeset *cs = (struct codeset *)tag->ti_Data;
+
+          AddTail((struct List *)codesetsList, (struct Node *)&cs->node);
+        }
+        break;
+      }
+    }
+  }
+
+  ReleaseSemaphore(&CodesetsBase->poolSem);
+
+  LEAVE();
+}
+
+LIBSTUB(CodesetsListAddA, void, REG(a0, struct MinList *codesetsList), REG(a1, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsListAddA((struct MinList *)REG_A0, (struct TagItem *)REG_A1);
+  #else
+  return CodesetsListAddA(codesetsList, attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsListAdd, void, struct MinList *list, ...)
+{
+  VA_LIST args;
+
+  VA_START(args, list);
+  CodesetsListAddA(list, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+}
+#endif
+
+///
+/// CodesetsListRemoveA()
+void LIBFUNC
+CodesetsListRemoveA(REG(a0, struct TagItem *attrs))
+{
+  ENTER();
+
+  ObtainSemaphore(&CodesetsBase->poolSem);
+
+  if(attrs != NULL)
+  {
+    BOOL freeCodesets;
+    struct TagItem *tstate = attrs;
+    struct TagItem *tag;
+
+    // check if the caller wants us also to free the codesets
+    freeCodesets = (BOOL)GetTagData(CODESETSA_FreeCodesets, TRUE, attrs);
+
+    // now we iterate through or tagItems and see what the
+    // user wants to remove from the list
+    while((tag = NextTagItem(&tstate)))
+    {
+      switch(tag->ti_Tag)
+      {
+        case CODESETSA_Codeset:
+        {
+          struct codeset *cs = (struct codeset *)tag->ti_Data;
+
+          if(cs)
+          {
+            struct MinNode *mstate = &cs->node;
+
+            // before we actually remove the node from its list, we
+            // have to make sure it isn't part of our internal codesets list
+            while(mstate->mln_Succ)
+              mstate = mstate->mln_Succ;
+
+            if(mstate != CodesetsBase->codesets.mlh_Tail)
+            {
+              Remove((struct Node *)&cs->node);
+
+              // free all codesets data if requested.
+              if(freeCodesets == TRUE)
+              {
+                if(cs->name)             freeArbitrateVecPooled(cs->name);
+                if(cs->alt_name)         freeArbitrateVecPooled(cs->alt_name);
+                if(cs->characterization) freeArbitrateVecPooled(cs->characterization);
+
+                freeArbitrateVecPooled(cs);
+              }
+            }
+            else
+              W(DBF_ALWAYS, "user tried to remove an internal codesets!");
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  ReleaseSemaphore(&CodesetsBase->poolSem);
+
+  LEAVE();
+}
+
+LIBSTUB(CodesetsListRemoveA, void, REG(a0, struct TagItem *attrs))
+{
+  #ifdef __MORPHOS__
+  return CodesetsListRemoveA((struct TagItem *)REG_A0);
+  #else
+  return CodesetsListRemoveA(attrs);
+  #endif
+}
+
+#ifdef __amigaos4__
+LIBSTUBVA(CodesetsListRemove, void, ...)
+{
+  VA_LIST args;
+
+  VA_START(args, self);
+  CodesetsListRemoveA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+}
+#endif
+
 ///
 
 /**************************************************************************/

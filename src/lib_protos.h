@@ -64,9 +64,7 @@ LIBPROTO(CodesetsConvertUTF8toUTF32,  ULONG, REG(a0, const UTF8 **sourceStart), 
 
 /* codesets.c */
 BOOL codesetsInit(struct MinList *codesetsList);
-BOOL codesetsPrivateInit(struct MinList *privatCodesetsList, struct Task *task);
 void codesetsCleanup(struct MinList *codesetsList);
-void codesetsPrivateCleanup(struct MinList *privateCodesetsList, struct Task *task);
 struct codeset *codesetsFind(struct MinList *codesetsList, STRPTR name);
 struct codeset *codesetsFindBest(struct MinList *codesetsList, STRPTR text, int text_len, int *error_ptr);
 
@@ -92,5 +90,12 @@ LIBPROTO(CodesetsFreeVecPooledA, void, REG(a0, APTR pool), REG(a1, APTR mem), RE
 LIBPROTOVA(CodesetsFreeVecPooled,void, REG(a0, APTR pool), REG(a1, APTR mem), ...);
 LIBPROTO(CodesetsIsValidUTF8,ULONG, REG(a0, STRPTR s));
 LIBPROTO(CodesetsUTF8Len,    ULONG, REG(a0, UTF8 *str));
+LIBPROTO(CodesetsListCreateA, struct MinList *, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListCreate, struct MinList *, ...);
+LIBPROTO(CodesetsListDelete, void, REG(a0, struct MinList *codesetsList));
+LIBPROTO(CodesetsListAddA, void, REG(a0, struct MinList *codesetsList), REG(a1, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListAdd, void, REG(a0, struct MinList *codesetsList), ...);
+LIBPROTO(CodesetsListRemoveA, void, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListRemove, void, ...);
 
 #endif /* _LIB_PROTOS_H */

@@ -362,6 +362,55 @@ static STRPTR stub_CodesetsConvertStrAPPC(ULONG *regarray)
 }
 STATIC CONST struct EmuTrap stub_CodesetsConvertStrA = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_CodesetsConvertStrAPPC };
 
+static struct MinList * stub_CodesetsListCreateAPPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	return Self->CodesetsListCreateA(
+		(struct TagItem *)regarray[8]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsListCreateA = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_CodesetsListCreateAPPC };
+
+static void stub_CodesetsListDeletePPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	Self->CodesetsListDelete(
+		(struct MinList *)regarray[8]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsListDelete = { TRAPINST, TRAPTYPENR, (ULONG (*)(ULONG *))stub_CodesetsListDeletePPC };
+
+static void stub_CodesetsListAddAPPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	Self->CodesetsListAddA(
+		(struct MinList *)regarray[8],
+		(struct TagItem *)regarray[9]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsListAddA = { TRAPINST, TRAPTYPENR, (ULONG (*)(ULONG *))stub_CodesetsListAddAPPC };
+
+static void stub_CodesetsListRemoveAPPC(ULONG *regarray)
+{
+	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
+
+	Self->CodesetsListRemoveA(
+		(struct TagItem *)regarray[8]
+	);
+}
+STATIC CONST struct EmuTrap stub_CodesetsListRemoveA = { TRAPINST, TRAPTYPENR, (ULONG (*)(ULONG *))stub_CodesetsListRemoveAPPC };
+
 CONST CONST_APTR VecTable68K[] =
 {
 	&stub_Open,
@@ -391,5 +440,9 @@ CONST CONST_APTR VecTable68K[] =
 	&stub_CodesetsIsValidUTF8,
 	&stub_CodesetsFreeVecPooledA,
 	&stub_CodesetsConvertStrA,
+	&stub_CodesetsListCreateA,
+	&stub_CodesetsListDelete,
+	&stub_CodesetsListAddA,
+	&stub_CodesetsListRemoveA,
 	(CONST_APTR)-1
 };

@@ -49,6 +49,13 @@ STRUCTURE CodesetsIFace, InterfaceData_SIZE
 	    FPTR ICodesets_CodesetsFreeVecPooled
 	    FPTR ICodesets_CodesetsConvertStrA
 	    FPTR ICodesets_CodesetsConvertStr
+	    FPTR ICodesets_CodesetsListCreateA
+	    FPTR ICodesets_CodesetsListCreate
+	    FPTR ICodesets_CodesetsListDelete
+	    FPTR ICodesets_CodesetsListAddA
+	    FPTR ICodesets_CodesetsListAdd
+	    FPTR ICodesets_CodesetsListRemoveA
+	    FPTR ICodesets_CodesetsListRemove
 	LABEL CodesetsIFace_SIZE
 
 #endif

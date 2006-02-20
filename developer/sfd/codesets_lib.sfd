@@ -58,4 +58,14 @@ void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag attrs, ...) (a0,a1,a2)
 STRPTR CodesetsConvertStrA(struct TagItem * attrs) (a0)
 ==varargs
 STRPTR CodesetsConvertStr(Tag attrs, ...) (a0)
+struct MinList * CodesetsListCreateA(struct TagItem *attrs) (a0)
+==varargs
+struct MinList * CodesetsListCreate(Tag attrs, ...) (a0)
+void CodesetsListDelete(struct MinList *codesetsList) (a0)
+void CodesetsListAddA(struct MinList *codesetsList, struct TagItem *attrs) (a0,a1)
+==varargs
+void CodesetsListAdd(struct MinList *codesetsList, Tag attrs, ...) (a0,a1)
+void CodesetsListRemoveA(struct TagItem *attrs) (a0)
+==varargs
+void CodesetsListRemove(Tag tag1, ...) (a0)
 ==end

@@ -107,5 +107,24 @@
 #elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define CodesetsConvertStr(...) ICodesets->CodesetsConvertStr(## vargs) 
 #endif
+#define CodesetsListCreateA(attrs) ICodesets->CodesetsListCreateA(attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsListCreate(...) ICodesets->CodesetsListCreate(__VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsListCreate(...) ICodesets->CodesetsListCreate(## vargs) 
+#endif
+#define CodesetsListDelete(codesetsList) ICodesets->CodesetsListDelete(codesetsList) 
+#define CodesetsListAddA(codesetsList, attrs) ICodesets->CodesetsListAddA(codesetsList, attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsListAdd(...) ICodesets->CodesetsListAdd(__VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsListAdd(vargs...) ICodesets->CodesetsListAdd(## vargs) 
+#endif
+#define CodesetsListRemoveA(attrs) ICodesets->CodesetsListRemoveA(attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsListRemove(...) ICodesets->CodesetsListRemove(__VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsListRemove(...) ICodesets->CodesetsListRemove(## vargs) 
+#endif
 
 #endif /* INLINE4_CODESETS_H */

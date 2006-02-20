@@ -110,7 +110,7 @@ enum
 */
 
 /* This value breaks the GPL2: it is strictly PRIVATE and CAN'T BE RE-USED! */
-#define CODESETSLIB_TAG(n)          ((int)0xfec901f4+(n))
+#define CODESETSLIB_TAG(n)          ((ULONG)0xfec901f4+(n))
 
 #define CODESETSA_Base                CODESETSLIB_TAG(0)
 
@@ -128,7 +128,10 @@ enum
 #define CODESETSA_NoFail              CODESETSLIB_TAG(12)
 #define CODESETSA_SourceCodeset       CODESETSLIB_TAG(13)
 #define CODESETSA_DestCodeset         CODESETSLIB_TAG(14)
-#define CODESETSA_RefTask             CODESETSLIB_TAG(15)
+#define CODESETSA_CodesetDir          CODESETSLIB_TAG(15)
+#define CODESETSA_CodesetFile         CODESETSLIB_TAG(16)
+#define CODESETSA_CodesetList         CODESETSLIB_TAG(17)
+#define CODESETSA_FreeCodesets        CODESETSLIB_TAG(18)
 
 #define CODESETSA_B64SourceString     CODESETSLIB_TAG(20)
 #define CODESETSA_B64SourceLen        CODESETSLIB_TAG(21)

@@ -170,21 +170,52 @@
 	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
 
 #define CodesetsFreeVecPooledA(pool, mem, attrs) \
-	LP3(0x9c, void, CodesetsFreeVecPooledA, APTR, pool, a0, APTR, mem, a1, struct TagItem *, attrs, a2, \
+	LP3NR(0x9c, CodesetsFreeVecPooledA, APTR, pool, a0, APTR, mem, a1, struct TagItem *, attrs, a2, \
 	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
 
 #ifndef NO_PPCINLINE_STDARG
 #define CodesetsFreeVecPooled(pool, mem, tags...) \
-	({ULONG _tags[] = {tags}; CodesetsFreeVecPooled((pool), (mem), (struct TagItem *) _tags);})
+	({ULONG _tags[] = {tags}; CodesetsFreeVecPooledA((pool), (mem), (struct TagItem *) _tags);})
 #endif
 
-#define CodesetsConvertStrA(attrs) \
-	LP1(0xa2, STRPTR, CodesetsConvertStrA, struct TagItem *, attrs, a0, \
+#define CodesetsConvertStrA(str) \
+	LP1(0xa2, STRPTR, CodesetsConvertStrA, struct TagItem *, str, a0, \
 	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
 
 #ifndef NO_PPCINLINE_STDARG
 #define CodesetsConvertStr(tags...) \
 	({ULONG _tags[] = {tags}; CodesetsConvertStrA((struct TagItem *) _tags);})
+#endif
+
+#define CodesetsListCreateA(attrs) \
+	LP1(0xa8, struct MinList *, CodesetsListCreateA, struct TagItem *, attrs, a0, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#ifndef NO_PPCINLINE_STDARG
+#define CodesetsListCreate(tags...) \
+	({ULONG _tags[] = {tags}; CodesetsListCreateA((struct TagItem *) _tags);})
+#endif
+
+#define CodesetsListDelete(list) \
+	LP1NR(0xae, CodesetsListDelete, struct MinList *, list, a0, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#define CodesetsListAddA(list, attrs) \
+	LP2NR(0xb4, CodesetsListAddA, struct MinList *, list, a0, struct TagItem *, attrs, a1, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#ifndef NO_PPCINLINE_STDARG
+#define CodesetsListAdd(list, tags...) \
+	({ULONG _tags[] = {tags}; CodesetsListAddA((list), (struct TagItem *) _tags);})
+#endif
+
+#define CodesetsListRemoveA(attrs) \
+	LP1NR(0xba, CodesetsListRemoveA, struct TagItem *, attrs, a0, \
+	, CODESETS_BASE_NAME, IF_CACHEFLUSHALL, NULL, 0, IF_CACHEFLUSHALL, NULL, 0)
+
+#ifndef NO_PPCINLINE_STDARG
+#define CodesetsListRemove(tags...) \
+	({ULONG _tags[] = {tags}; CodesetsListRemoveA((struct TagItem *) _tags);})
 #endif
 
 #endif /*  _PPCINLINE_CODESETS_H  */

@@ -155,5 +155,28 @@
 		<method name="CodesetsConvertStr" result="STRPTR">
 			<vararg name="attrs" type="Tag"/>
 		</method>
+		<method name="CodesetsListCreateA" result="struct MinList *">
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsListCreate" result="struct MinList *">
+			<vararg name="attrs" type="Tag"/>
+		</method>
+		<method name="CodesetsListDelete" result="void">
+			<arg name="codesetsList" type="struct MinList *"/>
+		</method>
+		<method name="CodesetsListAddA" result="void">
+			<arg name="codesetsList" type="struct MinList *"/>
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsListAdd" result="void">
+			<arg name="codesetsList" type="struct MinList *"/>
+			<vararg name="attrs" type="Tag"/>
+		</method>
+		<method name="CodesetsListRemoveA" result="void">
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsListRemove" result="void">
+			<vararg name="tag1" type="Tag"/>
+		</method>
 	</interface>
 </library>

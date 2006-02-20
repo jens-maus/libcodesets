@@ -32,7 +32,6 @@ struct LibraryHeader
   struct SignalSemaphore  poolSem;
   ULONG                   flags;
   struct MinList          codesets;       // exec list with all internal codesets.
-  struct MinList          privateCodesets;// exec list of task private codesets.
   struct codeset          *systemCodeset; // ptr to the system's default codeset
   struct codeset          *utf8Codeset;   // ptr to the fake utf8 codeset
 };

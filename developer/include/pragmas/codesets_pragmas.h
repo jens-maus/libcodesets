@@ -50,6 +50,10 @@
 #pragma amicall(CodesetsBase,0x096,CodesetsIsValidUTF8(a0))
 #pragma amicall(CodesetsBase,0x09c,CodesetsFreeVecPooledA(a0,a1,a2))
 #pragma amicall(CodesetsBase,0x0a2,CodesetsConvertStrA(a0))
+#pragma amicall(CodesetsBase,0x0a8,CodesetsListCreateA(a0))
+#pragma amicall(CodesetsBase,0x0ae,CodesetsListDelete(a0))
+#pragma amicall(CodesetsBase,0x0b4,CodesetsListAddA(a0,a1))
+#pragma amicall(CodesetsBase,0x0ba,CodesetsListRemoveA(a0))
 #endif
 #if defined(_DCC) || defined(__SASC)
 #pragma  libcall CodesetsBase CodesetsConvertUTF32toUTF16 024 0ba9805
@@ -72,8 +76,12 @@
 #pragma  libcall CodesetsBase CodesetsDecodeB64A     08a 801
 #pragma  libcall CodesetsBase CodesetsStrLenA        090 9802
 #pragma  libcall CodesetsBase CodesetsIsValidUTF8    096 801
-#pragma  libcall CodesetsBase CodesetsFreeVecPooledA 09c 801
+#pragma  libcall CodesetsBase CodesetsFreeVecPooledA 09c a9803
 #pragma  libcall CodesetsBase CodesetsConvertStrA    0a2 801
+#pragma  libcall CodesetsBase CodesetsListCreateA    0a8 801
+#pragma  libcall CodesetsBase CodesetsListDelete     0ae 801
+#pragma  libcall CodesetsBase CodesetsListAddA       0b4 9802
+#pragma  libcall CodesetsBase CodesetsListRemoveA    0ba 801
 #endif
 #ifdef __STORM__
 #pragma tagcall(CodesetsBase,0x054,CodesetsSetDefault(a0,a1))
@@ -88,6 +96,9 @@
 #pragma tagcall(CodesetsBase,0x090,CodesetsStrLen(a0,a1))
 #pragma tagcall(CodesetsBase,0x09c,CodesetsFreeVecPooled(a0,a1,a2))
 #pragma tagcall(CodesetsBase,0x0a2,CodesetsConvertStr(a0))
+#pragma tagcall(CodesetsBase,0x0a8,CodesetsListCreate(a0))
+#pragma tagcall(CodesetsBase,0x0b4,CodesetsListAdd(a0,a1))
+#pragma tagcall(CodesetsBase,0x0ba,CodesetsListRemove(a0))
 #endif
 #ifdef __SASC_60
 #pragma  tagcall CodesetsBase CodesetsSetDefault     054 9802
@@ -100,8 +111,11 @@
 #pragma  tagcall CodesetsBase CodesetsEncodeB64      084 801
 #pragma  tagcall CodesetsBase CodesetsDecodeB64      08a 801
 #pragma  tagcall CodesetsBase CodesetsStrLen         090 9802
-#pragma  tagcall CodesetsBase CodesetsFreeVecPooled  09c 801
+#pragma  tagcall CodesetsBase CodesetsFreeVecPooled  09c a9803
 #pragma  tagcall CodesetsBase CodesetsConvertStr     0a2 801
+#pragma  tagcall CodesetsBase CodesetsListCreate     0a8 801
+#pragma  tagcall CodesetsBase CodesetsListAdd        0b4 9802
+#pragma  tagcall CodesetsBase CodesetsListRemove     0ba 801
 #endif
 
 #endif /* PRAGMAS_CODESETS_PRAGMAS_H */
