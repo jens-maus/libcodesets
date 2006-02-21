@@ -30,7 +30,7 @@
 #include <proto/utility.h>
 #include <proto/dos.h>
 
-#include "codesets.library_rev.h"
+#include "version.h"
 
 #include "debug.h"
 #include "macros.h"
@@ -51,7 +51,7 @@ void SetupDebug(void)
 {
   char var[256];
 
-  kprintf("** %s startup ***********************************\n", VERS);
+  kprintf("** %s (%s) startup ***********************************\n", LIB_REV_STRING, LIB_DATE);
   kprintf("Initializing runtime debugging:\n");
 
 	if(GetVar("codesets.library.debug", var, sizeof(var), 0) > 0)

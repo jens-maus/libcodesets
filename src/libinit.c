@@ -21,7 +21,7 @@
 ***************************************************************************/
 
 #include "lib.h"
-#include "codesets.library_rev.h"
+#include "version.h"
 
 #include <exec/resident.h>
 #include <proto/exec.h>
@@ -40,8 +40,8 @@ struct ExecBase *SysBase = NULL;
 
 struct LibraryHeader *CodesetsBase = NULL;
 
-static const char UserLibName[] = PRG;
-static const char UserLibID[]   = VERSTAG;
+static const char UserLibName[] = "codesets.library";
+static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING CPU " (" LIB_DATE ") " LIB_COPYRIGHT;
 
 /****************************************************************************/
 
@@ -252,18 +252,18 @@ static const USED_VAR struct Resident ROMTag =
   #else
   RTF_AUTOINIT,
   #endif
-  VERSION,
+  LIB_VERSION,
   NT_LIBRARY,
   0,
-  PRG,
-  VSTRING,
+  (char *)UserLibName,
+  (char *)UserLibID+6,
   #if defined(__amigaos4__)
   (APTR)LibCreateTags           // This table is for initializing the Library.
   #else
   (APTR)LibInitTab,
   #endif
   #if defined(__MORPHOS__)
-  REVISION,
+  LIB_REVISION,
   0
   #endif
 };
@@ -304,9 +304,9 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   base->libBase.lib_Node.ln_Pri  = 0;
   base->libBase.lib_Node.ln_Name = (char *)UserLibName;
   base->libBase.lib_Flags        = LIBF_CHANGED | LIBF_SUMUSED;
-  base->libBase.lib_Version      = VERSION;
-  base->libBase.lib_Revision     = REVISION;
-  base->libBase.lib_IdString     = (char *)(UserLibID+7);
+  base->libBase.lib_Version      = LIB_VERSION;
+  base->libBase.lib_Revision     = LIB_REVISION;
+  base->libBase.lib_IdString     = (char *)(UserLibID+6);
 
   base->sysBase = (APTR)SysBase;
   base->segList = librarySegment;
