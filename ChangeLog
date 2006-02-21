@@ -7,6 +7,9 @@ $Source$
 
 2006-02-21  Jens Langner <Jens.Langner@light-speed.de>
 
+    * codesets.c: changed the scandir function to use ExAll() instead
+      of using the FileInfoBlock structures. This should be slightly
+      faster and more consistent.
     * codesets.c: replaced the previously added internal private
       codeset list management functions with a more transparent
       approach using separate functions (CodesetsListCreateA(),

@@ -443,35 +443,60 @@ codesetsScanDir(struct MinList *codesetsList, STRPTR dirPath)
 
   if(dirPath != NULL && dirPath[0] != '\0')
   {
-    struct FileInfoBlock *fib;
+    BPTR dirLock;
 
-    D(DBF_STARTUP, "scanning directory '%s' for codesets tables", dirPath);
-
-    // we try to walk through the PROGDIR:Charsets directory on our own and readin our
-    // own charset tables
-    if((fib = AllocDosObject(DOS_FIB, NULL)))
+    if((dirLock = Lock(dirPath, ACCESS_READ)))
     {
-      BPTR dir;
+      struct ExAllControl *eac;
 
-      if((dir = Lock(dirPath, SHARED_LOCK)) && Examine(dir, fib) && (fib->fib_DirEntryType >= 0))
+      D(DBF_STARTUP, "scanning directory '%s' for codesets tables", dirPath);
+
+      if((eac = AllocDosObject(DOS_EXALLCONTROL, NULL)))
       {
-        BPTR oldDir = CurrentDir(dir);
+        struct ExAllData *ead;
+        struct ExAllData *eabuffer;
+        LONG more;
 
-        while(ExNext(dir, fib))
+        eac->eac_LastKey = 0;
+        eac->eac_MatchString = NULL;
+        eac->eac_MatchFunc = NULL;
+
+        if((eabuffer = allocVecPooled(CodesetsBase->pool, 32768)))
         {
-          if(fib->fib_DirEntryType >= 0)
-            continue;
+          do
+          {
+            more = ExAll(dirLock, eabuffer, 32768, ED_TYPE, eac);
+            if(!more && IoErr() != ERROR_NO_MORE_ENTRIES)
+              break;
 
-          codesetsReadTable(codesetsList, fib->fib_FileName);
+            if(eac->eac_Entries == 0)
+              continue;
+
+            ead = (struct ExAllData *)eabuffer;
+            do
+            {
+              // we only take that ead if it is a file (ed_Type < 0)
+              if(ead->ed_Type < 0)
+              {
+                char filePath[620];
+
+                strcpy(filePath, dirPath);
+                AddPart(filePath, (char *)ead->ed_Name, 620);
+
+                codesetsReadTable(codesetsList, filePath);
+              }
+            }
+            while((ead = ead->ed_Next));
+          }
+          while(more);
+
+          freeArbitrateVecPooled(eabuffer);
         }
 
-        CurrentDir(oldDir);
+        FreeDosObject(DOS_EXALLCONTROL, eac);
       }
 
-      if(dir)
-        UnLock(dir);
-
-      FreeDosObject(DOS_FIB, fib);
+      UnLock(dirLock);
     }
   }
 
@@ -486,7 +511,6 @@ codesetsInit(struct MinList * codesetsList)
 {
   struct codeset       *codeset = NULL;
   UTF32                src;
-  struct FileInfoBlock *fib;
   int                  i;
   #if defined(__amigaos4__)
   int                  nextMIB = 3;
@@ -560,30 +584,7 @@ codesetsInit(struct MinList * codesetsList)
 
   // we try to walk to the LIBS:Charsets directory on our own and readin our
   // own charset tables
-  if((fib = AllocDosObject(DOS_FIB,NULL)))
-  {
-    BPTR dir;
-
-    if((dir = Lock("LIBS:Charsets",SHARED_LOCK)) && Examine(dir,fib) && (fib->fib_DirEntryType>=0))
-    {
-      BPTR oldDir = CurrentDir(dir);
-
-      while(ExNext(dir,fib))
-      {
-        if(fib->fib_DirEntryType>=0)
-          continue;
-
-        codesetsReadTable(codesetsList, fib->fib_FileName);
-      }
-
-      CurrentDir(oldDir);
-    }
-
-    if(dir)
-      UnLock(dir);
-
-    FreeDosObject(DOS_FIB,fib);
-  }
+  codesetsScanDir(codesetsList, "LIBS:Charsets");
 
   //
   // now we go and initialize our internally supported codesets but only if
