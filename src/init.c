@@ -295,7 +295,7 @@ initBase(struct LibraryHeader *lib)
         {
           if(codesetsInit(&lib->codesets))
           {
-            lib->systemCodeset = (struct codeset *)lib->codesets.mlh_Head;
+            lib->systemCodeset = (struct codeset *)lib->codesets.list.mlh_Head;
 
             if((LocaleBase = (APTR)OpenLibrary("locale.library", 37)) &&
                GETINTERFACE(ILocale, LocaleBase))

@@ -51,6 +51,7 @@ STRUCTURE CodesetsIFace, InterfaceData_SIZE
 	    FPTR ICodesets_CodesetsConvertStr
 	    FPTR ICodesets_CodesetsListCreateA
 	    FPTR ICodesets_CodesetsListCreate
+	    FPTR ICodesets_CodesetsListDeleteA
 	    FPTR ICodesets_CodesetsListDelete
 	    FPTR ICodesets_CodesetsListAddA
 	    FPTR ICodesets_CodesetsListAdd

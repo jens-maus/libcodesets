@@ -52,11 +52,11 @@
 	, CODESETS_BASE_NAME)
 
 #define CodesetsIsLegalUTF8(source, length) \
-	LP2(0x36, ULONG, CodesetsIsLegalUTF8, const , source, a0, ULONG, length, d0, \
+	LP2(0x36, BOOL, CodesetsIsLegalUTF8, const , source, a0, ULONG, length, d0, \
 	, CODESETS_BASE_NAME)
 
 #define CodesetsIsLegalUTF8Sequence(source, sourceEnd) \
-	LP2(0x3c, ULONG, CodesetsIsLegalUTF8Sequence, const , source, a0, const , sourceEnd, a1, \
+	LP2(0x3c, BOOL, CodesetsIsLegalUTF8Sequence, const , source, a0, const , sourceEnd, a1, \
 	, CODESETS_BASE_NAME)
 
 #define CodesetsConvertUTF8toUTF16(sourceStart, sourceEnd, targetStart, targetEnd, flags) \
@@ -166,7 +166,7 @@
 #endif
 
 #define CodesetsIsValidUTF8(str) \
-	LP1(0x96, ULONG, CodesetsIsValidUTF8, STRPTR, str, a0, \
+	LP1(0x96, BOOL, CodesetsIsValidUTF8, STRPTR, str, a0, \
 	, CODESETS_BASE_NAME)
 
 #define CodesetsFreeVecPooledA(pool, mem, attrs) \
@@ -188,7 +188,7 @@
 #endif
 
 #define CodesetsListCreateA(attrs) \
-	LP1(0xa8, struct MinList *, CodesetsListCreateA, struct TagItem *, attrs, a0, \
+	LP1(0xa8, struct codesetList *, CodesetsListCreateA, struct TagItem *, attrs, a0, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG
@@ -196,12 +196,17 @@
 	({ULONG _tags[] = {tags}; CodesetsListCreateA((struct TagItem *) _tags);})
 #endif
 
-#define CodesetsListDelete(list) \
-	LP1NR(0xae, CodesetsListDelete, struct MinList *, list, a0, \
+#define CodesetsListDeleteA(attrs) \
+	LP1(0xae, BOOL, CodesetsListDeleteA, struct TagItem *, attrs, a0, \
 	, CODESETS_BASE_NAME)
 
+#ifndef NO_INLINE_STDARG
+#define CodesetsListDelete(tags...) \
+	({ULONG _tags[] = {tags}; CodesetsListDeleteA((struct TagItem *) _tags);})
+#endif
+
 #define CodesetsListAddA(list, attrs) \
-	LP2NR(0xb4, CodesetsListAddA, struct MinList *, list, a0, struct TagItem *, attrs, a1, \
+	LP2(0xb4, BOOL, CodesetsListAddA, struct codesetList *, list, a0, struct TagItem *, attrs, a1, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG
@@ -210,7 +215,7 @@
 #endif
 
 #define CodesetsListRemoveA(attrs) \
-	LP1NR(0xba, CodesetsListRemoveA, struct TagItem *, attrs, a0, \
+	LP1(0xba, BOOL, CodesetsListRemoveA, struct TagItem *, attrs, a0, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG

@@ -30,11 +30,11 @@
 			<arg name="targetEnd" type="UTF8 *"/>
 			<arg name="flags" type="ULONG"/>
 		</method>
-		<method name="CodesetsIsLegalUTF8" result="ULONG">
+		<method name="CodesetsIsLegalUTF8" result="BOOL">
 			<arg name="source" type="const UTF8 *"/>
 			<arg name="length" type="ULONG"/>
 		</method>
-		<method name="CodesetsIsLegalUTF8Sequence" result="ULONG">
+		<method name="CodesetsIsLegalUTF8Sequence" result="BOOL">
 			<arg name="source" type="const UTF8 *"/>
 			<arg name="sourceEnd" type="const UTF8 *"/>
 		</method>
@@ -136,7 +136,7 @@
 			<arg name="str" type="STRPTR"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
-		<method name="CodesetsIsValidUTF8" result="ULONG">
+		<method name="CodesetsIsValidUTF8" result="BOOL">
 			<arg name="str" type="STRPTR"/>
 		</method>
 		<method name="CodesetsFreeVecPooledA" result="void">
@@ -155,27 +155,30 @@
 		<method name="CodesetsConvertStr" result="STRPTR">
 			<vararg name="attrs" type="Tag"/>
 		</method>
-		<method name="CodesetsListCreateA" result="struct MinList *">
+		<method name="CodesetsListCreateA" result="struct codesetList *">
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
-		<method name="CodesetsListCreate" result="struct MinList *">
+		<method name="CodesetsListCreate" result="struct codesetList *">
 			<vararg name="attrs" type="Tag"/>
 		</method>
-		<method name="CodesetsListDelete" result="void">
-			<arg name="codesetsList" type="struct MinList *"/>
-		</method>
-		<method name="CodesetsListAddA" result="void">
-			<arg name="codesetsList" type="struct MinList *"/>
+		<method name="CodesetsListDeleteA" result="BOOL">
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
-		<method name="CodesetsListAdd" result="void">
-			<arg name="codesetsList" type="struct MinList *"/>
+		<method name="CodesetsListDelete" result="BOOL">
+			<vararg name="tag1" type="Tag"/>
+		</method>
+		<method name="CodesetsListAddA" result="BOOL">
+			<arg name="codesetsList" type="struct codesetList *"/>
+			<arg name="attrs" type="struct TagItem *"/>
+		</method>
+		<method name="CodesetsListAdd" result="BOOL">
+			<arg name="codesetsList" type="struct codesetList *"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
-		<method name="CodesetsListRemoveA" result="void">
+		<method name="CodesetsListRemoveA" result="BOOL">
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
-		<method name="CodesetsListRemove" result="void">
+		<method name="CodesetsListRemove" result="BOOL">
 			<vararg name="tag1" type="Tag"/>
 		</method>
 	</interface>

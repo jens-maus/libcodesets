@@ -5,6 +5,23 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2006-02-25  Jens Langner <Jens.Langner@light-speed.de>
+
+    * codesets.doc: updated the autodocs according to our latest changes
+      sind the open-source release of the library. Added some common
+      examples and also restructed it.
+    * codesets.c: changed all "struct MinList *" related functions to use
+      the newly defined "struct codesetList *" instead. This new type
+      instead of the public MinList type keeps those functions more
+      flexible in future.
+    * codesets.c: changed CodesetsListDelete() to be a tagitem receiving
+      function. This should make it much more usable in future.
+    * codesets.c: modified all CodesetsListX() functions to return a
+      boolean value to signal if an operating succeeded or not.
+    * libraries/codesets.h: changed all tag items to carry the shortcut
+      CSA instead of the long CODESETSA_XXXX string. This should make the
+      use of codesets.library more intuitive.
+
 2006-02-21  Jens Langner <Jens.Langner@light-speed.de>
 
     * codesets.c: changed the scandir function to use ExAll() instead

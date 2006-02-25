@@ -66,7 +66,7 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
                             REG(a3, UTF16 * targetEnd),
                             REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF32 *source = *sourceStart;
   UTF16 *target = *targetStart;
 
@@ -78,7 +78,7 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
 
     if(target >= targetEnd)
     {
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
       break;
     }
 
@@ -89,10 +89,10 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
       /* UTF-16 surrogate values are illegal in UTF-32; 0xffff or 0xfffe are both reserved values */
       if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
       {
-        if(flags == CONVFLG_StrictConversion)
+        if(flags == CSF_StrictConversion)
         {
           --source;   /* return to the illegal value itself */
-          result = CONVRES_SourceIllegal;
+          result = CSR_SourceIllegal;
           break;
         }
         else
@@ -107,9 +107,9 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
     }
     else if(ch > UNI_MAX_LEGAL_UTF32)
     {
-      if(flags == CONVFLG_StrictConversion)
+      if(flags == CSF_StrictConversion)
       {
-        result = CONVRES_SourceIllegal;
+        result = CSR_SourceIllegal;
       }
       else
       {
@@ -122,7 +122,7 @@ CodesetsConvertUTF32toUTF16(REG(a0, const UTF32 ** sourceStart),
       if(target + 1 >= targetEnd)
       {
         --source;      /* Back up source pointer! */
-        result = CONVRES_TargetExhausted;
+        result = CSR_TargetExhausted;
         break;
       }
       ch -= halfBase;
@@ -160,7 +160,7 @@ CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
                             REG(a3, UTF32 * targetEnd),
                             REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF16 *source = *sourceStart;
   UTF32 *target = *targetStart;
   UTF32 ch=0, ch2=0;
@@ -188,11 +188,11 @@ CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
 
           ++source;
         }
-        else if(flags == CONVFLG_StrictConversion)
+        else if(flags == CSF_StrictConversion)
         {
           /* it's an unpaired high surrogate */
           --source;   /* return to the illegal value itself */
-          result = CONVRES_SourceIllegal;
+          result = CSR_SourceIllegal;
 
           break;
         }
@@ -201,18 +201,18 @@ CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
       {
         /* We don't have the 16 bits following the high surrogate. */
         --source;       /* return to the high surrogate */
-        result = CONVRES_SourceExhausted;
+        result = CSR_SourceExhausted;
 
         break;
       }
     }
-    else if (flags == CONVFLG_StrictConversion)
+    else if (flags == CSF_StrictConversion)
     {
       /* UTF-16 surrogate values are illegal in UTF-32 */
       if(ch >= UNI_SUR_LOW_START && ch <= UNI_SUR_LOW_END)
       {
         --source;       /* return to the illegal value itself */
-        result = CONVRES_SourceIllegal;
+        result = CSR_SourceIllegal;
 
         break;
       }
@@ -221,7 +221,7 @@ CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
     if(target >= targetEnd)
     {
       source = oldSource; /* Back up source pointer! */
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
 
       break;
     }
@@ -232,7 +232,7 @@ CodesetsConvertUTF16toUTF32(REG(a0, const UTF16 ** sourceStart),
   *targetStart = target;
 
   #if defined(DEBUG)
-  if(result == CONVRES_SourceIllegal)
+  if(result == CSR_SourceIllegal)
   {
     E(DBF_UTF, "ConvertUTF16toUTF32 illegal seq 0x%04x,%04x", ch, ch2);
   }
@@ -313,7 +313,7 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
                            REG(a3, UTF8 * targetEnd),
                            REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF16 *source = *sourceStart;
   UTF8 *target = *targetStart;
 
@@ -345,11 +345,11 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
 
           ++source;
         }
-        else if(flags == CONVFLG_StrictConversion)
+        else if(flags == CSF_StrictConversion)
         {
           /* it's an unpaired high surrogate */
           --source;   /* return to the illegal value itself */
-          result = CONVRES_SourceIllegal;
+          result = CSR_SourceIllegal;
           break;
         }
       }
@@ -357,18 +357,18 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
       {
         /* We don't have the 16 bits following the high surrogate. */
         --source;       /* return to the high surrogate */
-        result = CONVRES_SourceExhausted;
+        result = CSR_SourceExhausted;
 
         break;
       }
     }
-    else if(flags == CONVFLG_StrictConversion)
+    else if(flags == CSF_StrictConversion)
     {
       /* UTF-16 surrogate values are illegal in UTF-32 */
       if(ch >= UNI_SUR_LOW_START && ch <= UNI_SUR_LOW_END)
       {
         --source;       /* return to the illegal value itself */
-        result = CONVRES_SourceIllegal;
+        result = CSR_SourceIllegal;
 
         break;
       }
@@ -401,7 +401,7 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
     {
       source = oldSource; /* Back up source pointer! */
       target -= bytesToWrite;
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
 
       break;
     }
@@ -460,7 +460,7 @@ LIBSTUB(CodesetsConvertUTF16toUTF8, ULONG, REG(a0, const UTF16 ** sourceStart),
  * definition of UTF-8 goes up to 4-byte sequences.
  */
 
-ULONG LIBFUNC
+BOOL LIBFUNC
 CodesetsIsLegalUTF8(REG(a0, const UTF8 * source),
 		                REG(d0, ULONG length))
 {
@@ -558,7 +558,7 @@ CodesetsIsLegalUTF8(REG(a0, const UTF8 * source),
   return TRUE;
 }
 
-LIBSTUB(CodesetsIsLegalUTF8, ULONG, REG(a0, const UTF8 * source),
+LIBSTUB(CodesetsIsLegalUTF8, BOOL, REG(a0, const UTF8 * source),
                 		                REG(d0, ULONG length))
 {
   #ifdef __MORPHOS__
@@ -575,7 +575,7 @@ LIBSTUB(CodesetsIsLegalUTF8, ULONG, REG(a0, const UTF8 * source),
  * This is not used here; it's just exported.
  */
 
-ULONG LIBFUNC
+BOOL LIBFUNC
 CodesetsIsLegalUTF8Sequence(REG(a0, const UTF8 * source),
                             REG(a1, const UTF8 * sourceEnd))
 {
@@ -596,7 +596,7 @@ CodesetsIsLegalUTF8Sequence(REG(a0, const UTF8 * source),
   return res;
 }
 
-LIBSTUB(CodesetsIsLegalUTF8Sequence, ULONG, REG(a0, const UTF8 * source),
+LIBSTUB(CodesetsIsLegalUTF8Sequence, BOOL, REG(a0, const UTF8 * source),
                                             REG(a1, const UTF8 * sourceEnd))
 {
   #ifdef __MORPHOS__
@@ -615,7 +615,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
                            REG(a3, UTF16 * targetEnd),
                            REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF8 *source = *sourceStart;
   UTF16 *target = *targetStart;
 
@@ -628,14 +628,14 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
 
     if(source + extraBytesToRead >= sourceEnd)
     {
-      result = CONVRES_SourceExhausted;
+      result = CSR_SourceExhausted;
       break;
     }
 
     /* Do this check whether lenient or strict */
     if(!CodesetsIsLegalUTF8 (source, extraBytesToRead + 1))
     {
-      result = CONVRES_SourceIllegal;
+      result = CSR_SourceIllegal;
       break;
     }
 
@@ -673,7 +673,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
     if(target >= targetEnd)
     {
       source -= (extraBytesToRead + 1);   /* Back up source pointer! */
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
 
       break;
     }
@@ -684,10 +684,10 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
       /* UTF-16 surrogate values are illegal in UTF-32 */
       if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
       {
-        if(flags == CONVFLG_StrictConversion)
+        if(flags == CSF_StrictConversion)
         {
           source -= (extraBytesToRead + 1);   /* return to the illegal value itself */
-          result = CONVRES_SourceIllegal;
+          result = CSR_SourceIllegal;
 
           break;
         }
@@ -703,9 +703,9 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
     }
     else if(ch > UNI_MAX_UTF16)
     {
-      if(flags == CONVFLG_StrictConversion)
+      if(flags == CSF_StrictConversion)
       {
-        result = CONVRES_SourceIllegal;
+        result = CSR_SourceIllegal;
         source -= (extraBytesToRead + 1);   /* return to the start */
 
         break;          /* Bail out; shouldn't continue */
@@ -721,7 +721,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
       if(target + 1 >= targetEnd)
       {
         source -= (extraBytesToRead + 1);   /* Back up source pointer! */
-        result = CONVRES_TargetExhausted;
+        result = CSR_TargetExhausted;
 
         break;
       }
@@ -761,7 +761,7 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
                            REG(a3, UTF8 * targetEnd),
                            REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF32 *source = *sourceStart;
   UTF8 *target = *targetStart;
 
@@ -776,13 +776,13 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
 
     ch = *source++;
 
-    if(flags == CONVFLG_StrictConversion)
+    if(flags == CSF_StrictConversion)
     {
       /* UTF-16 surrogate values are illegal in UTF-32 */
       if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
       {
         --source;       /* return to the illegal value itself */
-        result = CONVRES_SourceIllegal;
+        result = CSR_SourceIllegal;
 
         break;
       }
@@ -812,7 +812,7 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
     {
       bytesToWrite = 3;
       ch = UNI_REPLACEMENT_CHAR;
-      result = CONVRES_SourceIllegal;
+      result = CSR_SourceIllegal;
     }
 
     target += bytesToWrite;
@@ -820,7 +820,7 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
     {
       --source;           /* Back up source pointer! */
       target -= bytesToWrite;
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
 
       break;
     }
@@ -875,7 +875,7 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
                            REG(a3, UTF32 * targetEnd),
                            REG(d0, ULONG flags))
 {
-  ULONG result = CONVRES_ConversionOK;
+  ULONG result = CSR_ConversionOK;
   const UTF8 *source = *sourceStart;
   UTF32 *target = *targetStart;
 
@@ -888,14 +888,14 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
 
     if(source + extraBytesToRead >= sourceEnd)
     {
-      result = CONVRES_SourceExhausted;
+      result = CSR_SourceExhausted;
       break;
     }
 
     /* Do this check whether lenient or strict */
     if(!CodesetsIsLegalUTF8(source, extraBytesToRead + 1))
     {
-      result = CONVRES_SourceIllegal;
+      result = CSR_SourceIllegal;
       break;
     }
 
@@ -933,7 +933,7 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
     if(target >= targetEnd)
     {
       source -= (extraBytesToRead + 1);   /* Back up the source pointer! */
-      result = CONVRES_TargetExhausted;
+      result = CSR_TargetExhausted;
 
       break;
     }
@@ -946,10 +946,10 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
       */
       if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
       {
-        if(flags == CONVFLG_StrictConversion)
+        if(flags == CSF_StrictConversion)
         {
           source -= (extraBytesToRead + 1);   /* return to the illegal value itself */
-          result = CONVRES_SourceIllegal;
+          result = CSR_SourceIllegal;
 
           break;
         }
@@ -966,7 +966,7 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
     else
     {
       /* i.e., ch > UNI_MAX_LEGAL_UTF32 */
-      result = CONVRES_SourceIllegal;
+      result = CSR_SourceIllegal;
       *target++ = UNI_REPLACEMENT_CHAR;
     }
   }

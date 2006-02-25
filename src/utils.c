@@ -192,19 +192,3 @@ snprintf(STRPTR buf,int size,STRPTR fmt,...)
     return s.counter-1;
 }
 #endif
-
-/****************************************************************************/
-
-int
-countNodes(struct MinList *List)
-{
-  struct MinNode *node, *succ;
-  int            num;
-
-  for(node = List->mlh_Head, num = 0; (succ = node->mln_Succ); node = succ)
-    ++num;
-
-  return num;
-}
-
-/***********************************************************************/

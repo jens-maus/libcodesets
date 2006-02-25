@@ -32,8 +32,8 @@ struct CodesetsIFace
 	ULONG APICALL (*CodesetsConvertUTF32toUTF16)(struct CodesetsIFace *Self, const UTF32 ** sourceStart, const UTF32 ** sourceEnd, UTF16 ** targetStart, UTF16 * targetEnd, ULONG flags);
 	ULONG APICALL (*CodesetsConvertUTF16toUTF32)(struct CodesetsIFace *Self, const UTF16 ** sourceStart, const UTF16 ** sourceEnd, UTF32 ** targetStart, UTF32 * targetEnd, ULONG flags);
 	ULONG APICALL (*CodesetsConvertUTF16toUTF8)(struct CodesetsIFace *Self, const UTF16 ** sourceStart, const UTF16 ** sourceEnd, UTF8 ** targetStart, UTF8 * targetEnd, ULONG flags);
-	ULONG APICALL (*CodesetsIsLegalUTF8)(struct CodesetsIFace *Self, const UTF8 * source, ULONG length);
-	ULONG APICALL (*CodesetsIsLegalUTF8Sequence)(struct CodesetsIFace *Self, const UTF8 * source, const UTF8 * sourceEnd);
+	BOOL APICALL (*CodesetsIsLegalUTF8)(struct CodesetsIFace *Self, const UTF8 * source, ULONG length);
+	BOOL APICALL (*CodesetsIsLegalUTF8Sequence)(struct CodesetsIFace *Self, const UTF8 * source, const UTF8 * sourceEnd);
 	ULONG APICALL (*CodesetsConvertUTF8toUTF16)(struct CodesetsIFace *Self, const UTF8 ** sourceStart, const UTF8 * sourceEnd, UTF16 ** targetStart, UTF16 * targetEnd, ULONG flags);
 	ULONG APICALL (*CodesetsConvertUTF32toUTF8)(struct CodesetsIFace *Self, const UTF32 ** sourceStart, const UTF32 * sourceEnd, UTF8 ** targetStart, UTF8 * targetEnd, ULONG flags);
 	ULONG APICALL (*CodesetsConvertUTF8toUTF32)(struct CodesetsIFace *Self, const UTF8 ** sourceStart, const UTF8 * sourceEnd, UTF32 ** targetStart, UTF32 * targetEnd, ULONG flags);
@@ -58,18 +58,19 @@ struct CodesetsIFace
 	ULONG APICALL (*CodesetsDecodeB64)(struct CodesetsIFace *Self, ...);
 	ULONG APICALL (*CodesetsStrLenA)(struct CodesetsIFace *Self, STRPTR str, struct TagItem * attrs);
 	ULONG APICALL (*CodesetsStrLen)(struct CodesetsIFace *Self, STRPTR str, ...);
-	ULONG APICALL (*CodesetsIsValidUTF8)(struct CodesetsIFace *Self, STRPTR str);
+	BOOL APICALL (*CodesetsIsValidUTF8)(struct CodesetsIFace *Self, STRPTR str);
 	void APICALL (*CodesetsFreeVecPooledA)(struct CodesetsIFace *Self, APTR pool, APTR mem, struct TagItem * attrs);
 	void APICALL (*CodesetsFreeVecPooled)(struct CodesetsIFace *Self, APTR pool, APTR mem, ...);
 	STRPTR APICALL (*CodesetsConvertStrA)(struct CodesetsIFace *Self, struct TagItem * attrs);
 	STRPTR APICALL (*CodesetsConvertStr)(struct CodesetsIFace *Self, ...);
-	struct MinList * APICALL (*CodesetsListCreateA)(struct CodesetsIFace *Self, struct TagItem * attrs);
-	struct MinList * APICALL (*CodesetsListCreate)(struct CodesetsIFace *Self, ...);
-	void APICALL (*CodesetsListDelete)(struct CodesetsIFace *Self, struct MinList * codesetsList);
-	void APICALL (*CodesetsListAddA)(struct CodesetsIFace *Self, struct MinList * codesetsList, struct TagItem * attrs);
-	void APICALL (*CodesetsListAdd)(struct CodesetsIFace *Self, struct MinList * codesetsList, ...);
-	void APICALL (*CodesetsListRemoveA)(struct CodesetsIFace *Self, struct TagItem * attrs);
-	void APICALL (*CodesetsListRemove)(struct CodesetsIFace *Self, ...);
+	struct codesetList * APICALL (*CodesetsListCreateA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	struct codesetList * APICALL (*CodesetsListCreate)(struct CodesetsIFace *Self, ...);
+	BOOL APICALL (*CodesetsListDeleteA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	BOOL APICALL (*CodesetsListDelete)(struct CodesetsIFace *Self, ...);
+	BOOL APICALL (*CodesetsListAddA)(struct CodesetsIFace *Self, struct codesetList * codesetsList, struct TagItem * attrs);
+	BOOL APICALL (*CodesetsListAdd)(struct CodesetsIFace *Self, struct codesetList * codesetsList, ...);
+	BOOL APICALL (*CodesetsListRemoveA)(struct CodesetsIFace *Self, struct TagItem * attrs);
+	BOOL APICALL (*CodesetsListRemove)(struct CodesetsIFace *Self, ...);
 };
 
 #endif /* CODESETS_INTERFACE_DEF_H */

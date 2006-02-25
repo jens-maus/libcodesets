@@ -36,7 +36,6 @@ APTR allocArbitratePooled(ULONG s);
 void freeArbitratePooled(APTR mem , ULONG s);
 APTR allocArbitrateVecPooled(ULONG size);
 void freeArbitrateVecPooled(APTR mem);
-int countNodes(struct MinList *List);
 
 #ifdef __MORPHOS__
 void sprintf(STRPTR buf, STRPTR fmt, ...) __attribute((varargs68k));
@@ -56,17 +55,17 @@ LIBPROTOVA(CodesetsDecodeB64,ULONG, ...);
 LIBPROTO(CodesetsConvertUTF32toUTF16, ULONG, REG(a0, const UTF32 **sourceStart), REG(a1, const UTF32 *sourceEnd), REG(a2, UTF16 **targetStart), REG(a3, UTF16 *targetEnd), REG(d0, ULONG flags));
 LIBPROTO(CodesetsConvertUTF16toUTF32, ULONG, REG(a0, const UTF16 **sourceStart), REG(a1, const UTF16 *sourceEnd), REG(a2, UTF32 **targetStart), REG(a3, UTF32 *targetEnd), REG(d0, ULONG flags));
 LIBPROTO(CodesetsConvertUTF16toUTF8,  ULONG, REG(a0, const UTF16 **sourceStart), REG(a1, const UTF16 *sourceEnd) , REG(a2, UTF8 **targetStart), REG(a3, UTF8 *targetEnd), REG(d0, ULONG flags));
-LIBPROTO(CodesetsIsLegalUTF8,         ULONG, REG(a0, const UTF8 *source), REG(d0, ULONG length));
-LIBPROTO(CodesetsIsLegalUTF8Sequence, ULONG, REG(a0, const UTF8 *source), REG(a1, const UTF8 *sourceEnd));
+LIBPROTO(CodesetsIsLegalUTF8,         BOOL, REG(a0, const UTF8 *source), REG(d0, ULONG length));
+LIBPROTO(CodesetsIsLegalUTF8Sequence, BOOL, REG(a0, const UTF8 *source), REG(a1, const UTF8 *sourceEnd));
 LIBPROTO(CodesetsConvertUTF8toUTF16,  ULONG, REG(a0, const UTF8 **sourceStart), REG(a1, const UTF8 *sourceEnd), REG(a2, UTF16 **targetStart), REG(a3, UTF16 *targetEnd), REG(d0, ULONG flags));
 LIBPROTO(CodesetsConvertUTF32toUTF8,  ULONG, REG(a0, const UTF32 **sourceStart), REG(a1, const UTF32 *sourceEnd), REG(a2, UTF8 **targetStart), REG(a3, UTF8 *targetEnd), REG(d0, ULONG flags));
 LIBPROTO(CodesetsConvertUTF8toUTF32,  ULONG, REG(a0, const UTF8 **sourceStart), REG(a1, const UTF8 *sourceEnd), REG(a2, UTF32 **targetStart), REG(a3, UTF32 *targetEnd), REG(d0, ULONG flags));
 
 /* codesets.c */
-BOOL codesetsInit(struct MinList *codesetsList);
-void codesetsCleanup(struct MinList *codesetsList);
-struct codeset *codesetsFind(struct MinList *codesetsList, STRPTR name);
-struct codeset *codesetsFindBest(struct MinList *codesetsList, STRPTR text, int text_len, int *error_ptr);
+BOOL codesetsInit(struct codesetList *csList);
+void codesetsCleanup(struct codesetList *csList);
+struct codeset *codesetsFind(struct codesetList *csList, STRPTR name);
+struct codeset *codesetsFindBest(struct codesetList *csList, STRPTR text, int text_len, int *error_ptr);
 
 LIBPROTO(CodesetsSupportedA,  STRPTR *, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsSupported, STRPTR *, ...);
@@ -88,14 +87,15 @@ LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsUTF8Create,UTF8 *, ...);
 LIBPROTO(CodesetsFreeVecPooledA, void, REG(a0, APTR pool), REG(a1, APTR mem), REG(a2, struct TagItem *attrs));
 LIBPROTOVA(CodesetsFreeVecPooled,void, REG(a0, APTR pool), REG(a1, APTR mem), ...);
-LIBPROTO(CodesetsIsValidUTF8,ULONG, REG(a0, STRPTR s));
+LIBPROTO(CodesetsIsValidUTF8,BOOL, REG(a0, STRPTR s));
 LIBPROTO(CodesetsUTF8Len,    ULONG, REG(a0, UTF8 *str));
-LIBPROTO(CodesetsListCreateA, struct MinList *, REG(a0, struct TagItem *attrs));
-LIBPROTOVA(CodesetsListCreate, struct MinList *, ...);
-LIBPROTO(CodesetsListDelete, void, REG(a0, struct MinList *codesetsList));
-LIBPROTO(CodesetsListAddA, void, REG(a0, struct MinList *codesetsList), REG(a1, struct TagItem *attrs));
-LIBPROTOVA(CodesetsListAdd, void, REG(a0, struct MinList *codesetsList), ...);
-LIBPROTO(CodesetsListRemoveA, void, REG(a0, struct TagItem *attrs));
-LIBPROTOVA(CodesetsListRemove, void, ...);
+LIBPROTO(CodesetsListCreateA, struct codesetList *, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListCreate, struct codesetList *, ...);
+LIBPROTO(CodesetsListDeleteA, BOOL, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListDelete, BOOL, ...);
+LIBPROTO(CodesetsListAddA, BOOL, REG(a0, struct codesetList *csList), REG(a1, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListAdd, BOOL, REG(a0, struct codesetList *csList), ...);
+LIBPROTO(CodesetsListRemoveA, BOOL, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsListRemove, BOOL, ...);
 
 #endif /* _LIB_PROTOS_H */

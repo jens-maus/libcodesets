@@ -26,7 +26,7 @@ CodesetsIsValidUTF8(str)(a0)
 CodesetsFreeVecPooledA(pool,mem,attrs)(a0,a1,a2)
 CodesetsConvertStrA(str)(a0)
 CodesetsListCreateA(attrs)(a0)
-CodesetsListDelete(list)(a0)
+CodesetsListDeleteA(attrs)(a0)
 CodesetsListAddA(list,attrs)(a0,a1)
 CodesetsListRemoveA(attrs)(a0)
 ##end

@@ -113,7 +113,12 @@
 #elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define CodesetsListCreate(...) ICodesets->CodesetsListCreate(## vargs) 
 #endif
-#define CodesetsListDelete(codesetsList) ICodesets->CodesetsListDelete(codesetsList) 
+#define CodesetsListDeleteA(attrs) ICodesets->CodesetsListDeleteA(attrs) 
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
+#define CodesetsListDelete(...) ICodesets->CodesetsListDelete(__VA_ARGS__) 
+#elif (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#define CodesetsListDelete(...) ICodesets->CodesetsListDelete(## vargs) 
+#endif
 #define CodesetsListAddA(codesetsList, attrs) ICodesets->CodesetsListAddA(codesetsList, attrs) 
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (__GNUC__ >= 3)
 #define CodesetsListAdd(...) ICodesets->CodesetsListAdd(__VA_ARGS__) 

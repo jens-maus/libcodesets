@@ -167,7 +167,7 @@ inchar(struct b64 *b64)
     if((c = FGetC((BPTR)b64->in))==EOF)
     {
       if(IoErr())
-        b64->error = B64_ERROR_DOS;
+        b64->error = CSR_B64_ERROR_DOS;
     }
   }
   else
@@ -210,7 +210,7 @@ ochar(struct b64 *b64,int c)
 
     if(r==EOF)
     {
-      b64->error = B64_ERROR_DOS;
+      b64->error = CSR_B64_ERROR_DOS;
 
       RETURN(EOF);
       return EOF;
@@ -247,7 +247,7 @@ ostring(struct b64 *b64,UBYTE * buf,int s)
 
     if(r==EOF)
     {
-      b64->error = B64_ERROR_DOS;
+      b64->error = CSR_B64_ERROR_DOS;
 
       RETURN(EOF);
       return EOF;
@@ -297,44 +297,44 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
 
   flags = 0;
 
-  if((tag = FindTagItem(CODESETSA_B64SourceFile,attrs)))
+  if((tag = FindTagItem(CSA_B64SourceFile,attrs)))
   {
     source = (STRPTR)tag->ti_Data;
     flags |= B64FLG_SourceFile;
   }
   else
   {
-    if((!(source = (STRPTR)GetTagData(CODESETSA_B64SourceString, 0, attrs))))
+    if((!(source = (STRPTR)GetTagData(CSA_B64SourceString, 0, attrs))))
     {
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
 
-    if((tag = FindTagItem(CODESETSA_B64SourceLen,attrs)))
+    if((tag = FindTagItem(CSA_B64SourceLen,attrs)))
       sourceLen = tag->ti_Data;
     else
       sourceLen = strlen(source);
   }
 
-  if((tag = FindTagItem(CODESETSA_B64DestFile,attrs)))
+  if((tag = FindTagItem(CSA_B64DestFile,attrs)))
   {
     dest = (APTR)tag->ti_Data;
     flags |= B64FLG_DestFile;
   }
   else
   {
-    if((!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr, 0, attrs))))
+    if((!(dest = (APTR)GetTagData(CSA_B64DestPtr, 0, attrs))))
     {
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
   }
 
-  maxLineLen = GetTagData(CODESETSA_B64MaxLineLen,0,attrs);
+  maxLineLen = GetTagData(CSA_B64MaxLineLen,0,attrs);
   if(maxLineLen<=0 || maxLineLen>=256)
     maxLineLen = MAXLINELEN;
 
-  if(GetTagData(CODESETSA_B64Unix,TRUE,attrs))
+  if(GetTagData(CSA_B64Unix,TRUE,attrs))
     flags |= B64FLG_Unix;
 
   /* source */
@@ -342,8 +342,8 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
   {
     if(!(in = (APTR)openIn(source,&size)))
     {
-      RETURN(B64_ERROR_DOS);
-      return B64_ERROR_DOS;
+      RETURN(CSR_B64_ERROR_DOS);
+      return CSR_B64_ERROR_DOS;
     }
 
     b64.inAvailable = 0;
@@ -362,8 +362,8 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
   {
     if(!(out = (APTR)Open(dest,MODE_NEWFILE)))
     {
-      RETURN(B64_ERROR_DOS);
-      return B64_ERROR_DOS;
+      RETURN(CSR_B64_ERROR_DOS);
+      return CSR_B64_ERROR_DOS;
     }
   }
   else
@@ -376,8 +376,8 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
       if(flags & B64FLG_SourceFile)
         Close((BPTR)in);
 
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
 
     *((STRPTR *)dest) = out;
@@ -454,7 +454,7 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
     if(!b64.error)
     {
       if(FPuts((BPTR)out,b64.eols)==EOF)
-        b64.error = B64_ERROR_DOS;
+        b64.error = CSR_B64_ERROR_DOS;
 
       #if defined(__amigaos4__)
       FFlush((BPTR)out);
@@ -517,36 +517,36 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
 
   flags = 0;
 
-  if((tag = FindTagItem(CODESETSA_B64SourceFile,attrs)))
+  if((tag = FindTagItem(CSA_B64SourceFile,attrs)))
   {
     source = (STRPTR)tag->ti_Data;
     flags |= B64FLG_SourceFile;
   }
   else
   {
-    if (!(source = (STRPTR)GetTagData(CODESETSA_B64SourceString,0,attrs)))
+    if (!(source = (STRPTR)GetTagData(CSA_B64SourceString,0,attrs)))
     {
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
 
-    if((tag = FindTagItem(CODESETSA_B64SourceLen,attrs)))
+    if((tag = FindTagItem(CSA_B64SourceLen,attrs)))
       sourceLen = tag->ti_Data;
     else
       sourceLen = strlen(source);
   }
 
-  if((tag = FindTagItem(CODESETSA_B64DestFile,attrs)))
+  if((tag = FindTagItem(CSA_B64DestFile,attrs)))
   {
     dest = (APTR)tag->ti_Data;
     flags |= B64FLG_DestFile;
   }
   else
   {
-    if(!(dest = (APTR)GetTagData(CODESETSA_B64DestPtr, 0, attrs)))
+    if(!(dest = (APTR)GetTagData(CSA_B64DestPtr, 0, attrs)))
     {
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
   }
 
@@ -555,8 +555,8 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
   {
     if(!(in = (APTR)openIn(source,&size)))
     {
-      RETURN(B64_ERROR_DOS);
-      return B64_ERROR_DOS;
+      RETURN(CSR_B64_ERROR_DOS);
+      return CSR_B64_ERROR_DOS;
     }
 
     b64.inAvailable = 0;
@@ -575,8 +575,8 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
   {
     if(!(out = (APTR)Open(dest,MODE_NEWFILE)))
     {
-      RETURN(B64_ERROR_DOS);
-      return B64_ERROR_DOS;
+      RETURN(CSR_B64_ERROR_DOS);
+      return CSR_B64_ERROR_DOS;
     }
   }
   else
@@ -589,8 +589,8 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
       if(flags & B64FLG_SourceFile)
         Close((BPTR)in);
 
-      RETURN(B64_ERROR_MEM);
-      return B64_ERROR_MEM;
+      RETURN(CSR_B64_ERROR_MEM);
+      return CSR_B64_ERROR_MEM;
     }
 
     *((STRPTR *)dest) = out;
@@ -607,7 +607,7 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
   b64.error       = 0;
 
   /* parse error check */
-  errcheck = !GetTagData(CODESETSA_B64FLG_NtCheckErr,FALSE,attrs);
+  errcheck = !GetTagData(CSA_B64FLG_NtCheckErr,FALSE,attrs);
 
   /* decode */
   for(;;)
@@ -625,7 +625,7 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
           ((STRPTR)out)[b64.outIndex] = 0;
 
         if(!b64.error && errcheck && (i>0))
-          b64.error = B64_ERROR_INCOMPLETE;
+          b64.error = CSR_B64_ERROR_INCOMPLETE;
 
         goto end;
       }
@@ -634,7 +634,7 @@ CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
       {
         if(errcheck)
         {
-          b64.error = B64_ERROR_ILLEGAL;
+          b64.error = CSR_B64_ERROR_ILLEGAL;
 
           goto end;
         }
@@ -669,7 +669,7 @@ end:
     if(!b64.error)
     {
       if(FPuts((BPTR)out,b64.eols)==EOF)
-        b64.error = B64_ERROR_DOS;
+        b64.error = CSR_B64_ERROR_DOS;
 
       #if defined(__amigaos4__)
       FFlush((BPTR)out);

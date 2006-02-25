@@ -27,20 +27,6 @@
 #include <libraries/codesets.h>
 #endif
 
-ULONG CodesetsConvertUTF32toUTF16(const UTF32 **sourceStart, const UTF32 *sourceEnd, UTF16 **targetStart, UTF16 *targetEnd, ULONG flags);
-ULONG CodesetsConvertUTF16toUTF32(const UTF16 **sourceStart, const UTF16 *sourceEnd, UTF32 **targetStart, UTF32 *targetEnd, ULONG flags);
-ULONG CodesetsConvertUTF16toUTF8(const UTF16 **sourceStart, const UTF16 *sourceEnd, UTF8 **targetStart, UTF8 *targetEnd, ULONG flags);
-ULONG CodesetsIsLegalUTF8(const UTF8 *source, ULONG length);
-ULONG CodesetsIsLegalUTF8Sequence(const UTF8 *source, const UTF8 *sourceEnd);
-ULONG CodesetsConvertUTF8toUTF16(const UTF8 **sourceStart, const UTF8 *sourceEnd, UTF16 **targetStart, UTF16 *targetEnd, ULONG flags);
-ULONG CodesetsConvertUTF32toUTF8(const UTF32 **sourceStart, const UTF32 *sourceEnd, UTF8 **targetStart, UTF8 *targetEnd, ULONG flags);
-ULONG CodesetsConvertUTF8toUTF32(const UTF8 **sourceStart, const UTF8 *sourceEnd, UTF32 **targetStart, UTF32 *targetEnd, ULONG flags);
-
-ULONG CodesetsEncodeB64A(struct TagItem *attrs);
-ULONG CodesetsEncodeB64(Tag tag1, ...);
-ULONG CodesetsDecodeB64A(struct TagItem *attrs);
-ULONG CodesetsDecodeB64(Tag tag1, ...);
-
 STRPTR *CodesetsSupportedA(struct TagItem *attrs);
 STRPTR *CodesetsSupported(Tag tag1 , ...);
 void CodesetsFreeA(APTR obj, struct TagItem *attrs);
@@ -58,17 +44,32 @@ STRPTR CodesetsUTF8ToStrA(struct TagItem *attrs);
 STRPTR CodesetsUTF8ToStr(Tag tag1, ...);
 UTF8 *CodesetsUTF8CreateA(struct TagItem *attrs);
 UTF8 *CodesetsUTF8Create(Tag tag1, ...);
-ULONG CodesetsIsValidUTF8(STRPTR str);
+BOOL CodesetsIsValidUTF8(STRPTR str);
 void CodesetsFreeVecPooledA(APTR pool, APTR mem, struct TagItem *attrs);
 void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag tag1, ...);
 STRPTR CodesetsConvertStrA(struct TagItem *attrs);
 STRPTR CodesetsConvertStr(Tag tag1, ...);
-struct MinList *CodesetsListCreateA(struct TagItem *attrs);
-struct MinList *CodesetsListCreate(Tag tag1, ...);
-void CodesetsListDelete(struct MinList *codesetsList);
-void CodesetsListAddA(struct MinList *codesetsList, struct TagItem *attrs);
-void CodesetsListAdd(struct MinList *codesetsList, ...);
-void CodesetsListRemoveA(struct TagItem *attrs);
-void CodesetsListRemove(Tag tag1, ...);
+struct codesetList *CodesetsListCreateA(struct TagItem *attrs);
+struct codesetList *CodesetsListCreate(Tag tag1, ...);
+BOOL CodesetsListDeleteA(struct TagItem *attrs);
+BOOL CodesetsListDelete(Tag tag1, ...);
+BOOL CodesetsListAddA(struct codesetList *csList, struct TagItem *attrs);
+BOOL CodesetsListAdd(struct codesetList *csList, ...);
+BOOL CodesetsListRemoveA(struct TagItem *attrs);
+BOOL CodesetsListRemove(Tag tag1, ...);
+
+ULONG CodesetsConvertUTF32toUTF16(const UTF32 **sourceStart, const UTF32 *sourceEnd, UTF16 **targetStart, UTF16 *targetEnd, ULONG flags);
+ULONG CodesetsConvertUTF16toUTF32(const UTF16 **sourceStart, const UTF16 *sourceEnd, UTF32 **targetStart, UTF32 *targetEnd, ULONG flags);
+ULONG CodesetsConvertUTF16toUTF8(const UTF16 **sourceStart, const UTF16 *sourceEnd, UTF8 **targetStart, UTF8 *targetEnd, ULONG flags);
+BOOL CodesetsIsLegalUTF8(const UTF8 *source, ULONG length);
+BOOL CodesetsIsLegalUTF8Sequence(const UTF8 *source, const UTF8 *sourceEnd);
+ULONG CodesetsConvertUTF8toUTF16(const UTF8 **sourceStart, const UTF8 *sourceEnd, UTF16 **targetStart, UTF16 *targetEnd, ULONG flags);
+ULONG CodesetsConvertUTF32toUTF8(const UTF32 **sourceStart, const UTF32 *sourceEnd, UTF8 **targetStart, UTF8 *targetEnd, ULONG flags);
+ULONG CodesetsConvertUTF8toUTF32(const UTF8 **sourceStart, const UTF8 *sourceEnd, UTF32 **targetStart, UTF32 *targetEnd, ULONG flags);
+
+ULONG CodesetsEncodeB64A(struct TagItem *attrs);
+ULONG CodesetsEncodeB64(Tag tag1, ...);
+ULONG CodesetsDecodeB64A(struct TagItem *attrs);
+ULONG CodesetsDecodeB64(Tag tag1, ...);
 
 #endif /* CLIB_CODESETS_PROTOS_H */

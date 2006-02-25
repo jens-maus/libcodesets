@@ -82,7 +82,8 @@ static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING CPU "
                   LFUNC_VA_(CodesetsConvertStr)           \
                   LFUNC_FA_(CodesetsListCreateA)          \
                   LFUNC_VA_(CodesetsListCreate)           \
-                  LFUNC_FA_(CodesetsListDelete)           \
+                  LFUNC_FA_(CodesetsListDeleteA)          \
+                  LFUNC_VA_(CodesetsListDelete)           \
                   LFUNC_FA_(CodesetsListAddA)             \
                   LFUNC_VA_(CodesetsListAdd)              \
                   LFUNC_FA_(CodesetsListRemoveA)          \

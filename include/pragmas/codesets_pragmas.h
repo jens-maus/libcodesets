@@ -51,7 +51,7 @@
 #pragma amicall(CodesetsBase,0x09c,CodesetsFreeVecPooledA(a0,a1,a2))
 #pragma amicall(CodesetsBase,0x0a2,CodesetsConvertStrA(a0))
 #pragma amicall(CodesetsBase,0x0a8,CodesetsListCreateA(a0))
-#pragma amicall(CodesetsBase,0x0ae,CodesetsListDelete(a0))
+#pragma amicall(CodesetsBase,0x0ae,CodesetsListDeleteA(a0))
 #pragma amicall(CodesetsBase,0x0b4,CodesetsListAddA(a0,a1))
 #pragma amicall(CodesetsBase,0x0ba,CodesetsListRemoveA(a0))
 #endif
@@ -79,7 +79,7 @@
 #pragma  libcall CodesetsBase CodesetsFreeVecPooledA 09c a9803
 #pragma  libcall CodesetsBase CodesetsConvertStrA    0a2 801
 #pragma  libcall CodesetsBase CodesetsListCreateA    0a8 801
-#pragma  libcall CodesetsBase CodesetsListDelete     0ae 801
+#pragma  libcall CodesetsBase CodesetsListDeleteA    0ae 801
 #pragma  libcall CodesetsBase CodesetsListAddA       0b4 9802
 #pragma  libcall CodesetsBase CodesetsListRemoveA    0ba 801
 #endif
@@ -97,6 +97,7 @@
 #pragma tagcall(CodesetsBase,0x09c,CodesetsFreeVecPooled(a0,a1,a2))
 #pragma tagcall(CodesetsBase,0x0a2,CodesetsConvertStr(a0))
 #pragma tagcall(CodesetsBase,0x0a8,CodesetsListCreate(a0))
+#pragma tagcall(CodesetsBase,0x0ae,CodesetsListDelete(a0))
 #pragma tagcall(CodesetsBase,0x0b4,CodesetsListAdd(a0,a1))
 #pragma tagcall(CodesetsBase,0x0ba,CodesetsListRemove(a0))
 #endif
@@ -114,6 +115,7 @@
 #pragma  tagcall CodesetsBase CodesetsFreeVecPooled  09c a9803
 #pragma  tagcall CodesetsBase CodesetsConvertStr     0a2 801
 #pragma  tagcall CodesetsBase CodesetsListCreate     0a8 801
+#pragma  tagcall CodesetsBase CodesetsListDelete     0ae 801
 #pragma  tagcall CodesetsBase CodesetsListAdd        0b4 9802
 #pragma  tagcall CodesetsBase CodesetsListRemove     0ba 801
 #endif

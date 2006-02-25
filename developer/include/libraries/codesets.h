@@ -89,19 +89,29 @@ struct codeset
 };
 
 /***********************************************************************/
+/*
+ * codesetList
+ */
+
+struct codesetList
+{
+  struct MinList list;
+};
+
+/***********************************************************************/
 
 enum
 {
-  CONVRES_ConversionOK,    /* conversion successful */
-  CONVRES_SourceExhausted, /* partial character in source, but hit end */
-  CONVRES_TargetExhausted, /* insuff. room in target for conversion */
-  CONVRES_SourceIllegal    /* source sequence is illegal/malformed */
+  CSR_ConversionOK,    /* conversion successful */
+  CSR_SourceExhausted, /* partial character in source, but hit end */
+  CSR_TargetExhausted, /* insuff. room in target for conversion */
+  CSR_SourceIllegal    /* source sequence is illegal/malformed */
 };
 
 enum
 {
-  CONVFLG_StrictConversion = 0,
-  CONVFLG_LenientConversion
+  CSF_StrictConversion = 0,
+  CSF_LenientConversion
 };
 
 /***********************************************************************/
@@ -109,38 +119,36 @@ enum
 ** Tags
 */
 
-/* This value breaks the GPL2: it is strictly PRIVATE and CAN'T BE RE-USED! */
-#define CODESETSLIB_TAG(n)          ((ULONG)0xfec901f4+(n))
+#define CODESETSLIB_TAG(n)     ((ULONG)0xfec901f4+(n))
 
-#define CODESETSA_Base                CODESETSLIB_TAG(0)
+#define CSA_Base                CODESETSLIB_TAG(0)
 
-#define CODESETSA_SourceLen           CODESETSLIB_TAG(1)
-#define CODESETSA_Source              CODESETSLIB_TAG(2)
-#define CODESETSA_Dest                CODESETSLIB_TAG(3)
-#define CODESETSA_DestLen             CODESETSLIB_TAG(4)
-#define CODESETSA_DestHook            CODESETSLIB_TAG(5)
-#define CODESETSA_DestLenPtr          CODESETSLIB_TAG(6)
-#define CODESETSA_Codeset             CODESETSLIB_TAG(7)
-#define CODESETSA_Pool                CODESETSLIB_TAG(8)
-#define CODESETSA_PoolSem             CODESETSLIB_TAG(9)
-#define CODESETSA_AllocIfNeeded       CODESETSLIB_TAG(10)
-#define CODESETSA_Save                CODESETSLIB_TAG(11)
-#define CODESETSA_NoFail              CODESETSLIB_TAG(12)
-#define CODESETSA_SourceCodeset       CODESETSLIB_TAG(13)
-#define CODESETSA_DestCodeset         CODESETSLIB_TAG(14)
-#define CODESETSA_CodesetDir          CODESETSLIB_TAG(15)
-#define CODESETSA_CodesetFile         CODESETSLIB_TAG(16)
-#define CODESETSA_CodesetList         CODESETSLIB_TAG(17)
-#define CODESETSA_FreeCodesets        CODESETSLIB_TAG(18)
+#define CSA_SourceLen           CODESETSLIB_TAG(1)
+#define CSA_Source              CODESETSLIB_TAG(2)
+#define CSA_Dest                CODESETSLIB_TAG(3)
+#define CSA_DestLen             CODESETSLIB_TAG(4)
+#define CSA_DestHook            CODESETSLIB_TAG(5)
+#define CSA_DestLenPtr          CODESETSLIB_TAG(6)
+#define CSA_SourceCodeset       CODESETSLIB_TAG(7)
+#define CSA_Pool                CODESETSLIB_TAG(8)
+#define CSA_PoolSem             CODESETSLIB_TAG(9)
+#define CSA_AllocIfNeeded       CODESETSLIB_TAG(10)
+#define CSA_Save                CODESETSLIB_TAG(11)
+#define CSA_FallbackToDefault   CODESETSLIB_TAG(12)
+#define CSA_DestCodeset         CODESETSLIB_TAG(13)
+#define CSA_CodesetDir          CODESETSLIB_TAG(14)
+#define CSA_CodesetFile         CODESETSLIB_TAG(15)
+#define CSA_CodesetList         CODESETSLIB_TAG(16)
+#define CSA_FreeCodesets        CODESETSLIB_TAG(17)
 
-#define CODESETSA_B64SourceString     CODESETSLIB_TAG(20)
-#define CODESETSA_B64SourceLen        CODESETSLIB_TAG(21)
-#define CODESETSA_B64SourceFile       CODESETSLIB_TAG(22)
-#define CODESETSA_B64DestPtr          CODESETSLIB_TAG(23)
-#define CODESETSA_B64DestFile         CODESETSLIB_TAG(24)
-#define CODESETSA_B64MaxLineLen       CODESETSLIB_TAG(25)
-#define CODESETSA_B64Unix             CODESETSLIB_TAG(26)
-#define CODESETSA_B64FLG_NtCheckErr   CODESETSLIB_TAG(27)
+#define CSA_B64SourceString     CODESETSLIB_TAG(20)
+#define CSA_B64SourceLen        CODESETSLIB_TAG(21)
+#define CSA_B64SourceFile       CODESETSLIB_TAG(22)
+#define CSA_B64DestPtr          CODESETSLIB_TAG(23)
+#define CSA_B64DestFile         CODESETSLIB_TAG(24)
+#define CSA_B64MaxLineLen       CODESETSLIB_TAG(25)
+#define CSA_B64Unix             CODESETSLIB_TAG(26)
+#define CSA_B64FLG_NtCheckErr   CODESETSLIB_TAG(27)
 
 /***********************************************************************/
 /*
@@ -149,11 +157,11 @@ enum
 
 enum
 {
-  B64_ERROR_OK = 0,
-  B64_ERROR_MEM,
-  B64_ERROR_DOS,
-  B64_ERROR_INCOMPLETE,
-  B64_ERROR_ILLEGAL,
+  CSR_B64_ERROR_OK = 0,
+  CSR_B64_ERROR_MEM,
+  CSR_B64_ERROR_DOS,
+  CSR_B64_ERROR_INCOMPLETE,
+  CSR_B64_ERROR_ILLEGAL,
 };
 
 /***********************************************************************/
@@ -166,8 +174,8 @@ struct convertMsg
 
 enum
 {
-  CODESETV_Translating,
-  CODESETV_End,
+  CSV_Translating,
+  CSV_End,
 };
 
 /***********************************************************************/
