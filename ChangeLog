@@ -5,8 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+#### 6.0 RELEASE #########################################################
+
 2006-02-25  Jens Langner <Jens.Langner@light-speed.de>
 
+    * misc: final 6.0 release preparations.
     * codesets.doc: updated the autodocs according to our latest changes
       sind the open-source release of the library. Added some common
       examples and also restructed it.

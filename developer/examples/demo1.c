@@ -1,14 +1,28 @@
-/****************************************************************************
-**
-** Copyright 2004 Alfonso Ranieri <alforan@tin.it>.
-**
-** Released under the terms of the GPL II.
-**
-** MUI demo that load/Save UTF8 files
-**
-** Needs TextEditor.mcc and Textinput.mcc
-**
-*****************************************************************************/
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005-2006 by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ Most of the code included in this file was relicensed from GPL to LGPL
+ from the source code of SimpleMail (http://www.sf.net/projects/simplemail)
+ with full permissions by its authors.
+
+ $Id$
+
+***************************************************************************/
 
 #include <clib/alib_protos.h>
 
@@ -410,8 +424,8 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
                                     codeset = CodesetsFindA(cname,NULL);
 
                                     /* Convert */
-                                    str = CodesetsUTF8ToStr(CODESETSA_Source,  buf,
-                                                            CODESETSA_Codeset, codeset,
+                                    str = CodesetsUTF8ToStr(CSA_Source,        buf,
+                                                            CSA_SourceCodeset, codeset,
                                                             TAG_DONE);
                                     if (str)
                                     {
@@ -447,7 +461,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 */
 
 static ULONG
-meditorSave(struct IClass *cl,Object *obj,Msg msg)
+meditorSave(struct IClass *cl, Object *obj, Msg msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
     STRPTR                     text;
@@ -467,7 +481,10 @@ meditorSave(struct IClass *cl,Object *obj,Msg msg)
         codeset = CodesetsFindA(cname,NULL);
 
         /* Convert text as utf8 */
-        if((utf8 = CodesetsUTF8Create(CODESETSA_Source,text,CODESETSA_Codeset,codeset,CODESETSA_DestLenPtr,&dlen,TAG_DONE)))
+        if((utf8 = CodesetsUTF8Create(CSA_Source,         text,
+                                      CSA_SourceCodeset,  codeset,
+                                      CSA_DestLenPtr,     &dlen,
+                                      TAG_DONE)))
         {
             /* Save converted text to a file */
 

@@ -1,3 +1,28 @@
+/***************************************************************************
+
+ codesets.library - Amiga shared library for handling different codesets
+ Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
+ Copyright (C) 2005-2006 by codesets.library Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ codesets.library project: http://sourceforge.net/projects/codesetslib/
+
+ Most of the code included in this file was relicensed from GPL to LGPL
+ from the source code of SimpleMail (http://www.sf.net/projects/simplemail)
+ with full permissions by its authors.
+
+ $Id$
+
+***************************************************************************/
 
 #include <proto/exec.h>
 #include <proto/codesets.h>
@@ -29,8 +54,8 @@ int main(int argc,char **argv)
         {
             ULONG r;
 
-            r = CodesetsDecodeB64(CODESETSA_B64SourceFile, argv[1],
-                                  CODESETSA_B64DestFile,   argv[2],
+            r = CodesetsDecodeB64(CSA_B64SourceFile, argv[1],
+                                  CSA_B64DestFile,   argv[2],
                                   TAG_DONE);
             printf("Res %ld\n",r);
 
