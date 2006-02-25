@@ -866,7 +866,7 @@ codesetsInit(struct codesetList *csList)
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("AmigaPL");
     codeset->alt_name 	      = NULL;
-    codeset->characterization = mystrdup("AmigaPL");
+    codeset->characterization = mystrdup("Polish (Amiga)");
     codeset->read_only 	      = 1;
     for(i=0; i<256; i++)
     {
@@ -894,8 +894,8 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
 	  codeset->name             = mystrdup("Amiga-1251");
-  	codeset->alt_name         = NULL;
-	  codeset->characterization = mystrdup("Amiga-1251");
+  	codeset->alt_name         = mystrdup("Ami1251");
+	  codeset->characterization = mystrdup("Cyrillic (Amiga)");
   	codeset->read_only        = 1;
 	  for(i=0; i<256; i++)
   	{
