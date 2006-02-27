@@ -37,14 +37,6 @@ void freeArbitratePooled(APTR mem , ULONG s);
 APTR allocArbitrateVecPooled(ULONG size);
 void freeArbitrateVecPooled(APTR mem);
 
-#ifdef __MORPHOS__
-void sprintf(STRPTR buf, STRPTR fmt, ...) __attribute((varargs68k));
-int snprintf(STRPTR buf, int size, STRPTR fmt, ...) __attribute((varargs68k));
-#elif !defined(__amigaos4__)
-void STDARGS sprintf(STRPTR to, STRPTR fmt, ...);
-int STDARGS snprintf(STRPTR buf, int size, STRPTR fmt, ...);
-#endif
-
 /* base64.c */
 LIBPROTO(CodesetsEncodeB64A, ULONG, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsEncodeB64,ULONG, ...);
