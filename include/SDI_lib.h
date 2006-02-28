@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_lib.h
-        Versionstring:  $VER: SDI_lib.h 1.7 (11.12.2005)
+        Versionstring:  $VER: SDI_lib.h 1.8 (28.02.2006)
         Author:         Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -31,6 +31,8 @@
  1.7   11.12.05 : adapted all macros to be somewhat more compatible to also
                   OS3 and MorphOS. Now in the real use case (codesets.library)
                   it required a fundamental rework of the macros. (Jens Langner)
+ 1.8   28.02.06 : removed "##" in front of the OS3 __VARARGS__ usage as they
+                  causing errors on GCC >= 3.x.
 
 */
 
@@ -176,9 +178,9 @@
     #define LIBPROTOVA(name, ret, ...)
     #define LIBSTUB(name, ret, ...)                                   \
       LIBFUNC ret name(__VA_ARGS__);                                  \
-      LIBFUNC ret libstub_##name(## __VA_ARGS__)
+      LIBFUNC ret libstub_##name(__VA_ARGS__)
     #define LIBSTUBVA(name, ret, ...)                                 \
-      LIBFUNC UNUSED ret STDARGS libstub_##name(## __VA_ARGS__)
+      LIBFUNC UNUSED ret STDARGS libstub_##name(__VA_ARGS__)
   #endif
   #define LFUNC_FAS(name) name
   #define LFUNC_VAS(name)
