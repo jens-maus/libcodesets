@@ -120,27 +120,38 @@ readLine(BPTR fh,STRPTR buf,int size)
 ///
 /// getConfigItem()
 static STRPTR
-getConfigItem(STRPTR buf,STRPTR item,int len)
+getConfigItem(STRPTR buf, STRPTR item, int len)
 {
-    if(!strnicmp(buf, item, len))
+  ENTER();
+
+  if(strnicmp(buf, item, len) == 0)
+  {
+    UBYTE c;
+
+    buf += len;
+
+    /* skip spaces */
+    while((c = *buf) && isspace(c))
+      buf++;
+
+    if(*buf != '=')
     {
-        UBYTE c;
-
-        buf += len;
-
-        /* skip spaces */
-        while ((c = *buf) && isspace(c)) buf++;
-
-        if (*buf!='=') return NULL;
-        buf++;
-
-        /* skip spaces */
-        while ((c = *buf) && isspace(c)) buf++;
-
-        return buf;
+      RETURN(NULL);
+      return NULL;
     }
 
-    return NULL;
+    buf++;
+
+    /* skip spaces */
+    while((c = *buf) && isspace(c))
+      buf++;
+
+    RETURN(buf);
+    return buf;
+  }
+
+  RETURN(NULL);
+  return NULL;
 }
 ///
 /// parseUtf8()
@@ -325,7 +336,9 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
 
       while(readLine(fh, buf, sizeof(buf)))
       {
-        STRPTR result;
+        char *result;
+
+        D(DBF_STARTUP, "read line: '%s'", buf);
 
         if(*buf=='#')
           continue;
@@ -352,7 +365,7 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
         }
         else
         {
-          STRPTR p = buf;
+          char *p = buf;
           int fmt2 = 0;
 
           if((*p=='=') || (fmt2 = ((*p=='0') || (*(p+1)=='x'))))
@@ -379,6 +392,8 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
           }
         }
       }
+
+      D(DBF_STARTUP, "read file %lx", codeset->name);
 
       // check if there is not already codeset with the same name in here
       if(codeset->name != NULL && !(codesetsFind(csList, codeset->name)))
