@@ -51,7 +51,7 @@ void SetupDebug(void)
 {
   char var[256];
 
-  kprintf("** %s (%s) startup ***********************************\n", LIB_REV_STRING, LIB_DATE);
+  kprintf("** codesets.library %s (%s) startup ****************************\n", LIB_REV_STRING, LIB_DATE);
   kprintf("Initializing runtime debugging:\n");
 
 	if(GetVar("codesets.library.debug", var, sizeof(var), 0) > 0)
