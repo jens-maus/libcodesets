@@ -5,6 +5,15 @@ codesets.library - Library for handling different codesets
 $Id$
 $Source$
 
+2006-02-28  Jens Langner <Jens.Langner@light-speed.de>
+
+    * utils.c: removed the unnecessary snprintf()/sprintf() stuff as it
+      is not required anymore.
+    * codesets.c: fixed some minor compiler warnings and added some more
+      debug output.
+    * include/SDI_lib.h: updated to latest SDI_lib.h, which fixes some
+      compiler issues with GCC3+ under OS3.
+
 #### 6.0 RELEASE #########################################################
 
 2006-02-25  Jens Langner <Jens.Langner@light-speed.de>
