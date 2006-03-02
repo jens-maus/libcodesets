@@ -355,7 +355,7 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
         {
           if((result[0]=='_') && (result[1]=='(') && (result[2]=='"'))
           {
-            STRPTR end = strchr(result + 3, '"');
+            char *end = strchr(result + 3, '"');
 
             if(end)
               codeset->characterization = mystrndup(result+3,end-(result+3));
