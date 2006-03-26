@@ -32,10 +32,10 @@
 
 
 #if defined(__amigaos4__)
-struct Library *SysBase = NULL;
-struct ExecIFace* IExec = NULL;
+extern struct Library *SysBase;
+extern struct ExecIFace* IExec;
 #else
-struct ExecBase *SysBase = NULL;
+extern struct ExecBase *SysBase;
 #endif
 
 struct LibraryHeader *CodesetsBase = NULL;
@@ -316,17 +316,10 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   InitSemaphore(&base->poolSem);
   base->flags = 0;
   base->systemCodeset = NULL;
+  base->wasInitialized = FALSE;
 
   // set the CodesetsBase
   CodesetsBase = base;
-
-  ObtainSemaphore(&base->libSem);
-  if(!initBase(base))
-  {
-    ReleaseSemaphore(&base->libSem);
-    return(NULL);
-  }
-  ReleaseSemaphore(&base->libSem);
 
   return(base);
 }
@@ -351,6 +344,17 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 
   ObtainSemaphore(&base->libSem);
 
+  // in case our codesets list wasn't already initialized
+  // we do it right now.
+  if(base->wasInitialized == FALSE && initBase(base) == FALSE)
+  {
+    // initialization didn't work out as expected
+    ReleaseSemaphore(&base->libSem);
+
+    return(NULL);
+  }
+
+  base->wasInitialized = TRUE;
   base->libBase.lib_Flags &= ~LIBF_DELEXP;
 	base->libBase.lib_OpenCnt++;
 
@@ -393,6 +397,7 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 
     // free all resources
     freeBase(base);
+    base->wasInitialized = FALSE;
 
     rc = base->segList;
 

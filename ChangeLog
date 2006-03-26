@@ -6,6 +6,10 @@ $Id$
 
 2006-03-27  Jens Langner <Jens.Langner@light-speed.de>
 
+    * libinit.c, base.h: moved the internal charset table initialization
+      routine from the LibInit() function to the first call of the
+      LibOpen(). This in fact should fix the various strange crash bugs
+      reported since the release of 6.0.
     * init.c: changed the library base definitions to use "extern" and
       also define "__UtilityBase" to please constraints of clib2.
 
