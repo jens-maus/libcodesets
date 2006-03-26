@@ -4,6 +4,11 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2006-03-27  Jens Langner <Jens.Langner@light-speed.de>
+
+    * init.c: changed the library base definitions to use "extern" and
+      also define "__UtilityBase" to please constraints of clib2.
+
 2006-03-14  Jens Langner <Jens.Langner@light-speed.de>
 
     * misc: switched from CVS to the new SVN (subversion) services of

@@ -33,23 +33,27 @@
 #include "debug.h"
 
 #if defined(__amigaos4__)
-struct Library    *DOSBase = NULL;
-struct Library    *UtilityBase = NULL;
-struct Library    *LocaleBase = NULL;
-struct Library    *DiskfontBase = NULL;
+extern struct Library *DOSBase;
+struct Library *UtilityBase = NULL;
+struct Library *LocaleBase = NULL;
+struct Library *DiskfontBase = NULL;
+extern struct Library *__UtilityBase;
 
-struct DOSIFace*      IDOS = NULL;
+extern struct DOSIFace*      IDOS;
 struct UtilityIFace*  IUtility = NULL;
 struct LocaleIFace*   ILocale = NULL;
 struct DiskfontIFace* IDiskfont = NULL;
+extern struct UtilityIFace*  __IUtility;
 #elif defined(__MORPHOS__)
-struct DosLibrary *DOSBase = NULL;
+extern struct DosLibrary *DOSBase;
 struct Library    *UtilityBase = NULL;
 struct Library    *LocaleBase = NULL;
+extern struct Library    *__UtilityBase; // required by libnix & clib2
 #else
-struct DosLibrary *DOSBase = NULL;
+extern struct DosLibrary *DOSBase;
 struct Library    *UtilityBase = NULL;
 struct LocaleBase *LocaleBase = NULL;
+extern struct Library    *__UtilityBase; // required by libnix & clib2
 #endif
 
 /****************************************************************************/
@@ -281,6 +285,14 @@ initBase(struct LibraryHeader *lib)
     if((UtilityBase = OpenLibrary("utility.library", 37)) &&
        GETINTERFACE(IUtility, UtilityBase))
     {
+
+      // we have to please the internal utilitybase
+      // pointers of libnix and clib2
+      __UtilityBase = (APTR)UtilityBase;
+      #if defined(__amigaos4__)
+      __IUtility = IUtility;
+      #endif
+
       // setup the debugging stuff
       #if defined(DEBUG)
       SetupDebug();
@@ -303,6 +315,7 @@ initBase(struct LibraryHeader *lib)
               getSystemCodeset(lib);
             }
 
+            RETURN(TRUE);
             return TRUE;
           }
         }
