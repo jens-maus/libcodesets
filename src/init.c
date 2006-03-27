@@ -45,15 +45,15 @@ struct LocaleIFace*   ILocale = NULL;
 struct DiskfontIFace* IDiskfont = NULL;
 extern struct UtilityIFace*  __IUtility;
 #elif defined(__MORPHOS__)
-extern struct DosLibrary *DOSBase;
-struct Library    *UtilityBase = NULL;
-struct Library    *LocaleBase = NULL;
-extern struct Library    *__UtilityBase; // required by libnix & clib2
+struct DosLibrary *DOSBase = NULL;
+struct Library *UtilityBase = NULL;
+struct Library *LocaleBase = NULL;
+struct Library *__UtilityBase = NULL; // required by libnix
 #else
 extern struct DosLibrary *DOSBase;
-struct Library    *UtilityBase = NULL;
+struct Library *UtilityBase = NULL;
 struct LocaleBase *LocaleBase = NULL;
-extern struct Library    *__UtilityBase; // required by libnix & clib2
+extern struct Library *__UtilityBase; // required by clib2
 #endif
 
 /****************************************************************************/

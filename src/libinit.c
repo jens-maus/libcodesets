@@ -34,6 +34,8 @@
 #if defined(__amigaos4__)
 extern struct Library *SysBase;
 extern struct ExecIFace* IExec;
+#elif defined(__libnix__)
+struct ExecBase *SysBase = NULL;
 #else
 extern struct ExecBase *SysBase;
 #endif
