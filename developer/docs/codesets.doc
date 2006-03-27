@@ -999,8 +999,9 @@ codesets.library/CodesetsEncodeB64A
         otherwise the functions returns NULL.
 
       CSA_SourceLen (ULONG)
-        Length of CSA_Source
-        Default: UINT_MAX
+        Length of CSA_Source. Must be > 0 or the function returns
+        NULL.
+        Default:string length of CSA_Source - strlen()
 
       CSA_Dest (STRPTR)
         Destination buffer. If you supply a valid buffer here, you

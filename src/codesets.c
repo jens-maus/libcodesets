@@ -100,22 +100,23 @@ mystrndup(STRPTR str1,int n)
 ///
 /// readLine()
 static ULONG
-readLine(BPTR fh,STRPTR buf,int size)
+readLine(BPTR fh, char *buf, ULONG size)
 {
-    STRPTR c;
+  char *c;
 
-    if (!FGets(fh,buf,size)) return FALSE;
+  if((c = FGets(fh, buf, size)) == NULL)
+    return FALSE;
 
-    for (c = buf; *c; c++)
+  for(; *c; c++)
+  {
+    if(*c == '\n' || *c == '\r')
     {
-        if (*c=='\n' || *c=='\r')
-        {
-            *c = 0;
-            break;
-        }
+      *c = '\0';
+      break;
     }
+  }
 
-    return TRUE;
+  return TRUE;
 }
 ///
 /// getConfigItem()
@@ -310,12 +311,11 @@ codesetsCmpUnicode(struct single_convert *arg1,struct single_convert *arg2)
 #define ITEM_CHARACTERIZATION   "Characterization"
 
 // Reads a coding table and adds it
-static ULONG
+static BOOL
 codesetsReadTable(struct codesetList *csList, STRPTR name)
 {
-  char buf[512];
-  BPTR  fh;
-  ULONG res = FALSE;
+  BPTR fh;
+  BOOL res = FALSE;
 
   ENTER();
 
@@ -325,20 +325,19 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
   {
     struct codeset *codeset;
 
-    if((codeset = (struct codeset *)allocVecPooled(CodesetsBase->pool,sizeof(struct codeset))))
+    if((codeset = (struct codeset *)allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))))
     {
       int i;
+      char buf[512];
 
       memset(codeset,0,sizeof(struct codeset));
 
       for(i = 0; i<256; i++)
         codeset->table[i].code = codeset->table[i].ucs4 = i;
 
-      while(readLine(fh, buf, sizeof(buf)))
+      while(readLine(fh, buf, 512*sizeof(char)))
       {
         char *result;
-
-        D(DBF_STARTUP, "read line: '%s'", buf);
 
         if(*buf=='#')
           continue;
@@ -392,8 +391,6 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
           }
         }
       }
-
-      D(DBF_STARTUP, "read file %lx", codeset->name);
 
       // check if there is not already codeset with the same name in here
       if(codeset->name != NULL && !(codesetsFind(csList, codeset->name)))
@@ -457,11 +454,13 @@ codesetsScanDir(struct codesetList *csList, STRPTR dirPath)
         eac->eac_MatchString = NULL;
         eac->eac_MatchFunc = NULL;
 
-        if((eabuffer = allocVecPooled(CodesetsBase->pool, 32768)))
+        if((eabuffer = allocVecPooled(CodesetsBase->pool, 10*sizeof(struct ExAllData))))
         {
+          char filePath[620];
+
           do
           {
-            more = ExAll(dirLock, eabuffer, 32768, ED_TYPE, eac);
+            more = ExAll(dirLock, eabuffer, 10*sizeof(struct ExAllData), ED_TYPE, eac);
             if(!more && IoErr() != ERROR_NO_MORE_ENTRIES)
               break;
 
@@ -474,10 +473,10 @@ codesetsScanDir(struct codesetList *csList, STRPTR dirPath)
               // we only take that ead if it is a file (ed_Type < 0)
               if(ead->ed_Type < 0)
               {
-                char filePath[620];
-
                 strcpy(filePath, dirPath);
                 AddPart(filePath, (char *)ead->ed_Name, 620);
+
+                D(DBF_STARTUP, "about to read codeset table '%s'", filePath);
 
                 codesetsReadTable(csList, filePath);
               }
@@ -486,7 +485,7 @@ codesetsScanDir(struct codesetList *csList, STRPTR dirPath)
           }
           while(more);
 
-          freeArbitrateVecPooled(eabuffer);
+          freeVecPooled(CodesetsBase->pool, eabuffer);
         }
 
         FreeDosObject(DOS_EXALLCONTROL, eac);
@@ -1467,37 +1466,38 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
 STRPTR LIBFUNC
 CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 {
-  UTF8   *str;
-  STRPTR dest;
-  ULONG  *destLenPtr;
-  ULONG  n;
+  UTF8 *src;
+  ULONG srcLen;
+  ULONG *destLenPtr;
+  ULONG n = 0;
+  STRPTR dest = NULL;
 
   ENTER();
 
-  str = (UTF8 *)GetTagData(CSA_Source, 0, attrs);
-  if(!str)
-    return NULL;
-
-  dest = NULL;
-  n    = 0;
-
-  if(str)
+  if((src = (UTF8 *)GetTagData(CSA_Source, 0, attrs)) &&
+     (srcLen = GetTagData(CSA_SourceLen, strlen((char *)src), attrs)) > 0)
   {
-    struct convertMsg     msg;
-    struct codeset        *codeset;
-    struct Hook           *hook;
+    struct convertMsg msg;
+    struct codeset *codeset;
+    struct Hook *hook;
     struct single_convert *f;
-    char                 	buf[256];
-    STRPTR                destIter = NULL, b = NULL;
-    ULONG                 destLen;
-    int                   i = 0;
+    char buf[256];
+    STRPTR destIter = NULL;
+    STRPTR b = NULL;
+    ULONG destLen;
+    int i = 0;
+    unsigned char *s = src;
+    unsigned char *e = (src+srcLen);
 
-    hook    = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
-    destLen = GetTagData(CSA_DestLen,0,attrs);
+    // get some more optional attributes
+    hook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
+    destLen = GetTagData(CSA_DestLen, 0, attrs);
 
+    // first we make sure we allocate enough memory
+    // for our destination buffer
     if(hook)
     {
-      if(destLen<16 || destLen>sizeof(buf))
+      if(destLen < 16 || destLen > sizeof(buf))
         destLen = sizeof(buf);
 
       msg.state = CSV_Translating;
@@ -1506,34 +1506,34 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     }
     else
     {
-      APTR                   pool;
-      struct SignalSemaphore *sem;
-
+      // in case the user wants us to dynamically generate the
+      // destination buffer ew do it right now
       if(!(dest = (STRPTR)GetTagData(CSA_Dest, 0, attrs)) ||
-        GetTagData(CSA_AllocIfNeeded,TRUE,attrs))
+        GetTagData(CSA_AllocIfNeeded, TRUE, attrs))
       {
-        ULONG len;
-        UBYTE c, *s;
+        ULONG len = 0;
 
-        len = 0;
-        s   = str;
-
-        while ((c = *s++))
+        // calculate the destLen
+        while(s < e)
         {
-            len++;
-            s += trailingBytesForUTF8[c];
+          unsigned char c = *s++;
+          len++;
+          s += trailingBytesForUTF8[c];
         }
 
-        if(!dest || (destLen<len+1))
+        if(!dest || (destLen < len+1))
         {
+          APTR pool;
+
           if((pool = (APTR)GetTagData(CSA_Pool, 0, attrs)))
           {
-            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)))
-            {
-              ObtainSemaphore(sem);
-            }
+            struct SignalSemaphore *sem;
 
-            dest = allocVecPooled(pool,len+1);
+            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)))
+              ObtainSemaphore(sem);
+
+            // allocate the destination buffer
+            dest = allocVecPooled(pool, len+1);
 
             if(sem)
               ReleaseSemaphore(sem);
@@ -1541,7 +1541,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           else
             dest = allocArbitrateVecPooled(len+1);
 
-          destLen  = len+1;
+          destLen = len+1;
         }
 
         if(!dest)
@@ -1551,33 +1551,37 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       destIter = dest;
     }
 
+    // get the destination codeset pointer
     if(!(codeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs)))
       codeset = defaultCodeset(TRUE);
 
-    for(;;n++)
+    // now we convert the src string to the
+    // destination buffer.
+    for(s=src;;n++)
     {
-      UBYTE c, d;
+      if(!hook && n >= destLen-1)
+        break;
 
-      if(!hook)
+      // convert until we reach the end of the
+      // source buffer.
+      if(s < e)
       {
-        if(n>=destLen-1)
-          break;
-      }
+        unsigned char c = *s;
+        unsigned char d;
 
-      if((c = *str))
-      {
-        if(c>127)
+        if(c > 127)
         {
-          int lenAdd = trailingBytesForUTF8[c], lenStr = lenAdd+1;
+          int lenAdd = trailingBytesForUTF8[c];
+          int lenStr = lenAdd+1;
 
-          BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)str, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
+          BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)s, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
           if(f)
             d = f->code;
           else
             d = '_';
 
-          str += lenAdd;
+          s += lenAdd;
         }
         else
           d = c;
@@ -1599,11 +1603,9 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           }
         }
         else
-        {
           *destIter++ = d;
-        }
 
-        str++;
+        s++;
       }
       else
         break;
@@ -1617,11 +1619,11 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       CallHookPkt(hook,&msg,buf);
     }
     else
-    {
       *destIter = 0;
-    }
   }
 
+  // put the final length of our destination buffer
+  // into the destLenPtr
   if((destLenPtr = (ULONG *)GetTagData(CSA_DestLenPtr, 0, attrs)))
     *destLenPtr = n;
 
@@ -1919,7 +1921,7 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       else
       {
         utf8str = (UTF8 *)srcStr;
-        utf8strLen = strlen(srcStr);
+        utf8strLen = srcLen;
       }
 
       // in case the destination codeset is UTF-8 we don't have to actually
@@ -1931,7 +1933,7 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
                                   { CSA_Source,      (ULONG)utf8str     },
                                   { CSA_SourceLen,   utf8strLen         },
                                   { CSA_DestLenPtr,  (ULONG)&dstLen     },
-                                  { TAG_DONE,              0                  } };
+                                  { TAG_DONE,        0                  } };
 
         dstStr = CodesetsUTF8ToStrA((struct TagItem *)&tags[0]);
 

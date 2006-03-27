@@ -6,6 +6,11 @@ $Id$
 
 2006-03-27  Jens Langner <Jens.Langner@light-speed.de>
 
+    * codesets.c: slightly reworked the ReadTable() function. Reworked
+      the CodesetsUTF8ToStrA() function to correctly take respect of the
+      CSA_SourceLen attribute as documented. Previously it always
+      converted until strlen(src). Now in case the SourceLen is specified
+      it will stop converting the UTF8 string.
     * libinit.c, base.h: moved the internal charset table initialization
       routine from the LibInit() function to the first call of the
       LibOpen(). This in fact should fix the various strange crash bugs
