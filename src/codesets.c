@@ -1579,7 +1579,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           if(f)
             d = f->code;
           else
-            d = '_';
+            d = '?';
 
           s += lenAdd;
         }

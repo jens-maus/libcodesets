@@ -6,6 +6,10 @@ $Id$
 
 2006-03-27  Jens Langner <Jens.Langner@light-speed.de>
 
+    * codesets.c: replaced the underscore char '_' use for an unknown char
+      during an UTF-8 conversion to a questionmark '?' as this might be
+      a more proper replacement and it doesn't triggers YAM's text
+      highlighting routines.
     * codesets.c: slightly reworked the ReadTable() function. Reworked
       the CodesetsUTF8ToStrA() function to correctly take respect of the
       CSA_SourceLen attribute as documented. Previously it always
