@@ -4,6 +4,13 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2006-04-05  Jens Langner <Jens.Langner@light-speed.de>
+
+    * libinit.c: slightly reworked the library init/expunge code to act a
+      bit more robust and don't use any semaphore during the library expunge
+      phase which in fact should cure the crashing on MorphOS during
+      expunging of the library.
+
 #### 6.1 RELEASE #########################################################
 
 2006-03-27  Jens Langner <Jens.Langner@light-speed.de>

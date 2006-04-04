@@ -351,17 +351,19 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
   if(base->wasInitialized == FALSE && initBase(base) == FALSE)
   {
     // initialization didn't work out as expected
-    ReleaseSemaphore(&base->libSem);
-
-    return(NULL);
+    res = NULL;
   }
+  else
+  {
+    // if we reach here then we have successfully initialized
+    // our library and can flag it as such.
+    base->wasInitialized = TRUE;
+    base->libBase.lib_Flags &= ~LIBF_DELEXP; // delete the late expung flag.
+  	base->libBase.lib_OpenCnt++; // increase the open counter.
 
-  base->wasInitialized = TRUE;
-  base->libBase.lib_Flags &= ~LIBF_DELEXP;
-	base->libBase.lib_OpenCnt++;
-
-  // return the base address on success.
-  res = base;
+    // return the base address on success.
+    res = base;
+  }
 
   ReleaseSemaphore(&base->libSem);
 
@@ -391,28 +393,35 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 
   D(DBF_STARTUP, "LibExpunge()");
 
-  ObtainSemaphore(&base->libSem);
-
-  if(base->libBase.lib_OpenCnt == 0)
-  {
-    SysBase = (APTR)base->sysBase;
-
-    // free all resources
-    freeBase(base);
-    base->wasInitialized = FALSE;
-
-    rc = base->segList;
-
-    Remove((struct Node *)base);
-    DeleteLibrary(&base->libBase);
-  }
-  else
+  // in case our open counter is still > 0, we have
+  // to set the late expunge flag and return immediately
+  if(base->libBase.lib_OpenCnt > 0)
   {
     base->libBase.lib_Flags |= LIBF_DELEXP;
     rc = 0;
   }
+  else
+  {
+    // in case the open counter is zero we can go
+    // and remove/expunge the library.
+    SysBase = (APTR)base->sysBase;
 
-  ReleaseSemaphore(&base->libSem);
+    // we expunge all our private data now. We haven't done
+    // that in LibClose() already because we want to keep
+    // our stuff kinda cached so that we don't have to
+    // initialize our codesets tables all the time when a user
+    // opens/closes the only app using codesets.library.
+    if(base->wasInitialized)
+    {
+      // free all our private data and stuff.
+      freeBase(base);
+      base->wasInitialized = FALSE;
+    }
+
+    Remove((struct Node *)base);
+    rc = base->segList;
+    DeleteLibrary(&base->libBase);
+  }
 
   return(rc);
 }
@@ -437,11 +446,19 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 
   ObtainSemaphore(&base->libSem);
 
-  if(base->libBase.lib_OpenCnt > 0)
+  // descrease the open counter
+  base->libBase.lib_OpenCnt--;
+
+  // in case the opern counter is <= 0 we can
+  // make sure that we free everything
+  if(base->libBase.lib_OpenCnt <= 0)
 	{
-		if(--base->libBase.lib_OpenCnt == 0 &&
-       base->libBase.lib_Flags & LIBF_DELEXP)
+    // in case the late expunge flag is set we go and
+    // expunge the library base right now
+		if(base->libBase.lib_Flags & LIBF_DELEXP)
     {
+      ReleaseSemaphore(&base->libSem);
+
       #if defined(__amigaos4__)
       rc = LibExpunge(Self);
       #elif defined(__MORPHOS__)
@@ -449,6 +466,8 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
       #else
       rc = LibExpunge(base);
       #endif
+
+      return rc;
     }
 	}
 
