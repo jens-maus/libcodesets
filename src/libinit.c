@@ -277,8 +277,8 @@ static const USED_VAR struct Resident ROMTag =
  * one for the ppc.library.
  * ** IMPORTANT **
  */
-ULONG	USED_VAR __amigappc__=1;
-ULONG	USED_VAR __abox__=1;
+const USED_VAR ULONG __amigappc__ = 1;
+const USED_VAR ULONG __abox__ = 1;
 
 #endif /* __MORPHOS */
 
@@ -358,7 +358,7 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
     // if we reach here then we have successfully initialized
     // our library and can flag it as such.
     base->wasInitialized = TRUE;
-    base->libBase.lib_Flags &= ~LIBF_DELEXP; // delete the late expung flag.
+    base->libBase.lib_Flags &= ~LIBF_DELEXP; // delete the late expunge flag.
   	base->libBase.lib_OpenCnt++; // increase the open counter.
 
     // return the base address on success.
@@ -367,7 +367,7 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 
   ReleaseSemaphore(&base->libSem);
 
-	return base;
+	return res;
 }
 
 /****************************************************************************/
