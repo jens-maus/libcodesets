@@ -4,6 +4,13 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2006-04-11  Jens Langner <Jens.Langner@light-speed.de>
+
+    * Makefile.os4, libinit.c: reworked the OS4 library interface to
+      cleanly compile with newlib instead of clib2. Future OS4 version will
+      be built for newlib only as that is the standard runtime library for
+      AmigaOS4.
+
 2006-04-05  Jens Langner <Jens.Langner@light-speed.de>
 
     * libinit.c: slightly reworked the library init/expunge code to act a
@@ -16,8 +23,8 @@ $Id$
 2006-03-27  Jens Langner <Jens.Langner@light-speed.de>
 
     * codesets.c: replaced the underscore char '_' use for an unknown char
-      during an UTF-8 conversion to a questionmark '?' as this might be
-      a more proper replacement and it doesn't triggers YAM's text
+      during an UTF-8 conversion by a questionmark '?' as this might be
+      a more proper replacement and it doesn't trigger YAM's text
       highlighting routines.
     * codesets.c: slightly reworked the ReadTable() function. Reworked
       the CodesetsUTF8ToStrA() function to correctly take respect of the

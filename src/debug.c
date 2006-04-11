@@ -25,19 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <proto/intuition.h>
 #include <proto/utility.h>
 #include <proto/dos.h>
+#include <proto/exec.h>
 
 #include "version.h"
 
 #include "debug.h"
 #include "macros.h"
-
-#ifndef __MORPHOS__
-extern void KPutFmt(const char *format, va_list arg);
-#endif
 
 // our static variables with default values
 static int indent_level = 0;
@@ -358,23 +356,27 @@ void _SHOWMSG(unsigned long dclass, unsigned long dflags, const char *msg, const
 
 /****************************************************************************/
 
+#if defined(__amigaos4__)
 void _DPRINTF(unsigned long dclass, unsigned long dflags, const char *file, int line, const char *format, ...)
 {
-	if(isFlagSet(debug_classes, dclass) &&
-     isFlagSet(debug_flags, dflags))
-	{
-		va_list args;
+  if((isFlagSet(debug_classes, dclass) && isFlagSet(debug_flags, dflags)) ||
+     (isFlagSet(dclass, DBC_ERROR) || isFlagSet(dclass, DBC_WARNING)))
+  {
+    va_list args;
+    static char buf[1024];
 
-		_INDENT();
+    _INDENT();
 
     va_start(args, format);
+    vsnprintf(buf, 1024, format, args);
+    va_end(args);
 
     if(ansi_output)
     {
-  		char *highlight = ANSI_ESC_FG_GREEN;
-	
-    	switch(dclass)
-  		{
+      char *highlight = ANSI_ESC_FG_GREEN;
+
+      switch(dclass)
+      {
         case DBC_CTRACE:  highlight = ANSI_ESC_FG_BROWN; break;
         case DBC_REPORT:  highlight = ANSI_ESC_FG_GREEN; break;
         case DBC_ASSERT:  highlight = ANSI_ESC_FG_RED;   break;
@@ -382,26 +384,64 @@ void _DPRINTF(unsigned long dclass, unsigned long dflags, const char *file, int 
         case DBC_DEBUG:   highlight = ANSI_ESC_FG_GREEN; break;
         case DBC_ERROR:   highlight = ANSI_ESC_FG_RED;   break;
         case DBC_WARNING: highlight = ANSI_ESC_FG_PURPLE;break;
-  		}
+      }
+
+      IExec->DebugPrintF("%s%s:%ld:%s%s\n", highlight, file, line, buf, ANSI_ESC_CLR);
+    }
+    else
+      IExec->DebugPrintF("%s:%ld:%s\n", file, line, buf);
+  }
+}
+#else
+#if !defined(__MORPHOS__)
+extern void KPutFmt(const char *format, va_list arg);
+#endif
+
+void _DPRINTF(unsigned long dclass, unsigned long dflags, const char *file, int line, const char *format, ...)
+{
+  if((isFlagSet(debug_classes, dclass) && isFlagSet(debug_flags, dflags)) ||
+     (isFlagSet(dclass, DBC_ERROR) || isFlagSet(dclass, DBC_WARNING)))
+  {
+    va_list args;
+
+    _INDENT();
+
+    va_start(args, format);
+
+    if(ansi_output)
+    {
+      char *highlight = ANSI_ESC_FG_GREEN;
+
+      switch(dclass)
+      {
+        case DBC_CTRACE:  highlight = ANSI_ESC_FG_BROWN; break;
+        case DBC_REPORT:  highlight = ANSI_ESC_FG_GREEN; break;
+        case DBC_ASSERT:  highlight = ANSI_ESC_FG_RED;   break;
+        case DBC_TIMEVAL: highlight = ANSI_ESC_FG_GREEN; break;
+        case DBC_DEBUG:   highlight = ANSI_ESC_FG_GREEN; break;
+        case DBC_ERROR:   highlight = ANSI_ESC_FG_RED;   break;
+        case DBC_WARNING: highlight = ANSI_ESC_FG_PURPLE;break;
+      }
 
       kprintf("%s%s:%ld:", highlight, file, line);
 
-	  	KPutFmt((char *)format, args);
+      KPutFmt((char *)format, args);
 
-  		kprintf("%s\n", ANSI_ESC_CLR);
-  	}
+      kprintf("%s\n", ANSI_ESC_CLR);
+    }
     else
     {
       kprintf("%s:%ld:", file, line);
 
-	  	KPutFmt((char *)format, args);
+      KPutFmt((char *)format, args);
 
-  		kprintf("\n");
-	  }
+      kprintf("\n");
+    }
 
     va_end(args);
-	}
+  }
 }
+#endif
 
 /****************************************************************************/
 

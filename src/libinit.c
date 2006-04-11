@@ -32,12 +32,14 @@
 
 
 #if defined(__amigaos4__)
-extern struct Library *SysBase;
-extern struct ExecIFace* IExec;
-#elif defined(__libnix__)
-struct ExecBase *SysBase = NULL;
+struct Library *SysBase = NULL;
+struct ExecIFace* IExec = NULL;
+#if defined(__NEWLIB__)
+struct Library *NewlibBase = NULL;
+struct NewlibIFace* INewlib = NULL;
+#endif
 #else
-extern struct ExecBase *SysBase;
+struct ExecBase *SysBase = NULL;
 #endif
 
 struct LibraryHeader *CodesetsBase = NULL;
@@ -299,31 +301,37 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
 
   SysBase = (APTR)sb;
 
-  D(DBF_STARTUP, "LibInit()");
+  #if defined(__amigaos4__) && defined(__NEWLIB__)
+  if((NewlibBase = OpenLibrary("newlib.library", 3)) &&
+     GETINTERFACE(INewlib, NewlibBase))
+  #endif
+  {
+    D(DBF_STARTUP, "LibInit()");
 
-  // cleanup the library header structure beginning with the
-  // library base.
-  base->libBase.lib_Node.ln_Type = NT_LIBRARY;
-  base->libBase.lib_Node.ln_Pri  = 0;
-  base->libBase.lib_Node.ln_Name = (char *)UserLibName;
-  base->libBase.lib_Flags        = LIBF_CHANGED | LIBF_SUMUSED;
-  base->libBase.lib_Version      = LIB_VERSION;
-  base->libBase.lib_Revision     = LIB_REVISION;
-  base->libBase.lib_IdString     = (char *)(UserLibID+6);
+    // cleanup the library header structure beginning with the
+    // library base.
+    base->libBase.lib_Node.ln_Type = NT_LIBRARY;
+    base->libBase.lib_Node.ln_Pri  = 0;
+    base->libBase.lib_Node.ln_Name = (char *)UserLibName;
+    base->libBase.lib_Flags        = LIBF_CHANGED | LIBF_SUMUSED;
+    base->libBase.lib_Version      = LIB_VERSION;
+    base->libBase.lib_Revision     = LIB_REVISION;
+    base->libBase.lib_IdString     = (char *)(UserLibID+6);
 
-  base->sysBase = (APTR)SysBase;
-  base->segList = librarySegment;
-  InitSemaphore(&base->libSem);
-  base->pool = NULL;
-  InitSemaphore(&base->poolSem);
-  base->flags = 0;
-  base->systemCodeset = NULL;
-  base->wasInitialized = FALSE;
+    base->sysBase = (APTR)SysBase;
+    base->segList = librarySegment;
+    InitSemaphore(&base->libSem);
+    base->pool = NULL;
+    InitSemaphore(&base->poolSem);
+    base->flags = 0;
+    base->systemCodeset = NULL;
+    base->wasInitialized = FALSE;
 
-  // set the CodesetsBase
-  CodesetsBase = base;
+    // set the CodesetsBase
+    CodesetsBase = base;
+  }
 
-  return(base);
+  return CodesetsBase;
 }
 
 /****************************************************************************/
@@ -417,6 +425,15 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
       freeBase(base);
       base->wasInitialized = FALSE;
     }
+
+    #if defined(__amigaos4__) && defined(__NEWLIB__)
+    if(NewlibBase)
+    {
+      DROPINTERFACE(INewlib);
+      CloseLibrary(NewlibBase);
+      NewlibBase = NULL;
+    }
+    #endif
 
     Remove((struct Node *)base);
     rc = base->segList;

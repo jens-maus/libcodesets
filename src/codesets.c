@@ -67,35 +67,39 @@
 static STRPTR
 mystrdup(STRPTR str)
 {
-    STRPTR new;
-    int   len;
+  STRPTR newStr;
+  int len;
 
-    if (!str) return NULL;
+  if(!str)
+    return NULL;
 
-    len = strlen(str);
-    if (!len) return NULL;
+  len = strlen(str);
+  if(!len)
+    return NULL;
 
-    if ((new = allocArbitrateVecPooled(len+1)))
-        strcpy(new,str);
+  if((newStr = allocArbitrateVecPooled(len+1)))
+    strlcpy(newStr, str, len+1);
 
-    return new;
+  return newStr;
 }
 ///
 /// mystrndup()
 static STRPTR
 mystrndup(STRPTR str1,int n)
 {
-    STRPTR dest;
+  STRPTR dest;
 
-    if ((dest = allocArbitrateVecPooled(n+1)))
-    {
-        if (str1) strncpy(dest,str1,n);
-        else dest[0] = 0;
+  if((dest = allocArbitrateVecPooled(n+1)))
+  {
+    if(str1)
+      strlcpy(dest, str1, n+1);
+    else
+      dest[0] = '\0';
 
-        dest[n] = 0;
-    }
+    dest[n] = '\0';
+  }
 
-    return dest;
+  return dest;
 }
 ///
 /// readLine()
@@ -473,8 +477,8 @@ codesetsScanDir(struct codesetList *csList, STRPTR dirPath)
               // we only take that ead if it is a file (ed_Type < 0)
               if(ead->ed_Type < 0)
               {
-                strcpy(filePath, dirPath);
-                AddPart(filePath, (char *)ead->ed_Name, 620);
+                strlcpy(filePath, dirPath, sizeof(filePath));
+                AddPart(filePath, (char *)ead->ed_Name, sizeof(filePath));
 
                 D(DBF_STARTUP, "about to read codeset table '%s'", filePath);
 
@@ -1016,8 +1020,7 @@ codesetsFindBest(struct codesetList *csList, STRPTR text, int text_len, int *err
           int len = trailingBytesForUTF8[c];
 
           conv.utf8[1] = c;
-          strncpy((char*)&conv.utf8[2], text_ptr, len);
-          conv.utf8[2+len] = 0;
+          strlcpy((char*)&conv.utf8[2], text_ptr, len);
           text_ptr += len;
 
           if(!bsearch(&conv,codeset->table_sorted,256,sizeof(codeset->table_sorted[0]),(APTR)codesetsCmpUnicode))
