@@ -289,28 +289,39 @@ codesets.library/CodesetsEncodeB64A
                         string content.
 
    SYNOPSIS
-    codeset = CodesetsFindBestA(text, textLen, errPtr, attrs);
-    D0                          A0    A1       A2      A3
+    codeset = CodesetsFindBestA(attrs);
+    D0                          A0
 
-    struct codeset * CodesetsFindBestA(STRPTR, ULONG, int *, struct TagItem *);
+    struct codeset * CodesetsFindBestA(struct TagItem *);
 
-    codeset = CodesetsFindBest(text, textLen, errPtr, tag1, ...);
-    D0                         A0    A1       A2      A3
+    codeset = CodesetsFindBest(tag1, ...);
+    D0                         A0
 
-    struct codeset * CodesetsFindBest(STRPTR, ULONG, int *, Tag, ...);
+    struct codeset * CodesetsFindBest(Tag, ...);
 
    FUNCTION
-    Returns the best found codeset for the given text. In case no
-    proper codeset for the supplied source string could be found,
-    the pointer to the system's default codeset will be returned.
-    In any way, the 'errPtr' argument have to be checked for
-    eventually unresolved characters found in the string.
+    Returns the best found codeset for the given text in the supplied
+    codeset family. In case no proper codeset for the supplied source string
+    could be found, NULL is returned or the default codeset if the
+    CSA_FallbackToDefault attribute is set to TRUE. In addition, in case
+    the CSA_ErrPtr is given, the amount of failed identifications (chars)
+    are returned.
 
    INPUTS
-    text - the text to find the best codeset for
-    textLen - text length
-    errPtr -  position of the unresolved char
-    attrs - a list of additional tag items. Valid items are:
+    attrs - a list of tag items. Valid items are:
+
+      CSA_Source (STRPTR)
+        The string which you want to convert. Must be supplied,
+        otherwise the functions returns NULL.
+
+      CSA_SourceLen (ULONG)
+        Length of CSA_Source
+        Default: strlen(CSA_Source)
+
+      CSA_ErrPtr (int *)
+        Pointer to an integer variable which will be filled with the
+        number of found errors (not identifyable chars)
+        Default: NULL
 
       CSA_CodesetList (struct codesetList *)
         You may supply an unlimited number of additional
@@ -319,22 +330,43 @@ codesets.library/CodesetsEncodeB64A
         list of available codesets will be searched.
         Default: NONE
 
+      CSA_CodesetFamily (ULONG)
+        To narrow the analyze, a user might define the codeset family
+        of which the supplied text might be composed of. The reason for
+        this is, that there isn't a unique identification algorithm
+        which can tell the codeset out of a given text. So to narrow
+        the identification, the follow values might be specified:
+
+          CSV_CodesetFamily_Latin    - Latin codeset family (e.g. ISO-8859-X)
+          CSV_CodesetFamily_Cyrillic - Cyrillic codeset family (e.g. KOI8R)
+
+        Default: CSV_CodesetFamily_Latin
+
+      CSA_FallbackToDefault (BOOL)
+        If TRUE the function never fails and returns the default
+        codeset if the supplied text couldn't be identified
+        Default: FALSE
+
    RESULT
     codeset - the best matching codeset or NULL in case a NULL pointer
               was supplied as the source string.
 
    EXAMPLE
      E.g. for receiving the pointer to 'best matching' codeset matching
-     the "Amiga rulez!" string.
+     a KOI8-R string:
 
      -- cut here --
      struct codeset *cs;
-     char str[] = "Amiga rulez!";
+     char str[] = "Невозможно перекодировать из кодировки";
      int errPtr;
 
-     if((cs = CodesetsFindBest(str, strlen(str), &errPtr, TAG_DONE)))
+     if((cs = CodesetsFindBest(CSA_Source, str,
+                               CSA_ErrPtr, &errPtr,
+                               CSA_CodesetFamily, CSV_CodesetFamily_Cyrillic,
+                               CSA_FallBackToDefault, FALSE,
+                               TAG_DONE)))
      {
-       ...
+       ... should return the KOI8-R codeset ...
      }
      -- cut here --
 

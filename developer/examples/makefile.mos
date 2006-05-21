@@ -58,7 +58,11 @@ LDLIBS   =
 # ignored warnings are:
 # none - because we want to compile with -Wall all the time
 
-TARGET = $(BINDIR)/b64d $(BINDIR)/b64e $(BINDIR)/UTF8ToStrHook $(BINDIR)/demo1
+TARGET = $(BINDIR)/b64d \
+         $(BINDIR)/b64e \
+         $(BINDIR)/UTF8ToStrHook \
+         $(BINDIR)/DetectCodeset \
+         $(BINDIR)/demo1
 
 #
 all: $(BINDIR) $(OBJDIR) $(TARGET)
@@ -90,6 +94,10 @@ $(BINDIR)/b64e: $(OBJDIR)/b64e.o
 	@$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(BINDIR)/UTF8ToStrHook: $(OBJDIR)/UTF8ToStrHook.o
+	@printf '\033[32mLinking \033[1m$@\033[0m\n'
+	@$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS)
+
+$(BINDIR)/DetectCodeset: $(OBJDIR)/DetectCodeset.o
 	@printf '\033[32mLinking \033[1m$@\033[0m\n'
 	@$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS)
 

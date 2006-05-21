@@ -57,7 +57,6 @@ LIBPROTO(CodesetsConvertUTF8toUTF32,  ULONG, REG(a0, const UTF8 **sourceStart), 
 BOOL codesetsInit(struct codesetList *csList);
 void codesetsCleanup(struct codesetList *csList);
 struct codeset *codesetsFind(struct codesetList *csList, STRPTR name);
-struct codeset *codesetsFindBest(struct codesetList *csList, STRPTR text, int text_len, int *error_ptr);
 
 LIBPROTO(CodesetsSupportedA,  STRPTR *, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsSupported, STRPTR *, ...);
@@ -67,8 +66,8 @@ LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a0, STRPTR name), REG(a1, st
 LIBPROTOVA(CodesetsSetDefault,struct codeset *, REG(a0, STRPTR name), ...);
 LIBPROTO(CodesetsFindA,       struct codeset *, REG(a0, STRPTR name), REG(a1, struct TagItem *attrs));
 LIBPROTOVA(CodesetsFind,      struct codeset *, REG(a0, STRPTR name), ...);
-LIBPROTO(CodesetsFindBestA,   struct codeset *, REG(a0, STRPTR text) , REG(d0, ULONG text_len) , REG(a1, ULONG *error_ptr), REG(a2, struct TagItem *attrs));
-LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a0, STRPTR text) , REG(d0, ULONG text_len) , REG(a1, ULONG *error_ptr), ...);
+LIBPROTO(CodesetsFindBestA,   struct codeset *, REG(a0, struct TagItem *attrs));
+LIBPROTOVA(CodesetsFindBest,  struct codeset *, ...);
 LIBPROTO(CodesetsStrLenA,     ULONG, REG(a0, STRPTR str), REG(a1, struct TagItem *attrs));
 LIBPROTOVA(CodesetsStrLen,    ULONG, REG(a0, STRPTR str), ...);
 LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a0, struct TagItem *attrs));

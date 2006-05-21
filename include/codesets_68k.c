@@ -22,44 +22,36 @@
 static inline int8  convert_int8 (uint32 x) { return x; }
 static inline int16 convert_int16(uint32 x) { return x; }
 
-/*
-
-  This file is required for the M68K->PPC crosscall stubs build for
-  AmigaOS4/PPC and is required by fdtrans on generation of the stubs
-
-  $Id$
-
-*/
 
 STATIC struct Library * stub_OpenPPC(ULONG *regarray)
 {
-	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
-	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
-	struct LibraryManagerInterface *Self = (struct LibraryManagerInterface *) ExtLib->ILibrary;
+    struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+    struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+    struct LibraryManagerInterface *Self = (struct LibraryManagerInterface *) ExtLib->ILibrary;
 
-	return Self->Open(0);
+    return Self->Open(0);
 }
 STATIC CONST struct EmuTrap stub_Open = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_OpenPPC };
 
 STATIC APTR stub_ClosePPC(ULONG *regarray)
 {
-	struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
-	struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
-	struct LibraryManagerInterface *Self = (struct LibraryManagerInterface *) ExtLib->ILibrary;
+    struct Library *Base = (struct Library *) regarray[REG68K_A6/4];
+    struct ExtendedLibrary *ExtLib = (struct ExtendedLibrary *) ((ULONG)Base + Base->lib_PosSize);
+    struct LibraryManagerInterface *Self = (struct LibraryManagerInterface *) ExtLib->ILibrary;
 
-	return Self->Close();
+    return Self->Close();
 }
 STATIC CONST struct EmuTrap stub_Close = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_ClosePPC };
 
 STATIC APTR stub_ExpungePPC(ULONG *regarray __attribute__((unused)))
 {
-	return NULL;
+    return NULL;
 }
 STATIC CONST struct EmuTrap stub_Expunge = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_ExpungePPC };
 
 STATIC ULONG stub_ReservedPPC(ULONG *regarray __attribute__((unused)))
 {
-	return 0UL;
+    return 0UL;
 }
 STATIC CONST struct EmuTrap stub_Reserved = { TRAPINST, TRAPTYPE, stub_ReservedPPC };
 
@@ -243,10 +235,7 @@ static struct codeset * stub_CodesetsFindBestAPPC(ULONG *regarray)
 	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
 
 	return Self->CodesetsFindBestA(
-		(STRPTR)regarray[8],
-		(ULONG)regarray[0],
-		(ULONG *)regarray[9],
-		(struct TagItem *)regarray[10]
+		(struct TagItem *)regarray[8]
 	);
 }
 STATIC CONST struct EmuTrap stub_CodesetsFindBestA = { TRAPINST, TRAPTYPE, (ULONG (*)(ULONG *))stub_CodesetsFindBestAPPC };

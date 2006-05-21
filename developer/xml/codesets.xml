@@ -90,15 +90,9 @@
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsFindBestA" result="struct codeset *">
-			<arg name="text" type="STRPTR"/>
-			<arg name="text_len" type="ULONG"/>
-			<arg name="error_ptr" type="ULONG *"/>
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
 		<method name="CodesetsFindBest" result="struct codeset *">
-			<arg name="text" type="STRPTR"/>
-			<arg name="text_len" type="ULONG"/>
-			<arg name="error_ptr" type="ULONG *"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsUTF8Len" result="ULONG">
