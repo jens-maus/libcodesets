@@ -4,6 +4,8 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+#### 6.2 RELEASE #########################################################
+
 2006-05-20  Jens Langner <Jens.Langner@light-speed.de>
 
   * misc: reworked the whole API of the CodesetsFindBestA() function which
