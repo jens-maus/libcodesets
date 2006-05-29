@@ -81,7 +81,7 @@ $(BINDIR):
 
 $(OBJDIR)/%.o: %.c
 	@printf '\033[32mCompiling $<\033[0m\n'
-	@$(CC) $(CFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $< -o $@ -DUSE_INLINE_STDARG
 
 #
 

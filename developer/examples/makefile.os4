@@ -108,7 +108,7 @@ $(BINDIR)/DetectCodeset: $(OBJDIR)/DetectCodeset.o
 
 $(BINDIR)/demo1: demo1.c
 	@printf '\033[32mCompiling demo1.c\033[0m\n'
-	@$(CC) $(CFLAGS) demo1.c -o $(OBJDIR)/demo1.o -DNO_PPCINLINE_STDARG
+	@$(CC) $(CFLAGS) demo1.c -o $(OBJDIR)/demo1.o
 	@printf '\033[32mLinking \033[1m$@\033[0m\n'
 	@$(CC) $(LDFLAGS) -o $@.debug $(OBJDIR)/demo1.o $(LDLIBS)
 	@$(STRIP) -o $@ $@.debug

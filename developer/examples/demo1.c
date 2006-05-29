@@ -37,6 +37,8 @@
 #include <mui/Textinput_mcc.h>
 #include <mui/TextEditor_mcc.h>
 
+#define USE_INLINE_STDARG
+
 // tempoarly disable the INLINE STDARG define here
 #if defined(NO_INLINE_STDARG)
 #undef NO_INLINE_STDARG
