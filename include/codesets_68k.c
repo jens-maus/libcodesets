@@ -63,7 +63,7 @@ static ULONG stub_CodesetsConvertUTF32toUTF16PPC(ULONG *regarray)
 
 	return Self->CodesetsConvertUTF32toUTF16(
 		(const UTF32 **)regarray[8],
-		(const UTF32 **)regarray[9],
+		(const UTF32 *)regarray[9],
 		(UTF16 **)regarray[10],
 		(UTF16 *)regarray[11],
 		(ULONG)regarray[0]
@@ -79,7 +79,7 @@ static ULONG stub_CodesetsConvertUTF16toUTF32PPC(ULONG *regarray)
 
 	return Self->CodesetsConvertUTF16toUTF32(
 		(const UTF16 **)regarray[8],
-		(const UTF16 **)regarray[9],
+		(const UTF16 *)regarray[9],
 		(UTF32 **)regarray[10],
 		(UTF32 *)regarray[11],
 		(ULONG)regarray[0]
@@ -95,7 +95,7 @@ static ULONG stub_CodesetsConvertUTF16toUTF8PPC(ULONG *regarray)
 
 	return Self->CodesetsConvertUTF16toUTF8(
 		(const UTF16 **)regarray[8],
-		(const UTF16 **)regarray[9],
+		(const UTF16 *)regarray[9],
 		(UTF8 **)regarray[10],
 		(UTF8 *)regarray[11],
 		(ULONG)regarray[0]

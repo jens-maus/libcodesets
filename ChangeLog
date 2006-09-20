@@ -4,6 +4,14 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2006-09-20  Jens Langner <Jens.Langner@light-speed.de>
+
+  * makefile.#?: added -Wwrite-string warning option to let the compiler
+    more easily find const/non-const issues.
+  * include/SDI_#?: update the sdi headers to latest versions.
+  * include/interfaces: fixed minor bug #1560515 where the interface
+    definition was slightly wrong.
+
 2006-09-06  Jens Langner <Jens.Langner@light-speed.de>
 
   * developer/include/inline: added a VBCC inline version of our current

@@ -28,10 +28,10 @@
 #define _VERSION_H_
 
 #define LIB_VERSION    6
-#define LIB_REVISION   2
+#define LIB_REVISION   3
 
-#define LIB_REV_STRING "6.2"
-#define LIB_DATE       "29.05.2006"
+#define LIB_REV_STRING "6.3"
+#define LIB_DATE       "20.09.2006"
 
 #if defined(__PPC__)
   #if defined(__MORPHOS__)
