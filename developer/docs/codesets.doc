@@ -414,6 +414,10 @@ codesets.library/CodesetsEncodeB64A
         The codeset to which the source string should be converted to.
         Default: the system's default codeset
 
+      CSA_DestLenPtr (ULONG *)
+        If supplied, will contain the length of the converted string
+        which is returned.
+
 
    RESULT
     either a pointer to the generated destination string or NULL
