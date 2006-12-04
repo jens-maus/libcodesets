@@ -4,6 +4,12 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2006-12-04  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: added alternative names to all ISO based codeset names as
+    some applications might want to query for these abbreviations instead.
+  * misc: fixed all still pending compiler warnings
+
 2006-09-20  Jens Langner <Jens.Langner@light-speed.de>
 
   * makefile.#?: added -Wwrite-string warning option to let the compiler

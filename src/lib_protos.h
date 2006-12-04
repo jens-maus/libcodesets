@@ -56,7 +56,7 @@ LIBPROTO(CodesetsConvertUTF8toUTF32,  ULONG, REG(a0, const UTF8 **sourceStart), 
 /* codesets.c */
 BOOL codesetsInit(struct codesetList *csList);
 void codesetsCleanup(struct codesetList *csList);
-struct codeset *codesetsFind(struct codesetList *csList, STRPTR name);
+struct codeset *codesetsFind(struct codesetList *csList, const char *name);
 
 LIBPROTO(CodesetsSupportedA,  STRPTR *, REG(a0, struct TagItem *attrs));
 LIBPROTOVA(CodesetsSupported, STRPTR *, ...);

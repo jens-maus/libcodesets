@@ -119,9 +119,9 @@ freeBase(struct LibraryHeader *lib)
 
 struct loc
 {
-  STRPTR name;
+  const char *name;
   ULONG  len;
-  STRPTR codesetName;
+  const char *codesetName;
 };
 
 // table with the default LANGUAGE<>CHARSET mapping we

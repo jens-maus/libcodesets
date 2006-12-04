@@ -31,7 +31,7 @@
 #define LIB_REVISION   3
 
 #define LIB_REV_STRING "6.3"
-#define LIB_DATE       "20.09.2006"
+#define LIB_DATE       "04.12.2006"
 
 #if defined(__PPC__)
   #if defined(__MORPHOS__)

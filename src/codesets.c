@@ -3160,7 +3160,7 @@ static const char koi8r_data[] =
 ///
 /// mystrdup()
 static STRPTR
-mystrdup(STRPTR str)
+mystrdup(const char *str)
 {
   STRPTR newStr;
   int len;
@@ -3180,7 +3180,7 @@ mystrdup(STRPTR str)
 ///
 /// mystrndup()
 static STRPTR
-mystrndup(STRPTR str1,int n)
+mystrndup(const char *str1, int n)
 {
   STRPTR dest;
 
@@ -3219,8 +3219,7 @@ readLine(BPTR fh, char *buf, ULONG size)
 }
 ///
 /// getConfigItem()
-static STRPTR
-getConfigItem(STRPTR buf, STRPTR item, int len)
+static const char * getConfigItem(const char *buf, const char *item, int len)
 {
   ENTER();
 
@@ -3436,12 +3435,12 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
 
       while(readLine(fh, buf, 512*sizeof(char)))
       {
-        char *result;
+        const char *result;
 
         if(*buf=='#')
           continue;
 
-        if((result = getConfigItem(buf,ITEM_STANDARD,strlen(ITEM_STANDARD))))
+        if((result = getConfigItem(buf, ITEM_STANDARD, strlen(ITEM_STANDARD))))
           codeset->name = mystrdup(result);
         else if(codeset->name == NULL) // a valid file starts with standard and nothing else!!
           break;
@@ -3529,7 +3528,7 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
 ///
 /// codesetsScanDir()
 static void
-codesetsScanDir(struct codesetList *csList, STRPTR dirPath)
+codesetsScanDir(struct codesetList *csList, const char *dirPath)
 {
   ENTER();
 
@@ -3720,7 +3719,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-1");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-1");
     codeset->characterization = mystrdup("West European");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3746,7 +3745,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-2");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-2");
     codeset->characterization = mystrdup("Central/East European");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3775,7 +3774,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-3");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-3");
     codeset->characterization = mystrdup("South European");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3804,7 +3803,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-4");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-4");
     codeset->characterization = mystrdup("North European");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3833,7 +3832,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-5");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-5");
     codeset->characterization = mystrdup("Slavic languages");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3862,7 +3861,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-9");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-9");
     codeset->characterization = mystrdup("Turkish");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3891,7 +3890,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
     codeset->name 	          = mystrdup("ISO-8859-15");
-    codeset->alt_name 	      = NULL;
+    codeset->alt_name 	      = mystrdup("ISO8859-15");
     codeset->characterization = mystrdup("West European II");
     codeset->read_only 	      = 0;
     for(i = 0; i<256; i++)
@@ -3920,7 +3919,7 @@ codesetsInit(struct codesetList *csList)
   {
     if(!(codeset = allocVecPooled(CodesetsBase->pool,sizeof(struct codeset)))) goto end;
 	  codeset->name             = mystrdup("ISO-8859-16");
-  	codeset->alt_name         = NULL;
+  	codeset->alt_name         = mystrdup("ISO8869-16");
 	  codeset->characterization = mystrdup("South-Eastern European");
   	codeset->read_only        = 0;
 	  for(i=0;i<256;i++)
@@ -4064,7 +4063,7 @@ codesetsCleanup(struct codesetList *csList)
 /// codesetsFind()
 // Returns the given codeset.
 struct codeset *
-codesetsFind(struct codesetList *csList, STRPTR name)
+codesetsFind(struct codesetList *csList, const char *name)
 {
   struct codeset *res = NULL;
 
@@ -4107,7 +4106,7 @@ codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_le
 
     struct CodesetSearch
     {
-    	char *name;
+    	const char *name;
     	const char *data;
     };
 

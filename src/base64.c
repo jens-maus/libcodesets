@@ -38,7 +38,7 @@ struct b64
   int    outIndex;
   int    maxLineLen;
   int    lineCounter;
-  STRPTR eols;
+  const char *eols;
   LONG   error;
 };
 
