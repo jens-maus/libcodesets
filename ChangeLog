@@ -4,6 +4,11 @@ codesets.library - Library for handling different codesets
 
 $Id$
 
+2007-01-11  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * base64.c: fixed bug #1608004 where b64 encoder never null terminated
+    the output string (when encoding to a string buffer).
+
 2006-12-04  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: added alternative names to all ISO based codeset names as

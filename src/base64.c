@@ -434,15 +434,15 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
         c = ochar(&b64,ogroup[i]);
         if(c==EOF)
         {
-		      if(!(b64.flags & B64FLG_DestFile))
-		        ((STRPTR)out)[b64.outIndex] = 0;
-
           stop = TRUE;
           break;
         }
       }
     }
   }
+
+  if(!(b64.flags & B64FLG_DestFile))
+    ((STRPTR)out)[b64.outIndex] = 0;
 
   /* close source */
   if(flags & B64FLG_SourceFile)
