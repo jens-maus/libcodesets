@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005-2006 by codesets.library Open Source Team
+ Copyright (C) 2005-2007 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,7 @@
 #define LIB_REVISION   3
 
 #define LIB_REV_STRING "6.3"
-#define LIB_DATE       "04.12.2006"
+#define LIB_DATE       "23.01.2007"
 
 #if defined(__PPC__)
   #if defined(__MORPHOS__)
@@ -51,6 +51,6 @@
   #define CPU ""
 #endif
 
-#define LIB_COPYRIGHT  "Copyright (c) 2005-2006 codesets.library Open Source Team"
+#define LIB_COPYRIGHT  "Copyright (c) 2005-2007 codesets.library Open Source Team"
 
 #endif // _VERSION_H_

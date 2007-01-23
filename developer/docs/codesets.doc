@@ -30,8 +30,9 @@ codesets.library/CodesetsEncodeB64A
 codesets.library/codesets.library
 
     *******************************************************************
-    Copyright (c) 2005-2006 by codesets.library Open Source Team
+    Copyright (c) 2005-2007 by codesets.library Open Source Team
     $Id$
+    $URL$
 
     codesets.library is an AmigaOS shared library which provides
     functions to deal with different kind of codesets. It provides
