@@ -3,6 +3,17 @@ codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
 $Id$
+$URL$
+
+#### 6.3 RELEASE #########################################################
+
+2007-01-27  Jens Langner <Jens.Langner@light-speed.de>
+
+  * Makefile: replaced the single target makefiles with a general Makefile
+    that contains HOST and TARGET os identification code via 'uname'.
+    This way we can easily compile codesets.library with a single makefile
+    for all our platforms.
+  * misc: bumped the year to 2007
 
 2007-01-11  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
