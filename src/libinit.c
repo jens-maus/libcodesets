@@ -222,9 +222,9 @@ STATIC CONST struct TagItem LibCreateTags[] =
 
 STATIC CONST APTR LibVectors[] =
 {
-	#ifdef __MORPHOS__
-	(APTR)FUNCARRAY_32BIT_NATIVE,
-	#endif
+  #ifdef __MORPHOS__
+  (APTR)FUNCARRAY_32BIT_NATIVE,
+  #endif
   (APTR)LibOpen,
   (APTR)LibClose,
   (APTR)LibExpunge,
@@ -235,10 +235,10 @@ STATIC CONST APTR LibVectors[] =
 
 STATIC CONST ULONG LibInitTab[] =
 {
-	sizeof(struct LibraryHeader),
-	(ULONG)LibVectors,
-	(ULONG)NULL,
-	(ULONG)LibInit
+  sizeof(struct LibraryHeader),
+  (ULONG)LibVectors,
+  (ULONG)NULL,
+  (ULONG)LibInit
 };
 
 #endif
@@ -252,8 +252,8 @@ static const USED_VAR struct Resident ROMTag =
   (struct Resident *)&ROMTag + 1,
   #if defined(__amigaos4__)
   RTF_AUTOINIT|RTF_NATIVE,      // The Library should be set up according to the given table.
-	#elif defined(__MORPHOS__)
-	RTF_AUTOINIT|RTF_PPC,
+  #elif defined(__MORPHOS__)
+  RTF_AUTOINIT|RTF_PPC,
   #else
   RTF_AUTOINIT,
   #endif
@@ -354,20 +354,27 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 
   ObtainSemaphore(&base->libSem);
 
+  // increase the open counter first, as initBase() might take a while and
+  // a LibExpunge() may be invoked in the mean time which will in turn expunge
+  // a not yet fully initialized library.
+  base->libBase.lib_OpenCnt++; 
+
   // in case our codesets list wasn't already initialized
   // we do it right now.
   if(base->wasInitialized == FALSE && initBase(base) == FALSE)
   {
     // initialization didn't work out as expected
     res = NULL;
+    // decrease the open counter again
+    base->libBase.lib_OpenCnt--;
   }
   else
   {
     // if we reach here then we have successfully initialized
     // our library and can flag it as such.
     base->wasInitialized = TRUE;
-    base->libBase.lib_Flags &= ~LIBF_DELEXP; // delete the late expunge flag.
-  	base->libBase.lib_OpenCnt++; // increase the open counter.
+    // delete the late expunge flag
+    base->libBase.lib_Flags &= ~LIBF_DELEXP; 
 
     // return the base address on success.
     res = base;
@@ -375,7 +382,7 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 
   ReleaseSemaphore(&base->libSem);
 
-	return res;
+  return res;
 }
 
 /****************************************************************************/
@@ -440,7 +447,7 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
     DeleteLibrary(&base->libBase);
   }
 
-  return(rc);
+  return rc;
 }
 
 /****************************************************************************/
@@ -463,16 +470,16 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 
   ObtainSemaphore(&base->libSem);
 
-  // descrease the open counter
+  // decrease the open counter
   base->libBase.lib_OpenCnt--;
 
   // in case the opern counter is <= 0 we can
   // make sure that we free everything
   if(base->libBase.lib_OpenCnt <= 0)
-	{
+  {
     // in case the late expunge flag is set we go and
     // expunge the library base right now
-		if(base->libBase.lib_Flags & LIBF_DELEXP)
+    if(base->libBase.lib_Flags & LIBF_DELEXP)
     {
       ReleaseSemaphore(&base->libSem);
 
@@ -486,11 +493,11 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 
       return rc;
     }
-	}
+  }
 
   ReleaseSemaphore(&base->libSem);
 
-	return rc;
+  return rc;
 }
 
 /****************************************************************************/

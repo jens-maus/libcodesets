@@ -5,6 +5,16 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-05-24  Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: the open counter is now bump as first action in LibOpen(), right
+    before calling baseInit(). baseInit() may scan some directories which may
+    take an unpredictable amount of time. While this happens the system may
+    invoke LibExpunge() which will immediately remove the library again from the
+    system, becasue the open counter is still zero. This should fix the random
+    crashes that some people were experiencing. Maybe a semaphore protected
+    LibExpunge() could do the same...
+
 #### 6.3 RELEASE #########################################################
 
 2007-01-27  Jens Langner <Jens.Langner@light-speed.de>
