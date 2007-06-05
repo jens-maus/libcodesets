@@ -7,6 +7,7 @@ $URL$
 
 2007-06-05  Thore Böckelmann <tboeckel@gmx.de>
 
+  * debug.c: fixed the variable parsing and the final output of the debug flags.
   * developer/examples/makefile.os4: removed the -pipe option from the command
     line as the OS4 native GCC does not support this yet.
 
