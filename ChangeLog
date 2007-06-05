@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-06-05  Thore Böckelmann <tboeckel@gmx.de>
+
+  * developer/examples/makefile.os4: removed the -pipe option from the command
+    line as the OS4 native GCC does not support this yet.
+
 2007-05-24  Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c: the open counter is now bump as first action in LibOpen(), right
