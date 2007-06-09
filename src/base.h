@@ -31,7 +31,6 @@ struct LibraryHeader
   APTR                    pool;
   struct SignalSemaphore  poolSem;
   ULONG                   flags;
-  BOOL                    wasInitialized; // TRUE if codesetsInit() was already called
   struct codesetList      codesets;       // list with all internal codesets.
   struct codeset          *systemCodeset; // ptr to the system's default codeset
   struct codeset          *utf8Codeset;   // ptr to the fake utf8 codeset

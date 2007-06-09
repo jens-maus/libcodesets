@@ -85,7 +85,7 @@ freeBase(struct LibraryHeader *lib)
   {
     DROPINTERFACE(IDiskfont);
     CloseLibrary((struct Library *)DiskfontBase);
-    LocaleBase = NULL;
+    DiskfontBase = NULL;
   }
   #endif
 
@@ -291,10 +291,10 @@ initBase(struct LibraryHeader *lib)
       // we have to please the internal utilitybase
       // pointers of libnix and clib2
       #if !defined(__NEWLIB__)
-      __UtilityBase = (APTR)UtilityBase;
-      #if defined(__amigaos4__)
-      __IUtility = IUtility;
-      #endif
+        __UtilityBase = (APTR)UtilityBase;
+        #if defined(__amigaos4__)
+        __IUtility = IUtility;
+        #endif
       #endif
 
       // setup the debugging stuff

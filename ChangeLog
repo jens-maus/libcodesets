@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-06-09  Jens Langner <Jens.Langner@light-speed.de>
+
+  * libinit.c, misc: reworked library init code to call the initBase/freeBase()
+    function in the respective LibInit/LibExpunge() function instead and just deal
+    with the open counter and the late expunge flag in the LibOpen/LibClose()
+    functions. This should make the library initialization more clear and
+    hopefully also less error prone.
+
 2007-06-05  Thore Böckelmann <tboeckel@gmx.de>
 
   * debug.c: fixed the variable parsing and the final output of the debug flags.
