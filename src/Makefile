@@ -135,9 +135,10 @@ TARGET = $(BINDIR)/codesets.library
 WARN     = -W -Wall -Wwrite-strings
 OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
 DEBUG    = -DDEBUG #-O0
+DEBUGSYM = -gstabs
 CFLAGS   = -I. -I../include $(CPU) $(WARN) $(OPTFLAGS) \
-           $(DEBUG) -g -c
-LDFLAGS  = $(CPU) -nostartfiles
+           $(DEBUG) $(DEBUGSYM) -c
+LDFLAGS  = $(CPU) $(DEBUGSYM) -nostartfiles
 LDLIBS   =
 
 # different options per target OS
@@ -153,10 +154,11 @@ ifeq ($(OS), os4)
 
   # Compiler/Linker flags
   CRT      = newlib
-  CPU      = -mcpu=604e -mmultiple -Wa,-mregnames
+  CPU      = -mcpu=powerpc
   REDEFINE = -DCoerceMethod=ICoerceMethod -DDoMethod=IDoMethod \
              -DDoSuperMethod=IDoSuperMethod -DDoSuperMethodA=IDoSuperMethodA
-  CFLAGS   += -mcrt=$(CRT) -D__USE_INLINE__ -D__NEW_TIMEVAL_DEFINITION_USED__ $(REDEFINE)
+  CFLAGS   += -mcrt=$(CRT) -D__USE_INLINE__ -D__NEW_TIMEVAL_DEFINITION_USED__ \
+              $(REDEFINE) -Wa,-mregnames
   LDFLAGS  += -mcrt=$(CRT)
 
   # additional object files required
@@ -191,7 +193,7 @@ ifeq ($(OS), mos)
   OBJDUMP = ppc-morphos-objdump
 
   # Compiler/Linker flags
-  CPU     = -mcpu=750 -mmultiple
+  CPU     = -mcpu=powerpc
   CFLAGS  += -noixemul
   LDFLAGS += -noixemul
   LDLIBS  += -ldebug
@@ -254,14 +256,14 @@ $(OBJDIR)/codesets_68k.o: ../include/codesets_68k.c
 
 $(TARGET): $(M68KSTUBS) $(OBJS)
 	@printf '\033[32mLinking \033[1m$@\033[0m\n'
-	@$(CC) $(LDFLAGS) -o $@.debug $(OBJS) $(M68KSTUBS) $(LDLIBS)
-	@$(STRIP) -o $@ $@.debug
+	@$(CC) $(LDFLAGS) -o $@.debug $(OBJS) $(M68KSTUBS) $(LDLIBS) -Wl,-Map,$@.map
+	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
 
 #
 
 .PHONY: clean
 clean:
-	-$(RM) $(TARGET) $(TARGET).debug $(OBJS) $(M68KSTUBS)
+	-$(RM) $(TARGET) $(TARGET).debug $(TARGET).map $(OBJS) $(M68KSTUBS)
 
 .PHONY: distclean
 distclean: clean
