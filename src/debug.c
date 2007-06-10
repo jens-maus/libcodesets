@@ -27,7 +27,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <proto/intuition.h>
 #include <proto/utility.h>
 #include <proto/dos.h>
 #include <proto/exec.h>
