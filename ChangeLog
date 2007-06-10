@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-06-10  Jens Langner <Jens.Langner@light-speed.de>
+
+  * libinit.c: partly reintroduced the initialization of codesets.library in
+    LibOpen() via a seperate init locking variable due to occuring stack issues
+    on OS3.
+  * debug.c: removed <proto/intuition.h> as it isn't required at all.
+
 2007-06-09  Jens Langner <Jens.Langner@light-speed.de>
 
   * libinit.c, misc: reworked library init code to call the initBase/freeBase()

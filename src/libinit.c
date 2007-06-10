@@ -306,8 +306,6 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
      GETINTERFACE(INewlib, NewlibBase))
   #endif
   {
-    BOOL success;
-
     D(DBF_STARTUP, "LibInit()");
 
     // cleanup the library header structure beginning with the
@@ -324,38 +322,16 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
     InitSemaphore(&base->poolSem);
 
     base->sysBase = (APTR)SysBase;
+    base->segList = librarySegment;
     base->pool = NULL;
     base->flags = 0;
     base->systemCodeset = NULL;
+    base->wasInitialized = FALSE;
 
     // set the CodesetsBase
     CodesetsBase = base;
 
-    // now we initialize our codesets by calling initBase()
-    // accordingly. This will open all necessary libraries and
-    // call codesetsInit() accordingly.
-    ObtainSemaphore(&base->libSem);
-    success = initBase(base);
-    ReleaseSemaphore(&base->libSem);
-
-    // check for success
-    if(success)
-    {
-      base->segList = librarySegment;
-
-      return base;
-    }
-    else
-      CodesetsBase = NULL;
-
-    #if defined(__amigaos4__) && defined(__NEWLIB__)
-    if(NewlibBase)
-    {
-      DROPINTERFACE(INewlib);
-      CloseLibrary(NewlibBase);
-      NewlibBase = NULL;
-    }
-    #endif
+    return base;
   }
 
   return(NULL);
@@ -399,9 +375,19 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
     // remove the library base from exec's lib list in advance
     Remove((struct Node *)base);
 
-    // free all our private data and stuff.
+    // protect access to wasInitialized
     ObtainSemaphore(&base->libSem);
-    freeBase(base);
+
+    // check if the lib was already initialized and if see
+    // call freeBase()
+    if(base->wasInitialized)
+    {
+      // free all our private data and stuff.
+      freeBase(base);
+      base->wasInitialized = FALSE;
+    }
+
+    // unprotect wasInitialized
     ReleaseSemaphore(&base->libSem);
 
     #if defined(__amigaos4__) && defined(__NEWLIB__)
@@ -434,6 +420,7 @@ static struct LibraryHeader *LibOpen(void)
 static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base))
 {
 #endif
+  struct LibraryHeader *res = base;
 
   D(DBF_STARTUP, "LibOpen(): %ld", base->libBase.lib_OpenCnt);
 
@@ -453,7 +440,30 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
   // delete the late expunge flag
   base->libBase.lib_Flags &= ~LIBF_DELEXP;
 
-  return base;
+  // protect access to wasInitialized
+  ObtainSemaphore(&base->libSem);
+
+  // now we initialize our codesets by calling initBase()
+  // accordingly. This will open all necessary libraries and
+  // call codesetsInit() accordingly.
+  //
+  // We do this here in LibOpen() instead of LibInit() because otherwise
+  // we might run into stack issues on systems like OS3/MorphOS. Therefore
+  // we use an own 'wasInitialized' flag to check if the library base
+  // was already initialized or not.
+  if(base->wasInitialized == FALSE)
+  {
+    // call initBase() to setup our codesets
+    if(initBase(base) == TRUE)
+      base->wasInitialized = TRUE;
+    else
+      res = NULL;
+  }
+
+  // unprotect wasInitialized
+  ReleaseSemaphore(&base->libSem);
+
+  return res;
 }
 
 /****************************************************************************/
