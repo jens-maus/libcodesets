@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-06-13  Thore Böckelmann <tboeckel@gmx.de>
+
+  * debug.c: unified the _DPRINTF() functions for all platforms.
+
 2007-06-10  Jens Langner <Jens.Langner@light-speed.de>
 
   * #?/Makefile: minor update/optimization on Makefiles.
