@@ -124,6 +124,18 @@ static LONG                   LIBFUNC LibNull    (void);
 
 /****************************************************************************/
 
+/*
+ * The system (and compiler) rely on a symbol named _start which marks
+ * the beginning of execution of an ELF file. To prevent others from
+ * executing this library, and to keep the compiler/linker happy, we
+ * define an empty _start symbol here.
+ *
+ * On the classic system (pre-AmigaOS4) this was usually done by
+ * moveq #0,d0
+ * rts
+ *
+ */
+
 #if defined(__amigaos4__)
 int _start(void)
 #else
@@ -142,85 +154,115 @@ static LONG LIBFUNC LibNull(VOID)
 
 #if defined(__amigaos4__)
 /* ------------------- OS4 Manager Interface ------------------------ */
-STATIC ULONG LibObtain(struct LibraryManagerInterface *Self)
+STATIC uint32 _manager_Obtain(struct LibraryManagerInterface *Self)
 {
-   return(Self->Data.RefCount++);
+	uint32 res;
+	__asm__ __volatile__(
+	"1:	lwarx	%0,0,%1\n"
+	"addic	%0,%0,1\n"
+	"stwcx.	%0,0,%1\n"
+	"bne-	1b"
+	: "=&r" (res)
+	: "r" (&Self->Data.RefCount)
+	: "cc", "memory");
+
+	return res;
 }
 
-STATIC ULONG LibRelease(struct LibraryManagerInterface *Self)
+STATIC uint32 _manager_Release(struct LibraryManagerInterface *Self)
 {
-   return(Self->Data.RefCount--);
+	uint32 res;
+	__asm__ __volatile__(
+	"1:	lwarx	%0,0,%1\n"
+	"addic	%0,%0,-1\n"
+	"stwcx.	%0,0,%1\n"
+	"bne-	1b"
+	: "=&r" (res)
+	: "r" (&Self->Data.RefCount)
+	: "cc", "memory");
+
+	return res;
 }
 
-STATIC CONST APTR LibManagerVectors[] =
+STATIC CONST APTR lib_manager_vectors[] =
 {
-   (APTR)LibObtain,
-   (APTR)LibRelease,
-   (APTR)NULL,
-   (APTR)NULL,
-   (APTR)LibOpen,
-   (APTR)LibClose,
-   (APTR)LibExpunge,
-   (APTR)NULL,
-   (APTR)-1
+	_manager_Obtain,
+	_manager_Release,
+  NULL,
+  NULL,
+  LibOpen,
+  LibClose,
+  LibExpunge,
+  NULL,
+  (APTR)-1
 };
 
-STATIC CONST struct TagItem LibManagerTags[] =
+STATIC CONST struct TagItem lib_managerTags[] =
 {
-   {MIT_Name,             (ULONG)"__library"},
-   {MIT_VectorTable,      (ULONG)LibManagerVectors},
-   {MIT_Version,          1},
-   {TAG_DONE,             0}
+  { MIT_Name,         (Tag)"__library" },
+  { MIT_VectorTable,  (Tag)lib_manager_vectors },
+  { MIT_Version,      1 },
+  { TAG_DONE,         0 }
 };
 
 /* ------------------- Library Interface(s) ------------------------ */
 
-STATIC CONST APTR LibVectors[] =
+ULONG LibObtain(UNUSED struct Interface *Self)
 {
-   (APTR)LibObtain,
-   (APTR)LibRelease,
-   (APTR)NULL,
-   (APTR)NULL,
-   (APTR)libvector,
-   (APTR)-1
+  return 0;
+}
+
+ULONG LibRelease(UNUSED struct Interface *Self)
+{
+  return 0;
+}
+
+STATIC CONST APTR main_vectors[] =
+{
+  LibObtain,
+  LibRelease,
+  NULL,
+  NULL,
+  libvector,
+  (APTR)-1
 };
 
-STATIC CONST struct TagItem MainTags[] =
+STATIC CONST struct TagItem mainTags[] =
 {
-   {MIT_Name,        (ULONG)"main"},
-   {MIT_VectorTable, (ULONG)LibVectors},
-   {MIT_Version,     1},
-   {TAG_DONE,        0}
+	{ MIT_Name,         (Tag)"main" },
+	{ MIT_VectorTable,	(Tag)main_vectors	},
+	{ MIT_Version,      1 },
+	{ TAG_DONE,         0	}
 };
 
-STATIC CONST ULONG LibInterfaces[] =
+STATIC CONST CONST_APTR libInterfaces[] =
 {
-   (ULONG)LibManagerTags,
-   (ULONG)MainTags,
-   (ULONG)0
+	lib_managerTags,
+	mainTags,
+	NULL
 };
 
-// Out libraries always have to carry a 68k jump table with it, so
+// Our libraries always have to carry a 68k jump table with it, so
 // lets define it here as extern, as we are going to link it to
 // our binary here.
 #ifndef NO_VECTABLE68K
-extern const APTR VecTable68K[];
+extern CONST APTR VecTable68K[];
 #endif
 
-STATIC CONST struct TagItem LibCreateTags[] =
+STATIC CONST struct TagItem libCreateTags[] =
 {
-   {CLT_DataSize,   (ULONG)(sizeof(struct LibraryHeader))},
-   {CLT_InitFunc,   (ULONG)LibInit},
-   {CLT_Interfaces, (ULONG)LibInterfaces},
-   #ifndef NO_VECTABLE68K
-   {CLT_Vector68K,  (ULONG)VecTable68K},
-   #endif
-   {TAG_DONE,       0}
+  { CLT_DataSize,   sizeof(struct LibraryHeader) },
+  { CLT_InitFunc,   (Tag)LibInit },
+  { CLT_Interfaces, (Tag)libInterfaces },
+  #ifndef NO_VECTABLE68K
+  { CLT_Vector68K,  (Tag)VecTable68K },
+  #endif
+  { TAG_DONE,       0 }
 };
 
 #else
 
-STATIC CONST APTR LibVectors[] =
+static const APTR LibVectors[] =
 {
   #ifdef __MORPHOS__
   (APTR)FUNCARRAY_32BIT_NATIVE,
@@ -233,7 +275,7 @@ STATIC CONST APTR LibVectors[] =
   (APTR)-1
 };
 
-STATIC CONST ULONG LibInitTab[] =
+static const ULONG LibInitTab[] =
 {
   sizeof(struct LibraryHeader),
   (ULONG)LibVectors,
@@ -249,7 +291,7 @@ static const USED_VAR struct Resident ROMTag =
 {
   RTC_MATCHWORD,
   (struct Resident *)&ROMTag,
-  (struct Resident *)&ROMTag + 1,
+  (struct Resident *)(&ROMTag + 1),
   #if defined(__amigaos4__)
   RTF_AUTOINIT|RTF_NATIVE,      // The Library should be set up according to the given table.
   #elif defined(__MORPHOS__)
@@ -263,7 +305,7 @@ static const USED_VAR struct Resident ROMTag =
   (char *)UserLibName,
   (char *)UserLibID+6,
   #if defined(__amigaos4__)
-  (APTR)LibCreateTags           // This table is for initializing the Library.
+  (APTR)libCreateTags           // This table is for initializing the Library.
   #else
   (APTR)LibInitTab,
   #endif
@@ -300,6 +342,12 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
 #endif
 
   SysBase = (APTR)sb;
+
+  // make sure that this is really a 68020+ machine if optimized for 020+
+  #if _M68060 || _M68040 || _M68030 || _M68020 || __mc68020 || __mc68030 || __mc68040 || __mc68060
+  if(!(SysBase->AttnFlags & AFF_68020))
+    return(NULL);
+  #endif
 
   #if defined(__amigaos4__) && defined(__NEWLIB__)
   if((NewlibBase = OpenLibrary("newlib.library", 3)) &&
@@ -347,6 +395,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
 #if defined(__amigaos4__)
 static BPTR LibExpunge(struct LibraryManagerInterface *Self)
 {
+  struct ExecIFace *IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
   struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
 #elif defined(__MORPHOS__)
 static BPTR LibExpunge(void)
@@ -412,6 +461,8 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 static struct LibraryHeader *LibOpen(struct LibraryManagerInterface *Self, ULONG version UNUSED)
 {
   struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
+  struct ExecIFace *IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
+
 #elif defined(__MORPHOS__)
 static struct LibraryHeader *LibOpen(void)
 {

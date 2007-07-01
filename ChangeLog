@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-07-01  Jens Langner <Jens.Langner@light-speed.de>
+
+  * libinit.c: reworked library manager interface to use inline asm-based obtain
+    and release functions according to the latest output of idltool 52.7
+
 2007-06-13  Thore Böckelmann <tboeckel@gmx.de>
 
   * debug.c: unified the _DPRINTF() functions for all platforms.
