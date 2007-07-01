@@ -1044,9 +1044,9 @@ codesets.library/CodesetsEncodeB64A
         Destination buffer. If you supply a valid buffer here, you
         must also set CSA_DestLen to the length of your buffer. If
         CSA_AllocIfNeeded is TRUE, CSA_DestLen is checked to see if
-        CSA_Dest may contain the whole utf8. If CSA_Dest can't
-        contain the utf8, a brand new buffer is allocated. If
-        CSA_AllocIfNeeded is FALSE, up to CSA_DestLen (ending '\0'
+        CSA_Dest may contain the whole converted string. If CSA_Dest 
+        can't contain the output string, a brand new buffer is allocated. 
+        If CSA_AllocIfNeeded is FALSE, up to CSA_DestLen (ending '\0'
         included) are written to CSA_Dest. If CSA_DestHook is supplied,
         CSA_Dest is ignored.
         Default: NULL.
@@ -1095,21 +1095,21 @@ codesets.library/CodesetsEncodeB64A
         supplied, CSA_DestLen is optional, otherwise it is required.
 
       CSA_DestLenPtr (ULONG *)
-        If supplied, will contain the length of the utf8 string
+        If supplied, will contain the length of the converted string.
 
       CSA_AllocIfNeeded (BOOL)
         If the destination buffer length is too small to contain
-        the UTF8 a new buffer is allocated
+        the output string, a new buffer is allocated.
         Default: TRUE
 
       CSA_Pool (APTR)
         If a new destination buffer is to be allocated (it happens
         if and only if CSA_DestHook is not used, CSA_AllocIfNeeded
-        is TRUE, CSA_Dest buffer is too small for the utf8) this pool
-        is used. The result is to be freed via FreePooled(pool, utf8).
+        is TRUE, CSA_Dest buffer is too small for the string) this pool
+        is used. The result is to be freed via FreePooled(pool, string).
         If it is not supplied, the destination buffer is allocated
         from the internal memory pool and must be freed with
-        CodesetsFreeA(utf8, NULL).
+        CodesetsFreeA(string, NULL).
 
       CSA_PoolSem (struct SignalSemaphore *)
         A semaphore to lock when using CSA_Pool

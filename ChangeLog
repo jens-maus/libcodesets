@@ -9,6 +9,8 @@ $URL$
 
   * libinit.c: reworked library manager interface to use inline asm-based obtain
     and release functions according to the latest output of idltool 52.7
+  * codesets.doc: applied patch for CodesetsUTF8ToStrA() function kindly provided
+    by Steffen Gutmann.
 
 2007-06-13  Thore Böckelmann <tboeckel@gmx.de>
 
