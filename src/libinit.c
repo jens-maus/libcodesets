@@ -28,8 +28,18 @@
 
 #include "debug.h"
 
+// transforms a define into a string
+#define STR(x)  STR2(x)
+#define STR2(x) #x
+
 /****************************************************************************/
 
+#define MIN_STACKSIZE 8192
+
+// stack cookie for shell v45+
+static const char USED_VAR stack_size[] = "$STACK:" STR(MIN_STACKSIZE) "\n";
+
+/****************************************************************************/
 
 #if defined(__amigaos4__)
 struct Library *SysBase = NULL;
@@ -354,6 +364,11 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
      GETINTERFACE(INewlib, NewlibBase))
   #endif
   {
+    BOOL success = FALSE;
+    #if !defined(__amigaos4__)
+    struct StackSwapStruct *stack;
+    #endif
+
     D(DBF_STARTUP, "LibInit()");
 
     // cleanup the library header structure beginning with the
@@ -370,16 +385,63 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
     InitSemaphore(&base->poolSem);
 
     base->sysBase = (APTR)SysBase;
-    base->segList = librarySegment;
     base->pool = NULL;
     base->flags = 0;
     base->systemCodeset = NULL;
-    base->wasInitialized = FALSE;
+
+    // protect access to initBase()
+    ObtainSemaphore(&base->libSem);
 
     // set the CodesetsBase
     CodesetsBase = base;
 
-    return base;
+    // now we initialize our codesets by calling initBase()
+    // accordingly. This will open all necessary libraries and
+    // call codesetsInit() accordingly.
+    //
+    // We do this here with making sure that we have enough stack on OS3 and
+    // MorphOS by doing an explicit StackSwap()
+    #if !defined(__amigaos4__)
+    if((stack = AllocMem(sizeof(*stack)+MIN_STACKSIZE, MEMF_PUBLIC|MEMF_CLEAR)))
+    #endif
+    {
+      // perform the StackSwap
+      #if !defined(__amigaos4__)
+      stack->stk_Lower = (stack + sizeof(*stack));
+      stack->stk_Upper = (ULONG)stack->stk_Lower + MIN_STACKSIZE;
+      stack->stk_Pointer = (APTR)stack->stk_Upper;
+      StackSwap(stack);
+      #endif
+
+      // call initBase()
+      success = initBase(base);
+
+      #if !defined(__amigaos4__)
+      StackSwap(stack);
+      FreeMem(stack, sizeof(*stack) + MIN_STACKSIZE);
+      #endif
+    }
+
+    // unprotect initBase()
+    ReleaseSemaphore(&base->libSem);
+
+    // check for success
+    if(success)
+    {
+      base->segList = librarySegment;
+      return base;
+    }
+    else
+      CodesetsBase = NULL;
+
+    #if defined(__amigaos4__) && defined(__NEWLIB__)
+    if(NewlibBase)
+    {
+      DROPINTERFACE(INewlib);
+      CloseLibrary(NewlibBase);
+      NewlibBase = NULL;
+    }
+    #endif
   }
 
   return(NULL);
@@ -424,19 +486,9 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
     // remove the library base from exec's lib list in advance
     Remove((struct Node *)base);
 
-    // protect access to wasInitialized
+    // free all our private data and stuff.
     ObtainSemaphore(&base->libSem);
-
-    // check if the lib was already initialized and if see
-    // call freeBase()
-    if(base->wasInitialized)
-    {
-      // free all our private data and stuff.
-      freeBase(base);
-      base->wasInitialized = FALSE;
-    }
-
-    // unprotect wasInitialized
+    freeBase(base);
     ReleaseSemaphore(&base->libSem);
 
     #if defined(__amigaos4__) && defined(__NEWLIB__)
@@ -461,8 +513,6 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 static struct LibraryHeader *LibOpen(struct LibraryManagerInterface *Self, ULONG version UNUSED)
 {
   struct LibraryHeader *base = (struct LibraryHeader *)Self->Data.LibBase;
-  struct ExecIFace *IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
-
 #elif defined(__MORPHOS__)
 static struct LibraryHeader *LibOpen(void)
 {
@@ -490,29 +540,6 @@ static struct LibraryHeader * LIBFUNC LibOpen(REG(a6, struct LibraryHeader *base
 
   // delete the late expunge flag
   base->libBase.lib_Flags &= ~LIBF_DELEXP;
-
-  // protect access to wasInitialized
-  ObtainSemaphore(&base->libSem);
-
-  // now we initialize our codesets by calling initBase()
-  // accordingly. This will open all necessary libraries and
-  // call codesetsInit() accordingly.
-  //
-  // We do this here in LibOpen() instead of LibInit() because otherwise
-  // we might run into stack issues on systems like OS3/MorphOS. Therefore
-  // we use an own 'wasInitialized' flag to check if the library base
-  // was already initialized or not.
-  if(base->wasInitialized == FALSE)
-  {
-    // call initBase() to setup our codesets
-    if(initBase(base) == TRUE)
-      base->wasInitialized = TRUE;
-    else
-      res = NULL;
-  }
-
-  // unprotect wasInitialized
-  ReleaseSemaphore(&base->libSem);
 
   return res;
 }

@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-07-04  Jens Langner <Jens.Langner@light-speed.de>
+
+  * libinit.c: initBase() will now be called in LibInit() again as this is
+    the smoother variant. But a StackSwap() construct protects us from stack
+    overruns on OS3/MOS machines.
+
 2007-07-01  Jens Langner <Jens.Langner@light-speed.de>
 
   * libinit.c: reworked library manager interface to use inline asm-based obtain
