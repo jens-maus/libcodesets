@@ -1114,6 +1114,11 @@ codesets.library/CodesetsEncodeB64A
       CSA_PoolSem (struct SignalSemaphore *)
         A semaphore to lock when using CSA_Pool
 
+      CSA_ErrPtr (int *)
+        Pointer to an integer variable which will be filled with the
+        number of found issues (number of not convertable chars)
+        Default: NULL
+
    RESULT
     str - the string or NULL
           If CSA_DestHook is used always NULL.

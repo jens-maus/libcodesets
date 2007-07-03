@@ -7,6 +7,9 @@ $URL$
 
 2007-07-04  Jens Langner <Jens.Langner@light-speed.de>
 
+  * codesets.c: CSA_ErrPtr can now be specified in the CodesetsUTF8ToStrA()
+    function to get informed about the amount of not convertable characters
+    found during the conversion. This fullfils feature request #1724860.
   * libinit.c: initBase() will now be called in LibInit() again as this is
     the smoother variant. But a StackSwap() construct protects us from stack
     overruns on OS3/MOS machines.

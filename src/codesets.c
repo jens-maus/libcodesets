@@ -4703,10 +4703,13 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     int i = 0;
     unsigned char *s = src;
     unsigned char *e = (src+srcLen);
+    int numConvErrors = 0;
+    int *numConvErrorsPtr;
 
     // get some more optional attributes
     hook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen, 0, attrs);
+    numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
 
     // first we make sure we allocate enough memory
     // for our destination buffer
@@ -4795,7 +4798,10 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           if(f)
             d = f->code;
           else
+          {
             d = '?';
+            numConvErrors++;
+          }
 
           s += lenAdd;
         }
@@ -4836,6 +4842,11 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     }
     else
       *destIter = 0;
+
+    // let us write the number of conversion errors
+    // to the proper variable pointer, if wanted
+    if(numConvErrorsPtr != NULL)
+      *numConvErrorsPtr = numConvErrors;
   }
 
   // put the final length of our destination buffer
