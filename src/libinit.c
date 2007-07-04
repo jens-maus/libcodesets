@@ -417,8 +417,9 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
       success = initBase(base);
 
       #if !defined(__amigaos4__)
-      StackSwap(stack);
-      FreeMem(stack, sizeof(*stack) + MIN_STACKSIZE);
+      base->stack = stack;
+      StackSwap(base->stack);
+      FreeMem(base->stack, sizeof(*(base->stack)) + MIN_STACKSIZE);
       #endif
     }
 
