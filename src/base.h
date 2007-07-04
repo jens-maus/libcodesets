@@ -24,11 +24,10 @@
 
 struct LibraryHeader
 {
-  struct Library	        libBase;
+  struct Library          libBase;
   struct Library          *sysBase;
   ULONG                   segList;
   struct SignalSemaphore  libSem;
-  struct StackSwapStruct  *stack;
   APTR                    pool;
   struct SignalSemaphore  poolSem;
   ULONG                   flags;

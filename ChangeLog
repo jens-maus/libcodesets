@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-07-04  Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: the StackSwapStruct is now placed on the stack instead of
+    allocating it in one block with the new stack itself, as that caused instant
+    crashes.
+
 2007-07-04  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: CSA_ErrPtr can now be specified in the CodesetsUTF8ToStrA()

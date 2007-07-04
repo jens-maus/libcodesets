@@ -34,7 +34,7 @@
 
 /****************************************************************************/
 
-#define MIN_STACKSIZE 8192
+#define MIN_STACKSIZE 65536
 
 // stack cookie for shell v45+
 static const char USED_VAR stack_size[] = "$STACK:" STR(MIN_STACKSIZE) "\n";
@@ -366,7 +366,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   {
     BOOL success = FALSE;
     #if !defined(__amigaos4__)
-    struct StackSwapStruct *stack;
+    struct StackSwapStruct stack;
     #endif
 
     D(DBF_STARTUP, "LibInit()");
@@ -402,26 +402,24 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
     // We do this here with making sure that we have enough stack on OS3 and
     // MorphOS by doing an explicit StackSwap()
     #if !defined(__amigaos4__)
-    if((stack = AllocMem(sizeof(*stack)+MIN_STACKSIZE, MEMF_PUBLIC|MEMF_CLEAR)))
-    #endif
+    if((stack.stk_Lower = AllocVec(MIN_STACKSIZE, MEMF_PUBLIC)) != NULL)
     {
+    #endif
       // perform the StackSwap
       #if !defined(__amigaos4__)
-      stack->stk_Lower = (stack + sizeof(*stack));
-      stack->stk_Upper = (ULONG)stack->stk_Lower + MIN_STACKSIZE;
-      stack->stk_Pointer = (APTR)stack->stk_Upper;
-      StackSwap(stack);
+      stack.stk_Upper = (ULONG)stack.stk_Lower + MIN_STACKSIZE;
+      stack.stk_Pointer = (APTR)((ULONG)stack.stk_Upper);
+      StackSwap(&stack);
       #endif
 
       // call initBase()
       success = initBase(base);
 
-      #if !defined(__amigaos4__)
-      base->stack = stack;
-      StackSwap(base->stack);
-      FreeMem(base->stack, sizeof(*(base->stack)) + MIN_STACKSIZE);
-      #endif
+    #if !defined(__amigaos4__)
+      StackSwap(&stack);
+      FreeVec(stack.stk_Lower);
     }
+    #endif
 
     // unprotect initBase()
     ReleaseSemaphore(&base->libSem);
