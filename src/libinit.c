@@ -408,7 +408,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
       // perform the StackSwap
       #if !defined(__amigaos4__)
       stack.stk_Upper = (ULONG)stack.stk_Lower + MIN_STACKSIZE;
-      stack.stk_Pointer = stack.stk_Upper;
+      stack.stk_Pointer = (APTR)stack.stk_Upper;
       StackSwap(&stack);
       #endif
 
