@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-07-17  Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: we use inline assembler for defining a new generic
+    stackswap_call() function that will be used to surround the initBase()
+    call by StackSwap() uses. This inline assembler should guarantee that
+    the function will not be inlined by the compiler and work properly on
+    all different supported platforms.
+
 2007-07-04  Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c: the StackSwapStruct is now placed on the stack instead of

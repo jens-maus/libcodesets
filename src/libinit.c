@@ -338,6 +338,92 @@ const USED_VAR ULONG __abox__ = 1;
 
 /****************************************************************************/
 
+#if !defined(__amigaos4__)
+
+/* generic StackSwap() function which calls function() surrounded by
+   StackSwap() calls */
+extern ULONG stackswap_call(struct StackSwapStruct *stack,
+                            ULONG (*function)(struct LibraryHeader *),
+                            struct LibraryHeader *arg);
+
+#if defined(__MORPHOS__)
+asm(".section	 \".text\"              \n\
+     .align 2                         \n\
+	   .globl stackswap_call            \n\
+	   .type  stackswap_call,@function  \n\
+   stackswap_call:                    \n\
+	   stwu 1,-32(1)                    \n\
+     mflr 0                           \n\
+     stmw 27,12(1)                    \n\
+	   stw 0,36(1)                      \n\
+     lwz 9,100(2)                     \n\
+     mr 27,3                          \n\
+     lis 28,SysBase@ha                \n\
+     li 3,-732                        \n\
+     lwz 0,SysBase@l(28)              \n\
+     mr 29,5                          \n\
+     mtlr 9                           \n\
+     mr 31,4                          \n\
+     stw 27,32(2)                     \n\
+     stw 0,56(2)                      \n\
+     blrl                             \n\
+     mr 3,29                          \n\
+     mtlr 31                          \n\
+     blrl                             \n\
+     lwz 9,100(2)                     \n\
+     mr 29,3                          \n\
+     li 3,-732                        \n\
+     lwz 0,SysBase@l(28)              \n\
+     mtlr 9                           \n\
+     stw 27,32(2)                     \n\
+     stw 0,56(2)                      \n\
+     blrl                             \n\
+     mr 3,29                          \n\
+     lwz 0,36(1)                      \n\
+     mtlr 0                           \n\
+     lmw 27,12(1)                     \n\
+     la 1,32(1)                       \n\
+     blr                              \n\
+     .size  stackswap_call, .-stackswap_call");
+#elif defined(__mc68000__)
+asm(".text                    \n\
+     .even                    \n\
+     .globl _stackswap_call   \n\
+   _stackswap_call:           \n\
+      moveml #0x3022,sp@-     \n\
+      movel sp@(20),d3        \n\
+      movel sp@(24),a2        \n\
+      movel sp@(28),d2        \n\
+      movel _SysBase,a6       \n\
+      movel d3,a0             \n\
+      jsr a6@(-732:W)         \n\
+      movel d2,sp@-           \n\
+      jbsr a2@                \n\
+      movel d0,d2             \n\
+      addql #4,sp             \n\
+      movel _SysBase,a6       \n\
+      movel d3,a0             \n\
+      jsr a6@(-732:W)         \n\
+      movel d2,d0             \n\
+      moveml sp@+,#0x440c     \n\
+      rts");
+#else
+ULONG stackswap_call(struct StackSwapStruct *stack,
+                     ULONG (*function)(struct LibraryHeader *),
+                     struct LibraryHeader *arg)
+{
+   register ULONG result;
+   StackSwap(stack);
+   result = function(arg);
+   StackSwap(stack);
+   return result;
+}
+#endif
+
+#endif
+
+/****************************************************************************/
+
 #if defined(__amigaos4__)
 static struct LibraryHeader * LibInit(struct LibraryHeader *base, BPTR librarySegment, struct ExecIFace *pIExec)
 {
@@ -404,21 +490,18 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
     #if !defined(__amigaos4__)
     if((stack.stk_Lower = AllocVec(MIN_STACKSIZE, MEMF_PUBLIC)) != NULL)
     {
-    #endif
       // perform the StackSwap
-      #if !defined(__amigaos4__)
       stack.stk_Upper = (ULONG)stack.stk_Lower + MIN_STACKSIZE;
       stack.stk_Pointer = (APTR)stack.stk_Upper;
-      StackSwap(&stack);
-      #endif
 
-      // call initBase()
-      success = initBase(base);
+      // call initBase() but with embedding it into a StackSwap()
+      success = stackswap_call(&stack, initBase, base);
 
-    #if !defined(__amigaos4__)
-      StackSwap(&stack);
       FreeVec(stack.stk_Lower);
     }
+    #else
+    // call initBase()
+    success = initBase(base);
     #endif
 
     // unprotect initBase()
