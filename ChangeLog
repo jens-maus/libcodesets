@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-08-20  Jens Langner <Jens.Langner@light-speed.de>
+
+  * libinit.c: adapted library initialization interface to match the
+    changes done in e.g. TextEditor.mcc and which should mainly fix stack
+    related issues on MorphOS systems.
+
 #### 6.4 RELEASE #########################################################
 
 2007-07-17  Thore Böckelmann <tboeckel@gmx.de>

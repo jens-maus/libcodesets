@@ -194,17 +194,17 @@ STATIC uint32 _manager_Release(struct LibraryManagerInterface *Self)
 	return res;
 }
 
-STATIC CONST APTR lib_manager_vectors[] =
+STATIC CONST CONST_APTR lib_manager_vectors[] =
 {
-	_manager_Obtain,
-	_manager_Release,
-  NULL,
-  NULL,
-  LibOpen,
-  LibClose,
-  LibExpunge,
-  NULL,
-  (APTR)-1
+	(CONST_APTR)_manager_Obtain,
+	(CONST_APTR)_manager_Release,
+  (CONST_APTR)NULL,
+  (CONST_APTR)NULL,
+  (CONST_APTR)LibOpen,
+  (CONST_APTR)LibClose,
+  (CONST_APTR)LibExpunge,
+  (CONST_APTR)NULL,
+  (CONST_APTR)-1
 };
 
 STATIC CONST struct TagItem lib_managerTags[] =
@@ -227,14 +227,14 @@ ULONG LibRelease(UNUSED struct Interface *Self)
   return 0;
 }
 
-STATIC CONST APTR main_vectors[] =
+STATIC CONST CONST_APTR main_vectors[] =
 {
-  LibObtain,
-  LibRelease,
-  NULL,
-  NULL,
-  libvector,
-  (APTR)-1
+  (CONST_APTR)LibObtain,
+  (CONST_APTR)LibRelease,
+  (CONST_APTR)NULL,
+  (CONST_APTR)NULL,
+  (CONST_APTR)libvector,
+  (CONST_APTR)-1
 };
 
 STATIC CONST struct TagItem mainTags[] =
@@ -247,9 +247,9 @@ STATIC CONST struct TagItem mainTags[] =
 
 STATIC CONST CONST_APTR libInterfaces[] =
 {
-	lib_managerTags,
-	mainTags,
-	NULL
+	(CONST_APTR)lib_managerTags,
+	(CONST_APTR)mainTags,
+	(CONST_APTR)NULL
 };
 
 // Our libraries always have to carry a 68k jump table with it, so
@@ -272,20 +272,20 @@ STATIC CONST struct TagItem libCreateTags[] =
 
 #else
 
-static const APTR LibVectors[] =
+STATIC CONST CONST_APTR LibVectors[] =
 {
   #ifdef __MORPHOS__
-  (APTR)FUNCARRAY_32BIT_NATIVE,
+  (CONST_APTR)FUNCARRAY_32BIT_NATIVE,
   #endif
-  (APTR)LibOpen,
-  (APTR)LibClose,
-  (APTR)LibExpunge,
-  (APTR)LibNull,
-  (APTR)libvector,
-  (APTR)-1
+  (CONST_APTR)LibOpen,
+  (CONST_APTR)LibClose,
+  (CONST_APTR)LibExpunge,
+  (CONST_APTR)LibNull,
+  (CONST_APTR)libvector,
+  (CONST_APTR)-1
 };
 
-static const ULONG LibInitTab[] =
+STATIC CONST ULONG LibInitTab[] =
 {
   sizeof(struct LibraryHeader),
   (ULONG)LibVectors,
@@ -313,7 +313,7 @@ static const USED_VAR struct Resident ROMTag =
   NT_LIBRARY,
   0,
   (char *)UserLibName,
-  (char *)UserLibID+6,
+  (char *)UserLibID+6,          // +6 to skip '$VER: '
   #if defined(__amigaos4__)
   (APTR)libCreateTags           // This table is for initializing the Library.
   #else
@@ -338,7 +338,7 @@ const USED_VAR ULONG __abox__ = 1;
 
 /****************************************************************************/
 
-#if !defined(__amigaos4__)
+#if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
 
 /* generic StackSwap() function which calls function() surrounded by
    StackSwap() calls */
@@ -346,46 +346,7 @@ extern ULONG stackswap_call(struct StackSwapStruct *stack,
                             ULONG (*function)(struct LibraryHeader *),
                             struct LibraryHeader *arg);
 
-#if defined(__MORPHOS__)
-asm(".section	 \".text\"              \n\
-     .align 2                         \n\
-	   .globl stackswap_call            \n\
-	   .type  stackswap_call,@function  \n\
-   stackswap_call:                    \n\
-	   stwu 1,-32(1)                    \n\
-     mflr 0                           \n\
-     stmw 27,12(1)                    \n\
-	   stw 0,36(1)                      \n\
-     lwz 9,100(2)                     \n\
-     mr 27,3                          \n\
-     lis 28,SysBase@ha                \n\
-     li 3,-732                        \n\
-     lwz 0,SysBase@l(28)              \n\
-     mr 29,5                          \n\
-     mtlr 9                           \n\
-     mr 31,4                          \n\
-     stw 27,32(2)                     \n\
-     stw 0,56(2)                      \n\
-     blrl                             \n\
-     mr 3,29                          \n\
-     mtlr 31                          \n\
-     blrl                             \n\
-     lwz 9,100(2)                     \n\
-     mr 29,3                          \n\
-     li 3,-732                        \n\
-     lwz 0,SysBase@l(28)              \n\
-     mtlr 9                           \n\
-     stw 27,32(2)                     \n\
-     stw 0,56(2)                      \n\
-     blrl                             \n\
-     mr 3,29                          \n\
-     lwz 0,36(1)                      \n\
-     mtlr 0                           \n\
-     lmw 27,12(1)                     \n\
-     la 1,32(1)                       \n\
-     blr                              \n\
-     .size  stackswap_call, .-stackswap_call");
-#elif defined(__mc68000__)
+#if defined(__mc68000__)
 asm(".text                    \n\
      .even                    \n\
      .globl _stackswap_call   \n\
@@ -407,7 +368,7 @@ asm(".text                    \n\
       movel d2,d0             \n\
       moveml sp@+,#0x440c     \n\
       rts");
-#else
+#elif !defined(__MORPHOS__)
 ULONG stackswap_call(struct StackSwapStruct *stack,
                      ULONG (*function)(struct LibraryHeader *),
                      struct LibraryHeader *arg)
@@ -420,7 +381,62 @@ ULONG stackswap_call(struct StackSwapStruct *stack,
 }
 #endif
 
-#endif
+static BOOL callLibFunction(ULONG (*function)(struct LibraryHeader *), struct LibraryHeader *arg)
+{
+  BOOL success = FALSE;
+  struct Task *tc;
+  ULONG stacksize;
+
+  // retrieve the task structure for the
+  // current task
+  tc = FindTask(NULL);
+
+  #if defined(__MORPHOS__)
+  // In MorphOS we have two stacks. One for PPC code and another for 68k code.
+  // We are only interested in the PPC stack.
+  NewGetTaskAttrsA(tc, &stacksize, sizeof(ULONG), TASKINFOTYPE_STACKSIZE, NULL);
+  #else
+  // on all other systems we query via SPUpper-SPLower calculation
+  stacksize = tc->tc_SPUpper - tc->tc_SPLower;
+  #endif
+
+  // Swap stacks only if current stack is insufficient
+  if(stacksize < MIN_STACKSIZE)
+  {
+    struct StackSwapStruct *stack;
+
+    if((stack = AllocVec(sizeof(*stack), MEMF_PUBLIC)) != NULL)
+    {
+      if((stack->stk_Lower = AllocVec(MIN_STACKSIZE, MEMF_PUBLIC)) != NULL)
+      {
+        #if defined(__MORPHOS__)
+        struct PPCStackSwapArgs swapargs;
+        #endif
+
+        // perform the StackSwap
+        stack->stk_Upper = (ULONG)stack->stk_Lower + MIN_STACKSIZE;
+        stack->stk_Pointer = (APTR)stack->stk_Upper;
+
+        // call routine but with embedding it into a [NewPPC]StackSwap()
+        #if defined(__MORPHOS__)
+        swapargs.Args[0] = (ULONG)arg;
+        success = NewPPCStackSwap(stack, function, &swapargs);
+        #else
+        success = stackswap_call(stack, function, arg);
+        #endif
+
+        FreeVec(stack->stk_Lower);
+      }
+      FreeVec(stack);
+    }
+  }
+  else
+    success = function(arg);
+
+  return success;
+}
+
+#endif // !__amigaos4__
 
 /****************************************************************************/
 
@@ -451,9 +467,6 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
   #endif
   {
     BOOL success = FALSE;
-    #if !defined(__amigaos4__)
-    struct StackSwapStruct stack;
-    #endif
 
     D(DBF_STARTUP, "LibInit()");
 
@@ -481,36 +494,27 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(a0, BPTR librarySegment), REG(
     // set the CodesetsBase
     CodesetsBase = base;
 
-    // now we initialize our codesets by calling initBase()
-    // accordingly. This will open all necessary libraries and
-    // call codesetsInit() accordingly.
-    //
-    // We do this here with making sure that we have enough stack on OS3 and
-    // MorphOS by doing an explicit StackSwap()
-    #if !defined(__amigaos4__)
-    if((stack.stk_Lower = AllocVec(MIN_STACKSIZE, MEMF_PUBLIC)) != NULL)
-    {
-      // perform the StackSwap
-      stack.stk_Upper = (ULONG)stack.stk_Lower + MIN_STACKSIZE;
-      stack.stk_Pointer = (APTR)stack.stk_Upper;
-
-      // call initBase() but with embedding it into a StackSwap()
-      success = stackswap_call(&stack, initBase, base);
-
-      FreeVec(stack.stk_Lower);
-    }
+    // If we are not running on AmigaOS4 (no stackswap required) we go and
+    // do an explicit StackSwap() in case the user wants to make sure we
+    // have enough stack for his user functions
+    #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
+    success = callLibFunction(initBase, base);
     #else
-    // call initBase()
     success = initBase(base);
     #endif
 
     // unprotect initBase()
     ReleaseSemaphore(&base->libSem);
 
-    // check for success
-    if(success)
+    // check if everything worked out fine
+    if(success == TRUE)
     {
+      // everything was successfully so lets
+      // set the initialized value and contiue
+      // with the class open phase
       base->segList = librarySegment;
+
+      // return the library base as success
       return base;
     }
     else
@@ -570,7 +574,15 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 
     // free all our private data and stuff.
     ObtainSemaphore(&base->libSem);
+
+    // make sure we have enough stack here
+    #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
+    callLibFunction(freeBase, base);
+    #else
     freeBase(base);
+    #endif
+
+    // unprotect
     ReleaseSemaphore(&base->libSem);
 
     #if defined(__amigaos4__) && defined(__NEWLIB__)
@@ -582,6 +594,7 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
     }
     #endif
 
+    // make sure the system deletes the library as well.
     rc = base->segList;
     DeleteLibrary(&base->libBase);
   }

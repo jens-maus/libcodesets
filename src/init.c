@@ -61,7 +61,7 @@ struct Library *__UtilityBase = NULL; // required by clib2 & libnix
 
 /****************************************************************************/
 
-void
+ULONG
 freeBase(struct LibraryHeader *lib)
 {
   ENTER();
@@ -112,7 +112,8 @@ freeBase(struct LibraryHeader *lib)
     DOSBase = NULL;
   }
 
-  LEAVE();
+  RETURN(TRUE);
+  return TRUE;
 }
 
 /***********************************************************************/

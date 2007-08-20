@@ -26,7 +26,7 @@
 #include "SDI_lib.h"
 
 /* init.c */
-void freeBase(struct LibraryHeader* lib);
+ULONG freeBase(struct LibraryHeader* lib);
 ULONG initBase(struct LibraryHeader* lib);
 
 /* utils.c */
