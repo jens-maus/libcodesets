@@ -4147,10 +4147,10 @@ codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_le
     		do
     		{
           unsigned char lb = (*p++) ^ 128;
-        				
+
           if(!((la | lb) & 128))
             ctr[n] += (signed char)tptr[(la << 7) + lb];
-        				
+
           la = lb;
     		}
     		while(*p);
@@ -4536,7 +4536,7 @@ CodesetsFindBestA(REG(a0, struct TagItem *attrs))
   if(attrs)
   {
     char *text = (char *)GetTagData(CSA_Source, 0, attrs);
-    ULONG text_len = GetTagData(CSA_SourceLen, strlen(text), attrs);
+    ULONG text_len = GetTagData(CSA_SourceLen, text != NULL ? strlen(text) : 0, attrs);
 
     if(text != NULL && text_len > 0)
     {
@@ -4638,7 +4638,7 @@ CodesetsStrLenA(REG(a0, STRPTR str),
   if(!(codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)))
     codeset = defaultCodeset(TRUE);
 
-  len = GetTagData(CSA_SourceLen,UINT_MAX,attrs);
+  len = GetTagData(CSA_SourceLen, strlen(str), attrs);
 
   src = str;
   res = 0;
@@ -4691,7 +4691,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
   ENTER();
 
   if((src = (UTF8 *)GetTagData(CSA_Source, 0, attrs)) &&
-     (srcLen = GetTagData(CSA_SourceLen, strlen((char *)src), attrs)) > 0)
+     (srcLen = GetTagData(CSA_SourceLen, src != NULL ? strlen((char *)src) : 0, attrs)) > 0)
   {
     struct convertMsg msg;
     struct codeset *codeset;
@@ -4900,7 +4900,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
   n    = 0;
 
   from = (UTF8*)GetTagData(CSA_Source, 0, attrs);
-  fromLen = GetTagData(CSA_SourceLen, UINT_MAX, attrs);
+  fromLen = GetTagData(CSA_SourceLen, from != NULL ? strlen(from) : 0, attrs);
 
   if(from && fromLen)
   {
@@ -5104,7 +5104,7 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   // get the ptr to the src string we want to convert
   // from the source codeset to the dest codeset.
   srcStr = (STRPTR)GetTagData(CSA_Source, 0, attrs);
-  srcLen = GetTagData(CSA_SourceLen, UINT_MAX, attrs);
+  srcLen = GetTagData(CSA_SourceLen, srcStr != NULL ? strlen(srcStr) : 0, attrs);
 
   if(srcStr != NULL && srcLen > 0)
   {

@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-09-05  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: changed all CSA_SourceLen occurences to default to the string
+    length of the given CSA_Source. Additionally CSA_Source is checked to be a
+    valid pointer. A NULL pointer will result in a length of zero.
+
 2007-08-20  Jens Langner <Jens.Langner@light-speed.de>
 
   * libinit.c: adapted library initialization interface to match the
