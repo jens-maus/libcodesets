@@ -4900,7 +4900,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
   n    = 0;
 
   from = (UTF8*)GetTagData(CSA_Source, 0, attrs);
-  fromLen = GetTagData(CSA_SourceLen, from != NULL ? strlen(from) : 0, attrs);
+  fromLen = GetTagData(CSA_SourceLen, from != NULL ? strlen((char *)from) : 0, attrs);
 
   if(from && fromLen)
   {

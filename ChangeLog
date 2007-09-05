@@ -7,6 +7,7 @@ $URL$
 
 2007-09-05  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: fixed a signedness warning.
   * codesets.c: changed all CSA_SourceLen occurences to default to the string
     length of the given CSA_Source. Additionally CSA_Source is checked to be a
     valid pointer. A NULL pointer will result in a length of zero.
