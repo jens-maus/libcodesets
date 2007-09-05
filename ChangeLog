@@ -10,6 +10,7 @@ $URL$
   * codesets.c: changed all CSA_SourceLen occurences to default to the string
     length of the given CSA_Source. Additionally CSA_Source is checked to be a
     valid pointer. A NULL pointer will result in a length of zero.
+  * codesets.doc: updated the docs to reflect the meaning of CSA_SourceLen.
 
 2007-08-20  Jens Langner <Jens.Langner@light-speed.de>
 
