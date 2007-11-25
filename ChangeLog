@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2007-11-25  Matthias Rustler <mrustler@gmx.de>
+
+  * AROS port
+
 2007-09-05  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: fixed a signedness warning.

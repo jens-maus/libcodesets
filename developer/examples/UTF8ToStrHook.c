@@ -37,7 +37,11 @@
             "öäüÖÄÜß" \
             "öäüÖÄÜß"
 
+#ifdef __AROS__
+#include <aros/asmcall.h>
+#else
 #include "SDI_hook.h"
+#endif
 
 struct Library *CodesetsBase = NULL;
 #if defined(__amigaos4__)
@@ -52,6 +56,27 @@ struct CodesetsIFace* ICodesets = NULL;
 #define DROPINTERFACE(iface)
 #endif
 
+#ifdef __AROS__
+
+AROS_UFH3S(ULONG, destFunc,
+AROS_UFHA(struct Hook *, h, A0),
+AROS_UFHA(struct convertMsg *, msg, A2),
+AROS_UFHA(STRPTR, buf, A1))
+{
+    AROS_USERFUNC_INIT
+    printf("[%3ld] [%s]\n",msg->len,buf);
+
+    if(msg->state == CSV_End)
+      printf("\n");
+
+    return 0;
+    AROS_USERFUNC_EXIT
+}
+
+static struct Hook destHook;
+
+#else /* __AROS__ */
+
 HOOKPROTONH(destFunc, ULONG, struct convertMsg* msg, STRPTR buf)
 {
     printf("[%3ld] [%s]\n",msg->len,buf);
@@ -63,10 +88,16 @@ HOOKPROTONH(destFunc, ULONG, struct convertMsg* msg, STRPTR buf)
 }
 MakeStaticHook(destHook, destFunc);
 
+#endif /* __AROS__ */
+
 int main(int argc,char **argv)
 {
     int            res;
 
+    #ifdef __AROS__
+    destHook.h_Entry = (HOOKFUNC)destFunc;
+    #endif
+    
     if((CodesetsBase = OpenLibrary(CODESETSNAME,CODESETSVER)) &&
         GETINTERFACE(ICodesets, CodesetsBase))
     {

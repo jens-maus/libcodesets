@@ -22,7 +22,9 @@
 
 #include "lib.h"
 
+#ifndef __AROS__
 #include "SDI_stdarg.h"
+#endif /* __AROS__ */
 
 #include "debug.h"
 
@@ -284,9 +286,18 @@ insig(struct b64 *b64)
 
 /****************************************************************************/
 
+#ifdef __AROS__
+AROS_LH1(ULONG, CodesetsEncodeB64A, 
+    AROS_LHA(struct TagItem *, attrs, A0),
+    struct LibraryHeader *, library, 21, Codesets
+)
+{
+    AROS_LIBFUNC_INIT
+#else
 ULONG LIBFUNC
 CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
 {
+#endif
   struct b64     b64;
   struct TagItem *tag;
   STRPTR         source;
@@ -475,8 +486,12 @@ CodesetsEncodeB64A(REG(a0, struct TagItem *attrs))
 
   RETURN((ULONG)b64.error);
   return (ULONG)b64.error;
+#ifdef __AROS__
+    AROS_LIBFUNC_EXIT
+#endif
 }
 
+#ifndef __AROS__
 LIBSTUB(CodesetsEncodeB64A, ULONG, REG(a0, struct TagItem *attrs))
 {
   #ifdef __MORPHOS__
@@ -485,6 +500,7 @@ LIBSTUB(CodesetsEncodeB64A, ULONG, REG(a0, struct TagItem *attrs))
   return CodesetsEncodeB64A(attrs);
   #endif
 }
+#endif
 
 #ifdef __amigaos4__
 LIBSTUBVA(CodesetsEncodeB64, ULONG, ...)
@@ -502,9 +518,18 @@ LIBSTUBVA(CodesetsEncodeB64, ULONG, ...)
 
 /****************************************************************************/
 
+#ifdef __AROS__
+AROS_LH1(ULONG, CodesetsDecodeB64A, 
+    AROS_LHA(struct TagItem *, attrs, A0),
+    struct LibraryHeader *, library, 22, Codesets
+)
+{
+    AROS_LIBFUNC_INIT
+#else
 ULONG LIBFUNC
 CodesetsDecodeB64A(REG(a0, struct TagItem *attrs))
 {
+#endif
   struct b64              b64;
   struct TagItem *tag;
   STRPTR         source;
@@ -690,8 +715,12 @@ end:
 
   RETURN((ULONG)b64.error);
   return (ULONG)b64.error;
+#ifdef __AROS__
+    AROS_LIBFUNC_EXIT
+#endif
 }
 
+#ifndef __AROS__
 LIBSTUB(CodesetsDecodeB64A, ULONG, REG(a0, struct TagItem *attrs))
 {
   #ifdef __MORPHOS__
@@ -700,6 +729,7 @@ LIBSTUB(CodesetsDecodeB64A, ULONG, REG(a0, struct TagItem *attrs))
   return CodesetsDecodeB64A(attrs);
   #endif
 }
+#endif
 
 #ifdef __amigaos4__
 LIBSTUBVA(CodesetsDecodeB64, ULONG, ...)
