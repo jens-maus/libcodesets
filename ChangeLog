@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-24  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * libcodesets.a: added MorphOS glue lib to developers dir.
+  * init.c: we must use localised Strnicmp() string comparison routine to
+    support supplement characters properly.
+  * init.c: added localised chech written in local charset (MorphOS uses
+    localised language names).
+
 2008-04-15  Thore Böckelmann <tboeckel@gmx.de>
 
   * developer/examples/vastubs.c, developer/examples/makefile.os3: added
