@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-24  Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: fixed broken build and renamed the gluecode lib directory name.
+
 2008-06-24  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
   * libcodesets.a: added MorphOS glue lib to developers dir.

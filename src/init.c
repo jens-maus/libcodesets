@@ -45,9 +45,8 @@ struct LocaleIFace*   ILocale = NULL;
 struct DiskfontIFace* IDiskfont = NULL;
 
 #if !defined(__NEWLIB__)
-exte0) || defined(__mc68040)
-  #define CPU " [040]"
-#elif defined(_M_IUtility;
+extern struct Library *__UtilityBase;
+extern struct UtilityIFace*  __IUtility;
 #endif
 
 #elif defined(__AROS__)
