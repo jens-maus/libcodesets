@@ -34,10 +34,12 @@
 
 /****************************************************************************/
 
+#if !defined(__MORPHOS__)
 #define MIN_STACKSIZE 65536
 
 // stack cookie for shell v45+
 static const char USED_VAR stack_size[] = "$STACK:" STR(MIN_STACKSIZE) "\n";
+#endif
 
 /****************************************************************************/
 
@@ -331,7 +333,6 @@ static const USED_VAR struct Resident ROMTag =
  * one for the ppc.library.
  * ** IMPORTANT **
  */
-const USED_VAR ULONG __amigappc__ = 1;
 const USED_VAR ULONG __abox__ = 1;
 
 #endif /* __MORPHOS */
