@@ -28,10 +28,6 @@
 
 #include "debug.h"
 
-// transforms a define into a string
-#define STR(x)  STR2(x)
-#define STR2(x) #x
-
 /****************************************************************************/
 
 #if !defined(__MORPHOS__)
@@ -57,7 +53,7 @@ struct ExecBase *SysBase = NULL;
 struct LibraryHeader *CodesetsBase = NULL;
 
 static const char UserLibName[] = "codesets.library";
-static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING CPU " (" LIB_DATE ") " LIB_COPYRIGHT;
+static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING " [" SYSTEMSHORT "/" CPU "] (" LIB_DATE ") " LIB_COPYRIGHT;
 
 /****************************************************************************/
 

@@ -5,6 +5,22 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-26  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c, misc: started implemented feature request #1879875 by
+    introducing a new CSA_ReplaceUnknown attribute for CodesetsConvertStr()
+    and CodesetsUTF8ToStr(). When this attribute is set to TRUE, some
+    well-known UTF8 sequences which can't be directly mapped to a certain
+    destination codeset will be automatically replaced by common 7bit
+    character representations. This should make some UTF8 encoded
+    text passages a bit more readable in case they contain punctation
+    and similar generic characters which can't be directly mapped. Please
+    note, however, that this is still work in progress and that the
+    replacement list should be enhanced by having a look what chars can be
+    mapped.
+  * misc: updated the build environment to take a Makefile.dep dependency
+    file into account.
+
 2008-06-24  Jens Langner <Jens.Langner@light-speed.de>
 
   * misc: fixed broken build and renamed the gluecode lib directory name.

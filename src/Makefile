@@ -2,7 +2,7 @@
 #
 # codesets.library - Amiga shared library for handling different codesets
 # Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-# Copyright (C) 2005-2007 by codesets.library Open Source Team
+# Copyright (C) 2005-2008 by codesets.library Open Source Team
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,11 @@
 #
 # codesets.library project: http://sourceforge.net/projects/codesetslib/
 #
-# $Id: makefile.os4 62 2007-01-23 08:55:18Z damato $
+# Most of the code included in this file was relicensed from GPL to LGPL
+# from the source code of SimpleMail (http://www.sf.net/projects/simplemail)
+# with full permissions by its authors.
+#
+# $Id: codesets.c 92 2007-12-18 11:37:55Z damato $
 #
 #***************************************************************************/
 
@@ -31,23 +35,27 @@
 # # to explicitly compile for AmigaOS3
 # > make OS=os3
 #
-# # to compile for AmigaOS4 but with debugging
+# # to compile for AmigaOS4 but without debugging
 # > make OS=os4 DEBUG=
 #
 
 #############################################
 # find out the HOST operating system
 # on which this makefile is run
-ifndef (HOST)
-  HOST = $(shell uname)
-  ifeq ($(HOST), AmigaOS)
-    ifeq ($(shell uname -m), powerpc)
-      HOST = AmigaOS4
-    endif
-    ifeq ($(shell uname -m), ppc)
-      HOST = AmigaOS4
-    endif
+HOST ?= $(shell uname)
+ifeq ($(HOST), AmigaOS)
+  ifeq ($(shell uname -m), powerpc)
+    HOST = AmigaOS4
   endif
+  ifeq ($(shell uname -m), ppc)
+    HOST = AmigaOS4
+  endif
+endif
+
+# if no host is identifed (no uname tool)
+# we assume a AmigaOS build
+ifeq ($(HOST),)
+  HOST = AmigaOS
 endif
 
 #############################################
@@ -80,35 +88,37 @@ endif
 # might be overridden on the commandline.
 
 # common commands
-FLEX  = flex
-FC    = flexcat
-EXPR  = expr
-CHMOD = chmod
-SED   = sed
-DATE  = date
-RM    = rm -f
-RMDIR = rm -rf
-MKDIR = mkdir
+FLEX    = flex
+FC      = flexcat
+EXPR    = expr
+DATE    = date
+RM      = delete force
+RMDIR   = delete force all
+MKDIR   = makedir
+CHMOD   = protect FLAGS=rwed
+CC      = gcc
+STRIP   = strip
+OBJDUMP = objdump
 
-# override commands for native builds
-ifeq ($(HOST), AmigaOS4)
-  # AmigaOS4 host
-  RM    = delete force
-  RMDIR = delete force all
-  MKDIR = makedir
-  DATE  = gdate
-else
-ifeq ($(HOST), AmigaOS)
-  # AmigaOS3 host
-  RM    = delete force
-  RMDIR = delete force all
-  MKDIR = makedir
-else
-ifeq ($(HOST), MorphOS)
-  # MorphOS host
-  RM    = delete force
-  RMDIR = delete force all
-  MKDIR = makedir
+# path definitions
+CDUP  = /
+CDTHIS=
+
+# override some variables for non-native builds (cross-compiler)
+ifneq ($(HOST), AmigaOS)
+ifneq ($(HOST), AmigaOS4)
+ifneq ($(HOST), MorphOS)
+
+  # when we end up here this is either a unix or Aros host
+  # so lets use unix kind of commands
+  RM      = rm -f
+  RMDIR   = rm -rf
+  MKDIR   = mkdir -p
+  CHMOD   = chmod 755
+
+  CDUP  = ../
+  CDTHIS= ./
+
 endif
 endif
 endif
@@ -124,20 +134,20 @@ endif
 # none - because we want to compile with -Wall all the time
 
 # Common Directories
-PREFIX = .
-OBJDIR = .obj_$(OS)
-BINDIR = bin_$(OS)
+PREFIX   = $(CDTHIS)
+OBJDIR   = .obj_$(OS)
+BINDIR   = bin_$(OS)
+VPATH    = $(OBJDIR)
 
 # target definition
-TARGET = $(BINDIR)/codesets.library
+TARGET   = $(BINDIR)/codesets.library
 
 # Common compiler/linker flags
-WARN     = -W -Wall -Wwrite-strings
+WARN     = -W -Wall -Wwrite-strings -Wpointer-arith -Wsign-compare
 OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-DEBUG    = -DDEBUG #-O0
+DEBUG    = -DDEBUG -O0
 DEBUGSYM = -gstabs
-CFLAGS   = -I. -I../include $(CPU) $(WARN) $(OPTFLAGS) \
-           $(DEBUG) $(DEBUGSYM) -c
+CFLAGS   = -I. -I../include $(CPU) $(WARN) $(OPTFLAGS) $(DEBUG) $(DEBUGSYM)
 LDFLAGS  = $(CPU) $(DEBUGSYM) -nostartfiles
 LDLIBS   =
 
@@ -148,15 +158,17 @@ ifeq ($(OS), os4)
   # AmigaOS4
 
   # Compiler/link/strip commands
-  CC      = ppc-amigaos-gcc
-  STRIP   = ppc-amigaos-strip
-  OBJDUMP = ppc-amigaos-objdump
+  ifneq ($(HOST), AmigaOS4)
+    CC      = ppc-amigaos-gcc
+    STRIP   = ppc-amigaos-strip
+    OBJDUMP = ppc-amigaos-objdump
+  endif
 
   # Compiler/Linker flags
   CRT      = newlib
   CPU      = -mcpu=powerpc
-  REDEFINE = -DCoerceMethod=ICoerceMethod -DDoMethod=IDoMethod \
-             -DDoSuperMethod=IDoSuperMethod -DDoSuperMethodA=IDoSuperMethodA
+  WARN     += -Wdeclaration-after-statement -Wdisabled-optimization
+  REDEFINE =
   CFLAGS   += -mcrt=$(CRT) -D__USE_INLINE__ -D__NEW_TIMEVAL_DEFINITION_USED__ \
               $(REDEFINE) -Wa,-mregnames
   LDFLAGS  += -mcrt=$(CRT)
@@ -171,9 +183,11 @@ ifeq ($(OS), os3)
   # AmigaOS3
 
   # Compiler/link/strip commands
-  CC      = m68k-amigaos-gcc
-  STRIP   = m68k-amigaos-strip
-  OBJDUMP = m68k-amigaos-objdump
+  ifneq ($(HOST), AmigaOS)
+    CC      = m68k-amigaos-gcc
+    STRIP   = m68k-amigaos-strip
+    OBJDUMP = m68k-amigaos-objdump
+  endif
 
   # Compiler/Linker flags
   CPU	    = -m68020-60 -msoft-float
@@ -188,9 +202,11 @@ ifeq ($(OS), mos)
   # MorphOS
 
   # Compiler/link/strip commands
-  CC      = ppc-morphos-gcc
-  STRIP   = ppc-morphos-strip
-  OBJDUMP = ppc-morphos-objdump
+  ifneq ($(HOST), MorphOS)
+    CC      = ppc-morphos-gcc
+    STRIP   = ppc-morphos-strip
+    OBJDUMP = ppc-morphos-objdump
+  endif
 
   # Compiler/Linker flags
   CPU     = -mcpu=powerpc
@@ -205,12 +221,14 @@ ifeq ($(OS), aros)
   # AROS
 
   # Compiler/link/strip commands
-  CC      = i686-aros-gcc
-  STRIP   = i686-aros-strip
-  OBJDUMP = i686-aros-objdump
+  ifneq ($(HOST), Aros)
+    CC      = i686-aros-gcc
+    STRIP   = i686-aros-strip
+    OBJDUMP = i686-aros-objdump
+  endif
 
   # Compiler/Linker flags
-  CPU     =
+  CPU =
 
 endif
 endif
@@ -221,61 +239,78 @@ endif
 # Here starts all stuff that is common for all target platforms and
 # hosts.
 
-OBJS = $(OBJDIR)/libinit.o    \
-       $(OBJDIR)/init.o       \
-       $(OBJDIR)/utils.o      \
-       $(OBJDIR)/base64.o     \
-       $(OBJDIR)/convertUTF.o \
-       $(OBJDIR)/codesets.o   \
-       $(OBJDIR)/debug.o
+OBJS += libinit.o    \
+        init.o       \
+        utils.o      \
+        base64.o     \
+        convertUTF.o \
+        codesets.o   \
+        debug.o
 
-#
+# main target
+.PHONY: all
 all: $(BINDIR) $(OBJDIR) $(TARGET)
 
 # make the object directories
 $(OBJDIR):
-	@printf '\033[33mGenerating $@ directory\033[0m\n'
+	@echo "  MK $@"
 	@$(MKDIR) $(OBJDIR)
 
-# make the binary directories
+# make the object directories
 $(BINDIR):
-	@printf '\033[33mGenerating $@ directory\033[0m\n'
+	@echo "  MK $@"
 	@$(MKDIR) $(BINDIR)
 
-#
+# for compiling single .c files
+%.o: %.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $(OBJDIR)/$@
 
-$(OBJDIR)/%.o: %.c
-	@printf '\033[32mCompiling $<\033[0m\n'
-	@$(CC) $(CFLAGS) $< -o $@
-
-$(OBJDIR)/codesets_68k.o: ../include/codesets_68k.c
-	@printf '\033[32mCompiling $<\033[0m\n'
-	@$(CC) $(CFLAGS) $< -o $@
-
-#
-
+# for linking the target
 $(TARGET): $(M68KSTUBS) $(OBJS)
-	@printf '\033[32mLinking \033[1m$@\033[0m\n'
-	@$(CC) $(LDFLAGS) -o $@.debug $(OBJS) $(M68KSTUBS) $(LDLIBS) -Wl,-Map,$@.map
+	@echo "  LD $@.debug"
+	@$(CC) $(LDFLAGS) -o $@.debug $(addprefix $(OBJDIR)/,$(OBJS)) $(M68KSTUBS) $(LDLIBS) -Wl,--cref,-M,-Map=$@.map
+	@echo "  LD $@"
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
 
-#
+# for creating a .dump file
+.PHONY: dump
+dump:
+	-$(OBJDUMP) --section-headers --all-headers --reloc --disassemble-all $(TARGET).debug > $(TARGET).dump
 
+# cleanup target
 .PHONY: clean
 clean:
-	-$(RM) $(TARGET) $(TARGET).debug $(TARGET).map $(OBJS) $(M68KSTUBS)
+	-$(RM) $(TARGET) $(TARGET).debug $(TARGET).map $(addprefix $(OBJDIR)/,$(OBJS)) $(M68KSTUBS)
 
-.PHONY: distclean
-distclean: clean
+# clean all including .obj directory
+.PHONY: cleanall
+cleanall: clean
 	-$(RMDIR) $(OBJDIR)
+
+# clean all stuff, including our autotools
+.PHONY: distclean
+distclean: cleanall
 	-$(RMDIR) $(BINDIR)
 
-#
+## SPECIAL COMPILE RULES ##############
 
-$(OBJDIR)/libinit.o:      libinit.c lib.h version.h base.h macros.h lib_protos.h
-$(OBJDIR)/init.o:         init.c lib.h base.h macros.h lib_protos.h
-$(OBJDIR)/utils.o:        utils.c lib.h base.h macros.h lib_protos.h
-$(OBJDIR)/base64.o:       base64.c lib.h base.h macros.h lib_protos.h
-$(OBJDIR)/convertUTF.o:   convertUTF.c lib.h convertUTF.h base.h macros.h lib_protos.h
-$(OBJDIR)/codesets.o:     codesets.c lib.h codesets_table.h convertUTF.h base.h macros.h lib_protos.h
-$(OBJDIR)/debug.o:        debug.c lib.h version.h
+$(OBJDIR)/codesets_68k.o: ../include/codesets_68k.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+## DEPENDENCY GENERATION ##############
+
+Makefile.dep: ;
+	@echo "WARNING: Makefile.dep missing. Please run 'make depend'"
+
+.PHONY: depend
+depend:
+	@echo "  MK Makefile.dep"
+	@echo "# AUTOGENERATED! DO NOT EDIT!!!" >Makefile.dep
+	@$(CC) -MM $(CFLAGS) $(patsubst %.o,%.c, $(OBJS)) >>Makefile.dep
+	@echo "# AUTOGENERATED! DO NOT EDIT!!!" >>Makefile.dep
+
+## DEPENDENCY INCLUDE #################
+
+-include Makefile.dep

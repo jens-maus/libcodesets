@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005-2007 by codesets.library Open Source Team
+ Copyright (C) 2005-2008 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -3367,6 +3367,189 @@ countCodesets(struct codesetList *csList)
 }
 
 ///
+/// getReplacementUTF8Char()
+// in case some UTF8 sequences can not be converted during CodesetsUTF8ToStrA(), this
+// function is used to replace these unknown sequences with lookalike characters that
+// still make the text more readable. For more replacement see
+// http://www.utf8-zeichentabelle.de/unicode-utf8-table.pl
+static int getReplacementUTF8Char(const char **dst, const char *src, const size_t utf8len)
+{
+  const char *rep = NULL;
+  LONG len = 0;
+
+  ENTER();
+
+  // check for the UTFlength
+  if(utf8len == 3)
+  {
+    // now we try to find a replacement string for the utf8
+    // string
+    if(*src == 0xE2)
+    {
+      if(*(src+1) == 0x80)
+      {
+        switch(*(src+2))
+        {
+          case 0x90:  // U+2010 -> - (HYPHEN)
+          case 0x91:  // U+2011 -> - (NON-BREAKING HYPHEN)
+          {
+            rep = "-";
+            len = 1;
+          }
+          break;
+
+          case 0x92:  // U+2012 -> -- (FIGURE DASH)
+          case 0x93:  // U+2013 -> -- (EN DASH)
+          {
+            rep = "--";
+            len = 2;
+          }
+          break;
+
+          case 0x94:  // U+2014 -> --- (EM DASH)
+          case 0x95:  // U+2015 -> --- (HORIZONTAL BAR)
+          {
+            rep = "---";
+            len = 3;
+          }
+          break;
+
+          case 0x98:  // U+2018 -> ` (LEFT SINGLE QUOTATION MARK)
+          {
+            rep = "`";
+            len = 1;
+          }
+          break;
+
+          case 0x9A:  // U+201A -> , (SINGLE LOW-9 QUOTATION MARK)
+          {
+            rep = ",";
+            len = 1;
+          }
+          break;
+
+          case 0x9B:  // U+201B -> U+00B4 (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
+          {
+            rep = "\xC2\xB4"; // == U+00B4 (ACUTE ACCENT)
+            len = -2; // signal minus because we return a UTF8 string again
+          }
+          break;
+
+          case 0x9C:  // U+201C -> '' (LEFT DOUBLE QUOTATION MARK)
+          {
+            rep = "''";
+            len = 1;
+          }
+          break;
+
+          case 0x9D:  // U+201D -> " (RIGHT DOUBLE QUOTATION MARK)
+          case 0x9F:  // U+201F -> " (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)
+          {
+            rep = "\"";
+            len = 1;
+          }
+          break;
+
+          case 0x9E:  // U+201E -> ,, (DOUBLE LOW-9 QUOTATION MARK)
+          {
+            rep = ",,";
+            len = 2;
+          }
+          break;
+
+          case 0xA0:  // U+2020 -> + (DAGGER)
+          case 0xA1:  // U+2021 -> + (DOUBLE DAGGER)
+          {
+            rep = "+";
+            len = 1;
+          }
+          break;
+
+          case 0xA2:  // U+2022 -> U+00B7 (BULLET)
+          case 0xA7:  // U+2027 -> U+00B7 (HYPHENATION POINT)
+          {
+            rep = "\xC2\xB7"; // == U+00B7 (MIDDLE DOT)
+            len = -2; // signal minus because we return a UTF8 string again
+          }
+          break;
+
+          case 0xA5:  // U+2025 -> .. (TWO DOT LEADER)
+          {
+            rep = "..";
+            len = 2;
+          }
+          break;
+
+          case 0xA6:  // U+2026 -> ... (HORIZONTAL ELLIPSIS)
+          {
+            rep = "...";
+            len = 3;
+          }
+          break;
+
+          case 0xB9:  // U+2039 -> < (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
+          {
+            rep = "<";
+            len = 1;
+          }
+          break;
+
+          case 0xBA:  // U+203A -> !! (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
+          {
+            rep = ">";
+            len = 1;
+          }
+          break;
+
+          case 0xBB:  // U+203B -> U+00D7 (REFERENCE MARK)
+          {
+            rep = "\xc3\x97"; // == U+00D7 (MULTIPLICATION SIGN)
+            len = -2; // signal minus because we return a UTF8 string again
+          }
+          break;
+
+          case 0xBC:  // U+203C -> !! (DOUBLE EXCLAMATION MARK)
+          {
+            rep = "!!";
+            len = 2;
+          }
+          break;
+        }
+      }
+      else if(*(src+1) == 0x82 && *(src+2) == 0xAC)
+      {
+        // the Euro Sign (U+20AC) replace with U+00A4 (CURRENCY SIGN)
+        rep = "\xC2\xA4";
+        len = -2; // signal minus because we return a UTF8 string again
+      }
+      else if(*(src+1) == 0x86)
+      {
+        switch(*(src+2))
+        {
+          case 0x90:  // U+2190 -> <- (LEFTWARDS ARROW)
+          {
+            rep = "<-";
+            len = 2;
+          }
+          break;
+
+          case 0x92:  // U+2192 -> -> (RIGHTWARDS ARROW)
+          {
+            rep = "->";
+            len = 2;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  *dst = rep;
+
+  RETURN(len);
+  return len;
+}
+///
 
 /**************************************************************************/
 
@@ -4819,11 +5002,18 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     unsigned char *e = (src+srcLen);
     int numConvErrors = 0;
     int *numConvErrorsPtr;
+    BOOL replaceUnknownChars;
+    APTR pool = NULL;
+    struct SignalSemaphore *sem = NULL;
 
     // get some more optional attributes
     hook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen, 0, attrs);
     numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
+    replaceUnknownChars = (BOOL)GetTagData(CSA_ReplaceUnknown, 0, attrs);
+
+    #warning "DEBUG"
+    replaceUnknownChars = TRUE;
 
     // first we make sure we allocate enough memory
     // for our destination buffer
@@ -4839,7 +5029,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     else
     {
       // in case the user wants us to dynamically generate the
-      // destination buffer ew do it right now
+      // destination buffer we do it right now
       if(!(dest = (STRPTR)GetTagData(CSA_Dest, 0, attrs)) ||
         GetTagData(CSA_AllocIfNeeded, TRUE, attrs))
       {
@@ -4855,12 +5045,8 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
         if(!dest || (destLen < len+1))
         {
-          APTR pool;
-
           if((pool = (APTR)GetTagData(CSA_Pool, 0, attrs)))
           {
-            struct SignalSemaphore *sem;
-
             if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)))
               ObtainSemaphore(sem);
 
@@ -4900,21 +5086,71 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       {
         unsigned char c = *s;
         unsigned char d;
+        const char *repstr = NULL;
+        int replen = 0;
 
+        // check if the char is a >7bit char
         if(c > 127)
         {
-          struct single_convert *f;
+          struct single_convert *f = NULL;
           int lenAdd = trailingBytesForUTF8[c];
           int lenStr = lenAdd+1;
 
+          // search in the UTF8 conversion table of the current charset if
+          // we have a replacement character for the char sequence starting at s
           BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)s, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
           if(f)
             d = f->code;
           else
           {
-            d = '?';
-            numConvErrors++;
+            // the analysed char sequence (s) is not convertable to a
+            // single visible char replacement, so we normally have to put
+            // a ? sign as a "unknown char" sign at the very position.
+            //
+            // For convienence we, however, allow users to replace these
+            // UTF8 characters with char sequences that "lookalike" the
+            // original char.
+            if(replaceUnknownChars == TRUE)
+            {
+              replen = getReplacementUTF8Char(&repstr, (char *)s, lenStr);
+
+              W(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
+
+              if(replen < 0)
+              {
+                // if the replacementchar function returns < 0
+                // it signals that it returns a UTF8 replacement string
+                // which we need to replace as well again
+                BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)repstr, (char *)codeset->table_sorted[m].utf8+1, -replen), f);
+
+                // check if we were able to find a correct replacement
+                if(f != NULL)
+                {
+                  W(DBF_UTF, "converted alternative UTF8 replacement char '%c' for UTF8 sequence '%s' (%ld)", d, repstr, -replen);
+
+                  d = f->code;
+                  replen = -1;
+                }
+                else
+                {
+                  W(DBF_UTF, "found no alternative UTF8 replacement for repstr '%s' (%lx) (%ld)", repstr, *repstr, -replen);
+
+                  replen = 0;
+                }
+
+                repstr = NULL;
+              }
+            }
+
+            if(repstr == NULL || replen == 0)
+            {
+              if(replen >= 0)
+              {
+                d = '?';
+                numConvErrors++;
+              }
+            }
           }
 
           s += lenAdd;
@@ -4924,22 +5160,77 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
         if(hook)
         {
-          *b++ = d;
-          i++;
+          if(replen > 1)
+          {
+            while(replen > 0)
+            {
+              *b++ = *repstr;
+              repstr++;
+              i++;
+              replen--;
+
+              if(i%(destLen-1)==0)
+              {
+                *b = '\0';
+                msg.len = i;
+                CallHookPkt(hook, &msg, buf);
+
+                b  = buf;
+                *b = '\0';
+                i  = 0;
+              }
+            }
+          }
+          else
+          {
+            *b++ = replen > 0 ? *repstr : d;
+            i++;
+          }
 
           if(i%(destLen-1)==0)
           {
-            *b = 0;
+            *b = '\0';
             msg.len = i;
             CallHookPkt(hook, &msg, buf);
 
             b  = buf;
-            *b = 0;
+            *b = '\0';
             i  = 0;
           }
         }
         else
-          *destIter++ = d;
+        {
+          if(replen > 1)
+          {
+            ULONG destPos = destIter-dest;
+
+            if(pool != NULL)
+            {
+              if(sem != NULL)
+                ObtainSemaphore(sem);
+
+              // allocate the destination buffer
+              dest = reallocVecPooled(pool, dest, destLen, destLen+replen-1);
+
+              if(sem != NULL)
+                ReleaseSemaphore(sem);
+            }
+            else
+              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
+
+            if(!dest)
+              return NULL;
+
+            destIter = dest+destPos;
+            memcpy(destIter, repstr, replen);
+            destIter += replen;
+
+          }
+          else if(replen == 1)
+            *destIter++ = *repstr;
+          else
+            *destIter++ = d;
+        }
 
         s++;
       }
@@ -4951,11 +5242,11 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     {
       msg.state = CSV_End;
       msg.len   = i;
-      *b        = 0;
+      *b        = '\0';
       CallHookPkt(hook,&msg,buf);
     }
     else
-      *destIter = 0;
+      *destIter = '\0';
 
     // let us write the number of conversion errors
     // to the proper variable pointer, if wanted
@@ -4970,6 +5261,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
   RETURN(dest);
   return dest;
+
 #ifdef __AROS__
     AROS_LIBFUNC_EXIT
 #endif

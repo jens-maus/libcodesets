@@ -163,6 +163,8 @@ enum
 #define CSA_B64Unix             CODESETSLIB_TAG(26)
 #define CSA_B64FLG_NtCheckErr   CODESETSLIB_TAG(27)
 
+#define CSA_ReplaceUnknown      CODESETSLIB_TAG(28)
+
 /***********************************************************************/
 /*
 ** Returns code from CodesetsEncodeB64A() CodesetsDecodeB64A()
