@@ -3372,7 +3372,7 @@ countCodesets(struct codesetList *csList)
 // function is used to replace these unknown sequences with lookalike characters that
 // still make the text more readable. For more replacement see
 // http://www.utf8-zeichentabelle.de/unicode-utf8-table.pl
-static int getReplacementUTF8Char(const char **dst, const char *src, const size_t utf8len)
+static int getReplacementUTF8Char(const char **dst, const unsigned char *src, const size_t utf8len)
 {
   const char *rep = NULL;
   LONG len = 0;
@@ -5113,7 +5113,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             // original char.
             if(replaceUnknownChars == TRUE)
             {
-              replen = getReplacementUTF8Char(&repstr, (char *)s, lenStr);
+              replen = getReplacementUTF8Char(&repstr, s, lenStr);
 
               W(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
 

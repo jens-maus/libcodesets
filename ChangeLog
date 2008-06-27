@@ -7,6 +7,12 @@ $URL$
 
 2008-06-27  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: changed the source pointer type of getReplacementUTF8Char() from
+    "char *" to "unsigned char *". For OS4 this should make no difference, since
+    the char type defaults to unsigned with GCC 4. For OS3 this makes a huge
+    difference, because for GCC 2 char is still signed and some comparisons will
+    be "const false" or even outside the valid value range in switch() statements
+    in this case.
   * libinit.c, codesets.c: removed some warnings about uninitialized variables
     and "void *" pointer arithmetic.
 
