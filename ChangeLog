@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-27  Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c, codesets.c: removed some warnings about uninitialized variables
+    and "void *" pointer arithmetic.
+
 2008-06-26  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c, misc: started implemented feature request #1879875 by

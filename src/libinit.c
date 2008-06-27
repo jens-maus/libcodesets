@@ -394,7 +394,7 @@ static BOOL callLibFunction(ULONG (*function)(struct LibraryHeader *), struct Li
   NewGetTaskAttrsA(tc, &stacksize, sizeof(ULONG), TASKINFOTYPE_STACKSIZE, NULL);
   #else
   // on all other systems we query via SPUpper-SPLower calculation
-  stacksize = tc->tc_SPUpper - tc->tc_SPLower;
+  stacksize = (ULONG)tc->tc_SPUpper - (ULONG)tc->tc_SPLower;
   #endif
 
   // Swap stacks only if current stack is insufficient

@@ -4469,7 +4469,7 @@ codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_le
 
 /// CodesetsSupportedA()
 #ifdef __AROS__
-AROS_LH1(STRPTR *, CodesetsSupportedA, 
+AROS_LH1(STRPTR *, CodesetsSupportedA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 15, Codesets
 )
@@ -4569,7 +4569,7 @@ LIBSTUBVA(CodesetsSupported, STRPTR*, ...)
 ///
 /// CodesetsFreeA()
 #ifdef __AROS__
-AROS_LH2(void, CodesetsFreeA, 
+AROS_LH2(void, CodesetsFreeA,
     AROS_LHA(APTR, obj, A0),
     AROS_LHA(struct TagItem *, attrs, A1),
     struct LibraryHeader *, library, 14, Codesets
@@ -4618,7 +4618,7 @@ LIBSTUBVA(CodesetsFree, void, REG(a0, APTR obj), ...)
 ///
 /// CodesetsSetDefaultA()
 #ifdef __AROS__
-AROS_LH2(struct codeset *, CodesetsSetDefaultA, 
+AROS_LH2(struct codeset *, CodesetsSetDefaultA,
     AROS_LHA(STRPTR, name, A0),
     AROS_LHA(struct TagItem *, attrs, A1),
     struct LibraryHeader *, library, 13, Codesets
@@ -4683,7 +4683,7 @@ LIBSTUBVA(CodesetsSetDefault, struct codeset *, REG(a0, STRPTR name), ...)
 ///
 /// CodesetsFindA()
 #ifdef __AROS__
-AROS_LH2(struct codeset *, CodesetsFindA, 
+AROS_LH2(struct codeset *, CodesetsFindA,
     AROS_LHA(STRPTR, name, A0),
     AROS_LHA(struct TagItem *, attrs, A1),
     struct LibraryHeader *, library, 16, Codesets
@@ -4769,7 +4769,7 @@ LIBSTUBVA(CodesetsFind, struct codeset *, REG(a0, STRPTR name), ...)
 ///
 /// CodesetsFindBestA()
 #ifdef __AROS__
-AROS_LH1(struct codeset *, CodesetsFindBestA, 
+AROS_LH1(struct codeset *, CodesetsFindBestA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 17, Codesets
 )
@@ -4847,7 +4847,7 @@ LIBSTUBVA(CodesetsFindBest, struct codeset *, ...)
 // Returns the number of characters a utf8 string has. This is not
 // identically with the size of memory is required to hold the string.
 #ifdef __AROS__
-AROS_LH1(ULONG, CodesetsUTF8Len, 
+AROS_LH1(ULONG, CodesetsUTF8Len,
     AROS_LHA(const UTF8 *, str, A0),
     struct LibraryHeader *, library, 18, Codesets
 )
@@ -4895,7 +4895,7 @@ LIBSTUB(CodesetsUTF8Len, ULONG, REG(a0, UTF8* str))
 ///
 /// CodesetsStrLenA()
 #ifdef __AROS__
-AROS_LH2(ULONG, CodesetsStrLenA, 
+AROS_LH2(ULONG, CodesetsStrLenA,
     AROS_LHA(STRPTR, str, A0),
     AROS_LHA(struct TagItem *, attrs, A1),
     struct LibraryHeader *, library, 23, Codesets
@@ -4968,7 +4968,7 @@ LIBSTUBVA(CodesetsStrLen, ULONG, REG(a0, STRPTR str), ...)
 // function; it means a NULL str will produce "" as dest; anyway you should
 // check NULL str to not waste your time!).
 #ifdef __AROS__
-AROS_LH1(STRPTR, CodesetsUTF8ToStrA, 
+AROS_LH1(STRPTR, CodesetsUTF8ToStrA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 19, Codesets
 )
@@ -5085,7 +5085,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       if(s < e)
       {
         unsigned char c = *s;
-        unsigned char d;
+        unsigned char d = '?';
         const char *repstr = NULL;
         int replen = 0;
 
@@ -5298,7 +5298,7 @@ LIBSTUBVA(CodesetsUTF8ToStr, STRPTR, ...)
 // If a destination hook is supplied always return 0.
 // If from is NULL, it returns NULL and doesn't call the hook.
 #ifdef __AROS__
-AROS_LH1(UTF8 *, CodesetsUTF8CreateA, 
+AROS_LH1(UTF8 *, CodesetsUTF8CreateA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 20, Codesets
 )
@@ -5482,7 +5482,7 @@ LIBSTUBVA(CodesetsUTF8Create, UTF8*, ...)
       (c) != 0xfeff && (c) != 0xfffe && (c) != 0xffff)
 
 #ifdef __AROS__
-AROS_LH1(BOOL, CodesetsIsValidUTF8, 
+AROS_LH1(BOOL, CodesetsIsValidUTF8,
     AROS_LHA(STRPTR, s, A0),
     struct LibraryHeader *, library, 24, Codesets
 )
@@ -5530,7 +5530,7 @@ LIBSTUB(CodesetsIsValidUTF8, BOOL, REG(a0, STRPTR s))
 // Converts a given string from one source Codeset to a given destination
 // codeset and returns the convert string
 #ifdef __AROS__
-AROS_LH1(STRPTR, CodesetsConvertStrA, 
+AROS_LH1(STRPTR, CodesetsConvertStrA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 26, Codesets
 )
@@ -5690,7 +5690,7 @@ LIBSTUBVA(CodesetsConvertStr, STRPTR, ...)
 ///
 /// CodesetsFreeVecPooledA()
 #ifdef __AROS__
-AROS_LH3(void, CodesetsFreeVecPooledA, 
+AROS_LH3(void, CodesetsFreeVecPooledA,
     AROS_LHA(APTR, pool, A0),
     AROS_LHA(APTR, mem, A1),
     AROS_LHA(struct TagItem *, attrs, A2),
@@ -5753,7 +5753,7 @@ LIBSTUBVA(CodesetsFreeVecPooled, void, REG(a0, APTR pool),
 ///
 /// CodesetsListCreateA()
 #ifdef __AROS__
-AROS_LH1(struct codesetList *, CodesetsListCreateA, 
+AROS_LH1(struct codesetList *, CodesetsListCreateA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 27, Codesets
 )
@@ -5857,7 +5857,7 @@ LIBSTUBVA(CodesetsListCreate, struct codesetList *, ...)
 ///
 /// CodesetsListDeleteA()
 #ifdef __AROS__
-AROS_LH1(BOOL, CodesetsListDeleteA, 
+AROS_LH1(BOOL, CodesetsListDeleteA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 28, Codesets
 )
@@ -5945,7 +5945,7 @@ LIBSTUBVA(CodesetsListDelete, BOOL, ...)
 ///
 /// CodesetsListAddA()
 #ifdef __AROS__
-AROS_LH2(BOOL, CodesetsListAddA, 
+AROS_LH2(BOOL, CodesetsListAddA,
     AROS_LHA(struct codesetList *, csList, A0),
     AROS_LHA(struct TagItem *, attrs, A1),
     struct LibraryHeader *, library, 29, Codesets
@@ -6037,7 +6037,7 @@ LIBSTUBVA(CodesetsListAdd, BOOL, struct codesetList *csList, ...)
 ///
 /// CodesetsListRemoveA()
 #ifdef __AROS__
-AROS_LH1(BOOL, CodesetsListRemoveA, 
+AROS_LH1(BOOL, CodesetsListRemoveA,
     AROS_LHA(struct TagItem *, attrs, A0),
     struct LibraryHeader *, library, 30, Codesets
 )
