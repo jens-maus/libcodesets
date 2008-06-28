@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-28  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: slightly updated our char replacement list - still more to come.
+
 2008-06-27  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: changed the source pointer type of getReplacementUTF8Char() from

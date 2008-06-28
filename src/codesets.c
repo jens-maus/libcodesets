@@ -3372,6 +3372,10 @@ countCodesets(struct codesetList *csList)
 // function is used to replace these unknown sequences with lookalike characters that
 // still make the text more readable. For more replacement see
 // http://www.utf8-zeichentabelle.de/unicode-utf8-table.pl
+//
+// The conversion table in this function is partly borrowed from the awebcharset plugin
+// written by Frank Weber. See http://cvs.sunsite.dk/viewcvs.cgi/aweb/plugins/charset/awebcharset.c
+//
 static int getReplacementUTF8Char(const char **dst, const unsigned char *src, const size_t utf8len)
 {
   const char *rep = NULL;
@@ -3415,8 +3419,18 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           break;
 
           case 0x98:  // U+2018 -> ` (LEFT SINGLE QUOTATION MARK)
+          case 0xB5:  // U+2035 -> ` (REVERSED PRIME)
           {
             rep = "`";
+            len = 1;
+          }
+          break;
+
+          case 0x99:  // U+2019 -> ´ (RIGHT SINGLE QUOTATION MARK)
+          case 0x9B:  // U+201B -> ´ (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
+          case 0xB2:  // U+2032 -> ´ (PRIME)
+          {
+            rep = "´";
             len = 1;
           }
           break;
@@ -3428,22 +3442,8 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
-          case 0x9B:  // U+201B -> U+00B4 (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
-          {
-            rep = "\xC2\xB4"; // == U+00B4 (ACUTE ACCENT)
-            len = -2; // signal minus because we return a UTF8 string again
-          }
-          break;
-
-          case 0x9C:  // U+201C -> '' (LEFT DOUBLE QUOTATION MARK)
-          {
-            rep = "''";
-            len = 1;
-          }
-          break;
-
+          case 0x9C:  // U+201C -> " (LEFT DOUBLE QUOTATION MARK)
           case 0x9D:  // U+201D -> " (RIGHT DOUBLE QUOTATION MARK)
-          case 0x9F:  // U+201F -> " (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)
           {
             rep = "\"";
             len = 1;
@@ -3453,6 +3453,14 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           case 0x9E:  // U+201E -> ,, (DOUBLE LOW-9 QUOTATION MARK)
           {
             rep = ",,";
+            len = 2;
+          }
+          break;
+
+          case 0x9F:  // U+201F -> `` (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)
+          case 0xB6:  // U+2036 -> `` (REVERSED DOUBLE PRIME)
+          {
+            rep = "``";
             len = 2;
           }
           break;
@@ -3487,6 +3495,34 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
+          case 0xB3:  // U+2033 -> ´´ (DOUBLE PRIME)
+          {
+            rep = "´´";
+            len = 2;
+          }
+          break;
+
+          case 0xB4:  // U+2034 -> ´´´ (TRIPLE PRIME)
+          {
+            rep = "´´´";
+            len = 3;
+          }
+          break;
+
+          case 0xB7:  // U+2037 -> ``` (REVERSED TRIPLE PRIME)
+          {
+            rep = "```";
+            len = 3;
+          }
+          break;
+
+          case 0xB8:  // U+2038 -> ^ (CARET)
+          {
+            rep = "^";
+            len = 1;
+          }
+          break;
+                    
           case 0xB9:  // U+2039 -> < (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
           {
             rep = "<";
