@@ -3418,6 +3418,20 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
+          case 0x96:  // U+2016 -> || (DOUBLE VERTICAL LINE)
+          {
+            rep = "||";
+            len = 2;
+          }
+          break;
+
+          case 0x97:  // U+2017 -> _ (DOUBLE LOW LINE)
+          {
+            rep = "_";
+            len = 1;
+          }
+          break;
+
           case 0x98:  // U+2018 -> ` (LEFT SINGLE QUOTATION MARK)
           case 0xB5:  // U+2035 -> ` (REVERSED PRIME)
           {
@@ -3481,6 +3495,14 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
+          case 0xA3:  // U+2023 -> . (TRIANGULAR BULLET)
+          case 0xA4:  // U+2024 -> . (ONE DOT LEADER)
+          {
+            rep = ".";
+            len = 1;
+          }
+          break;
+
           case 0xA5:  // U+2025 -> .. (TWO DOT LEADER)
           {
             rep = "..";
@@ -3491,6 +3513,20 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           case 0xA6:  // U+2026 -> ... (HORIZONTAL ELLIPSIS)
           {
             rep = "...";
+            len = 3;
+          }
+          break;
+
+          case 0xB0:  // U+2030 -> %. (PER MILLE SIGN)
+          {
+            rep = "%.";
+            len = 2;
+          }
+          break;
+
+          case 0xB1:  // U+2031 -> %.. (PER TEN THOUSAND SIGN)
+          {
+            rep = "%..";
             len = 3;
           }
           break;
@@ -3530,7 +3566,7 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
-          case 0xBA:  // U+203A -> !! (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
+          case 0xBA:  // U+203A -> > (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
           {
             rep = ">";
             len = 1;
@@ -3550,7 +3586,112 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
             len = 2;
           }
           break;
+
+          case 0xBD:  // U+203D -> ? (INTERROBANG)
+          {
+            rep = "?";
+            len = 1;
+          }
+          break;
         }
+      }
+      else if(*(src+1) == 0x81)
+      {
+         switch(*(src+2))
+         {
+            case 0x82:  // U+2042 -> * (ASTERISM)
+            {
+               rep = "*";
+               len = 1;
+            }
+            break;
+
+            case 0x83:  // U+2043 -> . (HYPHEN BULLET)
+            {
+               rep = ".";
+               len = 1;
+            }
+            break;
+
+            case 0x84:  // U+2044 -> / (FRACTION SLASH)
+            {
+               rep = "/";
+               len = 1;
+            }
+            break;
+
+            case 0x87:  // U+2047 -> ?? (DOUBLE QUESTION MARK)
+            {
+               rep = "??";
+               len = 2;
+            }
+            break;
+
+            case 0x88:  // U+2048 -> ?! (QUESTION EXCLAMATION MARK)
+            {
+               rep = "?!";
+               len = 2;
+            }
+            break;
+
+            case 0x89:  // U+2049 -> !? (EXCLAMATION QUESTION MARK)
+            {
+               rep = "!?";
+               len = 2;
+            }
+            break;
+
+            case 0x8E:  // U+204E -> * (LOW ASTERISK)
+            case 0x91:  // U+2051 -> * (TWO ASTERISKS ALIGNED VERTICALLY)
+            case 0x95:  // U+2055 -> * (FLOWER PUNCTUATION MARK)
+            {
+               rep = "*";
+               len = 1;
+            }
+            break;
+
+            case 0x8F:  // U+204F -> ; (REVERSED SEMICOLON)
+            {
+               rep = ";";
+               len = 1;
+            }
+            break;
+
+            case 0x92:  // U+2052 -> - (COMMERCIAL MINUS SIGN)
+            {
+               rep = "-";
+               len = 1;
+            }
+            break;
+
+            case 0x93:  // U+2053 -> ~ (SWUNG DASH)
+            {
+               rep = "~";
+               len = 1;
+            }
+            break;
+
+            case 0x97:  // U+2057 -> ÂÂÂÂ (QUADRUPLE PRIME)
+            {
+               rep = "ÂÂÂÂ";
+               len = 4;
+            }
+            break;
+
+            case 0x9A: // U+205A -> : (TWO DOT PUNCTUATION)
+            {
+               rep = ":";
+               len = 1;
+            }
+            break;
+
+            case 0x9C: // U+205C -> + (DOTTED CROSS)
+            {
+               rep = "+";
+               len = 1;
+            }
+            break;
+         }
       }
       else if(*(src+1) == 0x82 && *(src+2) == 0xAC)
       {
