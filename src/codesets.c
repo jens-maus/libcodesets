@@ -3440,11 +3440,11 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
-          case 0x99:  // U+2019 -> ´ (RIGHT SINGLE QUOTATION MARK)
-          case 0x9B:  // U+201B -> ´ (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
-          case 0xB2:  // U+2032 -> ´ (PRIME)
+          case 0x99:  // U+2019 -> ' (RIGHT SINGLE QUOTATION MARK)
+          case 0x9B:  // U+201B -> ' (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
+          case 0xB2:  // U+2032 -> ' (PRIME)
           {
-            rep = "´";
+            rep = "'";
             len = 1;
           }
           break;
@@ -3531,16 +3531,16 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
           }
           break;
 
-          case 0xB3:  // U+2033 -> ´´ (DOUBLE PRIME)
+          case 0xB3:  // U+2033 -> '' (DOUBLE PRIME)
           {
-            rep = "´´";
+            rep = "''";
             len = 2;
           }
           break;
 
-          case 0xB4:  // U+2034 -> ´´´ (TRIPLE PRIME)
+          case 0xB4:  // U+2034 -> ''' (TRIPLE PRIME)
           {
-            rep = "´´´";
+            rep = "'''";
             len = 3;
           }
           break;
@@ -3671,9 +3671,9 @@ static int getReplacementUTF8Char(const char **dst, const unsigned char *src, co
             }
             break;
 
-            case 0x97:  // U+2057 -> ÂÂÂÂ (QUADRUPLE PRIME)
+            case 0x97:  // U+2057 -> '''' (QUADRUPLE PRIME)
             {
-               rep = "ÂÂÂÂ";
+               rep = "''''";
                len = 4;
             }
             break;

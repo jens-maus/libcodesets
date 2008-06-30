@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-06-30  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: fixed the PRIME character replacement.
+
 2008-06-29  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: added more replacement UTF8 replaceent characters to the internal
