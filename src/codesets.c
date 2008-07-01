@@ -3378,10 +3378,10 @@ countCodesets(struct codesetList *csList)
 //
 struct UTF8Replacement
 {
-  const char *utf8;
-  const size_t utf8len;
-  const char *rep;
-  const LONG replen;
+  const char *utf8;     // the original UTF8 string we are going to replace
+  const size_t utf8len; // the length of the utf8 string
+  const char *rep;      // pointer to the replacement string
+  const LONG replen;    // the length of the replacement string (minus for signalling an UTF8 string)
 };
 
 static int compareUTF8Replacements(const void *p1, const void *p2)
@@ -3396,7 +3396,7 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
 {
   LONG len = 0;
 
-  static struct UTF8Replacement utf8map[] =
+  static struct UTF8Replacement const utf8map[] =
   {
     // U+2000 ... U+206F (General Punctuation)
     { "\xE2\x80\x90", 3, "-",         1 }, // U+2010 -> -       (HYPHEN)
@@ -3452,7 +3452,11 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
     { "\xE2\x81\x97", 3, "''''",      4 }, // U+2057 -> ''''    (QUADRUPLE PRIME)
     { "\xE2\x81\x9A", 3, ":",         1 }, // U+205A -> :       (TWO DOT PUNCTUATION)
     { "\xE2\x81\x9C", 3, "+",         1 }, // U+205C -> +       (DOTTED CROSS)
+
+    // U+20A0 ... U+20CF (Currency Symbols)
     { "\xE2\x82\xAC", 3, "\xC2\xA4", -2 }, // U+20AC -> U+00A4  (EURO SIGN) -> (CURRENCY SIGN)
+
+    // U+2190 ... U+21FF (Arrows)
     { "\xE2\x86\x90", 3, "<-",        2 }, // U+2190 -> <-      (LEFTWARDS ARROW)
     { "\xE2\x86\x92", 3, "->",        2 }, // U+2192 -> ->      (RIGHTWARDS ARROW)
   };
@@ -3465,7 +3469,7 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
   // check for the UTFlength
   if(utf8len == 3)
   {
-    struct UTF8Replacement key = { src, utf8len, NULL, 0 };
+    struct UTF8Replacement key = { (char *)src, utf8len, NULL, 0 };
     struct UTF8Replacement *rep;
 
     if((rep = bsearch(&key, utf8map, sizeof(utf8map) / sizeof(utf8map[0]), sizeof(utf8map[0]), compareUTF8Replacements)) != NULL)
