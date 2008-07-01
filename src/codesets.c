@@ -3376,372 +3376,104 @@ countCodesets(struct codesetList *csList)
 // The conversion table in this function is partly borrowed from the awebcharset plugin
 // written by Frank Weber. See http://cvs.sunsite.dk/viewcvs.cgi/aweb/plugins/charset/awebcharset.c
 //
+struct UTF8Replacement
+{
+  const char *utf8;
+  const size_t utf8len;
+  const char *rep;
+  const LONG replen;
+};
+
+static int compareUTF8Replacements(const void *p1, const void *p2)
+{
+  struct UTF8Replacement *key = (struct UTF8Replacement *)p1;
+  struct UTF8Replacement *rep = (struct UTF8Replacement *)p2;
+
+  return strncmp(key->utf8, rep->utf8, key->utf8len);
+}
+
 static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size_t utf8len)
 {
-  const char *rep = NULL;
   LONG len = 0;
 
-  static struct { const char *utf8; const size_t utf8len; const char *rep; const LONG replen; } utf8map[] =
+  static struct UTF8Replacement utf8map[] =
   {
     // U+2000 ... U+206F (General Punctuation)
-    { "\xE2\x80\x90", 3, "-",   1 }, // U+2010 -> -    (HYPHEN)
-    { "\xE2\x80\x91", 3, "-",   1 }, // U+2011 -> -    (NON-BREAKING HYPHEN)
-    { "\xE2\x80\x92", 3, "--",  2 }, // U+2012 -> --   (FIGURE DASH)
-    { "\xE2\x80\x93", 3, "--",  2 }, // U+2013 -> --   (EN DASH)
-    { "\xE2\x80\x94", 3, "---", 3 }, // U+2014 -> ---  (EM DASH)
-    { "\xE2\x80\x95", 3, "---", 3 }, // U+2015 -> ---  (HORIZONTAL BAR)
-    { "\xE2\x80\x96", 3, "||",  2 }, // U+2016 -> ||   (DOUBLE VERTICAL LINE)
-    { "\xE2\x80\x97", 3, "_",   1 }, // U+2017 -> _    (DOUBLE LOW LINE)
-    { "\xE2\x80\x98", 3, "`",   1 }, // U+2018 -> `    (LEFT SINGLE QUOTATION MARK)
-    { "\xE2\x80\x99", 3, "'",   1 }, // U+2019 -> '    (RIGHT SINGLE QUOTATION MARK)
-    { "\xE2\x80\x9A", 3, ",",   1 }, // U+201A -> ,    (SINGLE LOW-9 QUOTATION MARK)
-    { "\xE2\x80\x9B", 3, "'",   1 }, // U+201B -> '    (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
-
-    { "\xE2\x80\xB5", 3, "`",   1 }, // U+2035 -> `    (REVERSED PRIME)
-
+    { "\xE2\x80\x90", 3, "-",         1 }, // U+2010 -> -       (HYPHEN)
+    { "\xE2\x80\x91", 3, "-",         1 }, // U+2011 -> -       (NON-BREAKING HYPHEN)
+    { "\xE2\x80\x92", 3, "--",        2 }, // U+2012 -> --      (FIGURE DASH)
+    { "\xE2\x80\x93", 3, "--",        2 }, // U+2013 -> --      (EN DASH)
+    { "\xE2\x80\x94", 3, "---",       3 }, // U+2014 -> ---     (EM DASH)
+    { "\xE2\x80\x95", 3, "---",       3 }, // U+2015 -> ---     (HORIZONTAL BAR)
+    { "\xE2\x80\x96", 3, "||",        2 }, // U+2016 -> ||      (DOUBLE VERTICAL LINE)
+    { "\xE2\x80\x97", 3, "_",         1 }, // U+2017 -> _       (DOUBLE LOW LINE)
+    { "\xE2\x80\x98", 3, "`",         1 }, // U+2018 -> `       (LEFT SINGLE QUOTATION MARK)
+    { "\xE2\x80\x99", 3, "'",         1 }, // U+2019 -> '       (RIGHT SINGLE QUOTATION MARK)
+    { "\xE2\x80\x9A", 3, ",",         1 }, // U+201A -> ,       (SINGLE LOW-9 QUOTATION MARK)
+    { "\xE2\x80\x9B", 3, "'",         1 }, // U+201B -> '       (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
+    { "\xE2\x80\x9C", 3, "\"",        1 }, // U+201C -> "       (LEFT DOUBLE QUOTATION MARK)
+    { "\xE2\x80\x9D", 3, "\"",        1 }, // U+201D -> "       (RIGHT DOUBLE QUOTATION MARK)
+    { "\xE2\x80\x9E", 3, ",,",        2 }, // U+201E -> ,,      (DOUBLE LOW-9 QUOTATION MARK)
+    { "\xE2\x80\x9F", 3, "``",        2 }, // U+201F -> ``      (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)
+    { "\xE2\x80\xA0", 3, "+",         1 }, // U+2020 -> +       (DAGGER)
+    { "\xE2\x80\xA1", 3, "+",         1 }, // U+2021 -> +       (DOUBLE DAGGER)
+    { "\xE2\x80\xA2", 3, "\xC2\xB7", -2 }, // U+2022 -> U+00B7  (BULLET) -> (MIDDLE POINT)
+    { "\xE2\x80\xA3", 3, ".",         1 }, // U+2023 -> .       (TRIANGULAR BULLET)
+    { "\xE2\x80\xA4", 3, ".",         1 }, // U+2024 -> .       (ONE DOT LEADER)
+    { "\xE2\x80\xA5", 3, "..",        2 }, // U+2025 -> ..      (TWO DOT LEADER)
+    { "\xE2\x80\xA6", 3, "...",       3 }, // U+2026 -> ...     (HORIZONTAL ELLIPSIS)
+    { "\xE2\x80\xA7", 3, "\xC2\xB7", -2 }, // U+2027 -> U+00B7  (HYPHENATION POINT) -> (MIDDLE POINT)
+    { "\xE2\x80\xB0", 3, "%.",        2 }, // U+2030 -> %.      (PER MILLE SIGN)
+    { "\xE2\x80\xB1", 3, "%..",       3 }, // U+2031 -> %..     (PER TEN THOUSAND SIGN)
+    { "\xE2\x80\xB2", 3, "'",         1 }, // U+2032 -> `       (PRIME)
+    { "\xE2\x80\xB3", 3, "''",        2 }, // U+2033 -> ''      (DOUBLE PRIME)
+    { "\xE2\x80\xB4", 3, "'''",       3 }, // U+2034 -> '''     (TRIPLE PRIME)
+    { "\xE2\x80\xB5", 3, "`",         1 }, // U+2035 -> `       (REVERSED PRIME)
+    { "\xE2\x80\xB6", 3, "``",        2 }, // U+2036 -> ``      (REVERSED DOUBLE PRIME)
+    { "\xE2\x80\xB7", 3, "```",       3 }, // U+2037 -> ```     (REVERSED TRIPLE PRIME)
+    { "\xE2\x80\xB8", 3, "^",         1 }, // U+2038 -> ^       (CARET)
+    { "\xE2\x80\xB9", 3, "<",         1 }, // U+2039 -> <       (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
+    { "\xE2\x80\xBA", 3, ">",         1 }, // U+203A -> >       (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
+    { "\xE2\x80\xBB", 3, "\xC3\x97", -2 }, // U+203B -> U+00D7  (REFERENCE MARK) -> (MULTIPLICATION SIGN)
+    { "\xE2\x80\xBC", 3, "!!",        2 }, // U+203C -> !!      (DOUBLE EXCLAMATION MARK)
+    { "\xE2\x80\xBD", 3, "?",         1 }, // U+203D -> ?       (INTERROBANG)
+    { "\xE2\x81\x82", 3, "*",         1 }, // U+2042 -> *       (ASTERISM)
+    { "\xE2\x81\x83", 3, ".",         1 }, // U+2043 -> .       (HYPHEN BULLET)
+    { "\xE2\x81\x84", 3, "/",         1 }, // U+2044 -> /       (FRACTION SLASH)
+    { "\xE2\x81\x87", 3, "??",        2 }, // U+2047 -> ??      (DOUBLE QUESTION MARK)
+    { "\xE2\x81\x88", 3, "?!",        2 }, // U+2048 -> ?!      (QUESTION EXCLAMATION MARK)
+    { "\xE2\x81\x89", 3, "!?",        2 }, // U+2049 -> !?      (EXCLAMATION QUESTION MARK)
+    { "\xE2\x81\x8E", 3, "*",         1 }, // U+204E -> *       (LOW ASTERISK)
+    { "\xE2\x81\x8F", 3, ";",         1 }, // U+204F -> ;       (REVERSED SEMICOLON)
+    { "\xE2\x81\x91", 3, "*",         1 }, // U+2051 -> *       (TWO ASTERISKS ALIGNED VERTICALLY)
+    { "\xE2\x81\x92", 3, "-",         1 }, // U+2052 -> -       (COMMERCIAL MINUS SIGN)
+    { "\xE2\x81\x93", 3, "~",         1 }, // U+2053 -> ~       (SWUNG DASH)
+    { "\xE2\x81\x95", 3, "*",         1 }, // U+2055 -> *       (FLOWER PUNCTUATION MARK)
+    { "\xE2\x81\x97", 3, "''''",      4 }, // U+2057 -> ''''    (QUADRUPLE PRIME)
+    { "\xE2\x81\x9A", 3, ":",         1 }, // U+205A -> :       (TWO DOT PUNCTUATION)
+    { "\xE2\x81\x9C", 3, "+",         1 }, // U+205C -> +       (DOTTED CROSS)
+    { "\xE2\x82\xAC", 3, "\xC2\xA4", -2 }, // U+20AC -> U+00A4  (EURO SIGN) -> (CURRENCY SIGN)
+    { "\xE2\x86\x90", 3, "<-",        2 }, // U+2190 -> <-      (LEFTWARDS ARROW)
+    { "\xE2\x86\x92", 3, "->",        2 }, // U+2192 -> ->      (RIGHTWARDS ARROW)
   };
 
   ENTER();
 
+  // start with no replacement string
+  *dst = NULL;
+
   // check for the UTFlength
   if(utf8len == 3)
   {
-    // now we try to find a replacement string for the utf8
-    // string
-    if(*src == 0xE2)
+    struct UTF8Replacement key = { src, utf8len, NULL, 0 };
+    struct UTF8Replacement *rep;
+
+    if((rep = bsearch(&key, utf8map, sizeof(utf8map) / sizeof(utf8map[0]), sizeof(utf8map[0]), compareUTF8Replacements)) != NULL)
     {
-      if(*(src+1) == 0x80)
-      {
-        switch(*(src+2))
-        {
-          case 0x90:  // U+2010 -> - (HYPHEN)
-          case 0x91:  // U+2011 -> - (NON-BREAKING HYPHEN)
-          {
-            rep = "-";
-            len = 1;
-          }
-          break;
-
-          case 0x92:  // U+2012 -> -- (FIGURE DASH)
-          case 0x93:  // U+2013 -> -- (EN DASH)
-          {
-            rep = "--";
-            len = 2;
-          }
-          break;
-
-          case 0x94:  // U+2014 -> --- (EM DASH)
-          case 0x95:  // U+2015 -> --- (HORIZONTAL BAR)
-          {
-            rep = "---";
-            len = 3;
-          }
-          break;
-
-          case 0x96:  // U+2016 -> || (DOUBLE VERTICAL LINE)
-          {
-            rep = "||";
-            len = 2;
-          }
-          break;
-
-          case 0x97:  // U+2017 -> _ (DOUBLE LOW LINE)
-          {
-            rep = "_";
-            len = 1;
-          }
-          break;
-
-          case 0x98:  // U+2018 -> ` (LEFT SINGLE QUOTATION MARK)
-          case 0xB5:  // U+2035 -> ` (REVERSED PRIME)
-          {
-            rep = "`";
-            len = 1;
-          }
-          break;
-
-          case 0x99:  // U+2019 -> ' (RIGHT SINGLE QUOTATION MARK)
-          case 0x9B:  // U+201B -> ' (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
-          case 0xB2:  // U+2032 -> ' (PRIME)
-          {
-            rep = "'";
-            len = 1;
-          }
-          break;
-
-          case 0x9A:  // U+201A -> , (SINGLE LOW-9 QUOTATION MARK)
-          {
-            rep = ",";
-            len = 1;
-          }
-          break;
-
-          case 0x9C:  // U+201C -> " (LEFT DOUBLE QUOTATION MARK)
-          case 0x9D:  // U+201D -> " (RIGHT DOUBLE QUOTATION MARK)
-          {
-            rep = "\"";
-            len = 1;
-          }
-          break;
-
-          case 0x9E:  // U+201E -> ,, (DOUBLE LOW-9 QUOTATION MARK)
-          {
-            rep = ",,";
-            len = 2;
-          }
-          break;
-
-          case 0x9F:  // U+201F -> `` (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)
-          case 0xB6:  // U+2036 -> `` (REVERSED DOUBLE PRIME)
-          {
-            rep = "``";
-            len = 2;
-          }
-          break;
-
-          case 0xA0:  // U+2020 -> + (DAGGER)
-          case 0xA1:  // U+2021 -> + (DOUBLE DAGGER)
-          {
-            rep = "+";
-            len = 1;
-          }
-          break;
-
-          case 0xA2:  // U+2022 -> U+00B7 (BULLET)
-          case 0xA7:  // U+2027 -> U+00B7 (HYPHENATION POINT)
-          {
-            rep = "\xC2\xB7"; // == U+00B7 (MIDDLE DOT)
-            len = -2; // signal minus because we return a UTF8 string again
-          }
-          break;
-
-          case 0xA3:  // U+2023 -> . (TRIANGULAR BULLET)
-          case 0xA4:  // U+2024 -> . (ONE DOT LEADER)
-          {
-            rep = ".";
-            len = 1;
-          }
-          break;
-
-          case 0xA5:  // U+2025 -> .. (TWO DOT LEADER)
-          {
-            rep = "..";
-            len = 2;
-          }
-          break;
-
-          case 0xA6:  // U+2026 -> ... (HORIZONTAL ELLIPSIS)
-          {
-            rep = "...";
-            len = 3;
-          }
-          break;
-
-          case 0xB0:  // U+2030 -> %. (PER MILLE SIGN)
-          {
-            rep = "%.";
-            len = 2;
-          }
-          break;
-
-          case 0xB1:  // U+2031 -> %.. (PER TEN THOUSAND SIGN)
-          {
-            rep = "%..";
-            len = 3;
-          }
-          break;
-
-          case 0xB3:  // U+2033 -> '' (DOUBLE PRIME)
-          {
-            rep = "''";
-            len = 2;
-          }
-          break;
-
-          case 0xB4:  // U+2034 -> ''' (TRIPLE PRIME)
-          {
-            rep = "'''";
-            len = 3;
-          }
-          break;
-
-          case 0xB7:  // U+2037 -> ``` (REVERSED TRIPLE PRIME)
-          {
-            rep = "```";
-            len = 3;
-          }
-          break;
-
-          case 0xB8:  // U+2038 -> ^ (CARET)
-          {
-            rep = "^";
-            len = 1;
-          }
-          break;
-                    
-          case 0xB9:  // U+2039 -> < (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
-          {
-            rep = "<";
-            len = 1;
-          }
-          break;
-
-          case 0xBA:  // U+203A -> > (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
-          {
-            rep = ">";
-            len = 1;
-          }
-          break;
-
-          case 0xBB:  // U+203B -> U+00D7 (REFERENCE MARK)
-          {
-            rep = "\xc3\x97"; // == U+00D7 (MULTIPLICATION SIGN)
-            len = -2; // signal minus because we return a UTF8 string again
-          }
-          break;
-
-          case 0xBC:  // U+203C -> !! (DOUBLE EXCLAMATION MARK)
-          {
-            rep = "!!";
-            len = 2;
-          }
-          break;
-
-          case 0xBD:  // U+203D -> ? (INTERROBANG)
-          {
-            rep = "?";
-            len = 1;
-          }
-          break;
-        }
-      }
-      else if(*(src+1) == 0x81)
-      {
-         switch(*(src+2))
-         {
-            case 0x82:  // U+2042 -> * (ASTERISM)
-            {
-               rep = "*";
-               len = 1;
-            }
-            break;
-
-            case 0x83:  // U+2043 -> . (HYPHEN BULLET)
-            {
-               rep = ".";
-               len = 1;
-            }
-            break;
-
-            case 0x84:  // U+2044 -> / (FRACTION SLASH)
-            {
-               rep = "/";
-               len = 1;
-            }
-            break;
-
-            case 0x87:  // U+2047 -> ?? (DOUBLE QUESTION MARK)
-            {
-               rep = "??";
-               len = 2;
-            }
-            break;
-
-            case 0x88:  // U+2048 -> ?! (QUESTION EXCLAMATION MARK)
-            {
-               rep = "?!";
-               len = 2;
-            }
-            break;
-
-            case 0x89:  // U+2049 -> !? (EXCLAMATION QUESTION MARK)
-            {
-               rep = "!?";
-               len = 2;
-            }
-            break;
-
-            case 0x8E:  // U+204E -> * (LOW ASTERISK)
-            case 0x91:  // U+2051 -> * (TWO ASTERISKS ALIGNED VERTICALLY)
-            case 0x95:  // U+2055 -> * (FLOWER PUNCTUATION MARK)
-            {
-               rep = "*";
-               len = 1;
-            }
-            break;
-
-            case 0x8F:  // U+204F -> ; (REVERSED SEMICOLON)
-            {
-               rep = ";";
-               len = 1;
-            }
-            break;
-
-            case 0x92:  // U+2052 -> - (COMMERCIAL MINUS SIGN)
-            {
-               rep = "-";
-               len = 1;
-            }
-            break;
-
-            case 0x93:  // U+2053 -> ~ (SWUNG DASH)
-            {
-               rep = "~";
-               len = 1;
-            }
-            break;
-
-            case 0x97:  // U+2057 -> '''' (QUADRUPLE PRIME)
-            {
-               rep = "''''";
-               len = 4;
-            }
-            break;
-
-            case 0x9A: // U+205A -> : (TWO DOT PUNCTUATION)
-            {
-               rep = ":";
-               len = 1;
-            }
-            break;
-
-            case 0x9C: // U+205C -> + (DOTTED CROSS)
-            {
-               rep = "+";
-               len = 1;
-            }
-            break;
-         }
-      }
-      else if(*(src+1) == 0x82 && *(src+2) == 0xAC)
-      {
-        // the Euro Sign (U+20AC) replace with U+00A4 (CURRENCY SIGN)
-        rep = "\xC2\xA4";
-        len = -2; // signal minus because we return a UTF8 string again
-      }
-      else if(*(src+1) == 0x86)
-      {
-        switch(*(src+2))
-        {
-          case 0x90:  // U+2190 -> <- (LEFTWARDS ARROW)
-          {
-            rep = "<-";
-            len = 2;
-          }
-          break;
-
-          case 0x92:  // U+2192 -> -> (RIGHTWARDS ARROW)
-          {
-            rep = "->";
-            len = 2;
-          }
-          break;
-        }
-      }
+      *dst = rep->rep;
+      len = rep->replen;
     }
   }
-
-  *dst = rep;
 
   RETURN(len);
   return len;

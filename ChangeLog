@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-01  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: implemented the binary search in the new replacement lookup
+    table.
+
 2008-07-01  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: renamed replacement function to mapUTF8toAscii() which more
