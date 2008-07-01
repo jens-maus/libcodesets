@@ -7,6 +7,7 @@ $URL$
 
 2008-07-01  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: added the Latin Extended-A section to the lookup table.
   * codesets.c: implemented the binary search in the new replacement lookup
     table.
 

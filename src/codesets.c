@@ -3381,23 +3381,161 @@ struct UTF8Replacement
   const char *utf8;     // the original UTF8 string we are going to replace
   const size_t utf8len; // the length of the utf8 string
   const char *rep;      // pointer to the replacement string
-  const LONG replen;    // the length of the replacement string (minus for signalling an UTF8 string)
+  const int replen;     // the length of the replacement string (minus for signalling an UTF8 string)
 };
 
 static int compareUTF8Replacements(const void *p1, const void *p2)
 {
   struct UTF8Replacement *key = (struct UTF8Replacement *)p1;
   struct UTF8Replacement *rep = (struct UTF8Replacement *)p2;
+  int cmp;
 
-  return strncmp(key->utf8, rep->utf8, key->utf8len);
+  // compare the length first, after that compare the strings
+  cmp = key->utf8len - rep->utf8len;
+  if(cmp == 0)
+    cmp = memcmp(key->utf8, rep->utf8, key->utf8len);
+
+  return cmp;
 }
 
 static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size_t utf8len)
 {
-  LONG len = 0;
+  int len = 0;
+  struct UTF8Replacement key = { src, utf8len, NULL, 0 };
+  struct UTF8Replacement *rep;
 
   static struct UTF8Replacement const utf8map[] =
   {
+    // U+0100 ... U+017F (Latin Extended-A)
+    { "\xC4\x80", 2, "A",         1 }, // U+0100 -> A       (LATIN CAPITAL LETTER A WITH MACRON)
+    { "\xC4\x81", 2, "a",         1 }, // U+0101 -> a       (LATIN SMALL LETTER A WITH MACRON)
+    { "\xC4\x82", 2, "A",         1 }, // U+0102 -> A       (LATIN CAPITAL LETTER A WITH BREVE)
+    { "\xC4\x83", 2, "a",         1 }, // U+0103 -> a       (LATIN SMALL LETTER A WITH BREVE)
+    { "\xC4\x84", 2, "A",         1 }, // U+0104 -> A       (LATIN CAPITAL LETTER A WITH OGONEK)
+    { "\xC4\x85", 2, "a",         1 }, // U+0105 -> a       (LATIN SMALL LETTER A WITH OGONEK)
+    { "\xC4\x86", 2, "C",         1 }, // U+0106 -> C       (LATIN CAPITAL LETTER C WITH ACUTE)
+    { "\xC4\x87", 2, "c",         1 }, // U+0107 -> c       (LATIN SMALL LETTER C WITH ACUTE)
+    { "\xC4\x88", 2, "C",         1 }, // U+0108 -> C       (LATIN CAPITAL LETTER C WITH CIRCUMFLEX)
+    { "\xC4\x89", 2, "c",         1 }, // U+0109 -> c       (LATIN SMALL LETTER C WITH CIRCUMFLEX)
+    { "\xC4\x8A", 2, "C",         1 }, // U+010A -> C       (LATIN CAPITAL LETTER C WITH DOT ABOVE)
+    { "\xC4\x8B", 2, "c",         1 }, // U+010B -> c       (LATIN SMALL LETTER C WITH DOT ABOVE)
+    { "\xC4\x8C", 2, "C",         1 }, // U+010C -> C       (LATIN CAPITAL LETTER C WITH CARON)
+    { "\xC4\x8D", 2, "c",         1 }, // U+010D -> c       (LATIN SMALL LETTER C WITH CARON)
+    { "\xC4\x8E", 2, "D",         1 }, // U+010E -> D       (LATIN CAPITAL LETTER D WITH CARON)
+    { "\xC4\x8F", 2, "d",         1 }, // U+010F -> d       (LATIN SMALL LETTER D WITH CARON)
+    { "\xC4\x90", 2, "D",         1 }, // U+0110 -> D       (LATIN CAPITAL LETTER D WITH STROKE)
+    { "\xC4\x91", 2, "d",         1 }, // U+0111 -> d       (LATIN SMALL LETTER D WITH STROKE)
+    { "\xC4\x92", 2, "A",         1 }, // U+0112 -> E       (LATIN CAPITAL LETTER E WITH MACRON)
+    { "\xC4\x93", 2, "a",         1 }, // U+0113 -> e       (LATIN SMALL LETTER E WITH MACRON)
+    { "\xC4\x94", 2, "A",         1 }, // U+0114 -> E       (LATIN CAPITAL LETTER E WITH BREVE)
+    { "\xC4\x95", 2, "a",         1 }, // U+0115 -> e       (LATIN SMALL LETTER E WITH BREVE)
+    { "\xC4\x96", 2, "C",         1 }, // U+0116 -> E       (LATIN CAPITAL LETTER E WITH DOT ABOVE)
+    { "\xC4\x97", 2, "c",         1 }, // U+0117 -> e       (LATIN SMALL LETTER E WITH DOT ABOVE)
+    { "\xC4\x98", 2, "C",         1 }, // U+0118 -> E       (LATIN CAPITAL LETTER E WITH OGONEK)
+    { "\xC4\x99", 2, "c",         1 }, // U+0119 -> e       (LATIN SMALL LETTER E WITH OGONEK)
+    { "\xC4\x9A", 2, "C",         1 }, // U+011A -> E       (LATIN CAPITAL LETTER E WITH CARON)
+    { "\xC4\x9B", 2, "c",         1 }, // U+011B -> e       (LATIN SMALL LETTER E WITH CARON)
+    { "\xC4\x9C", 2, "C",         1 }, // U+011C -> G       (LATIN CAPITAL LETTER G WITH CIRCUMFLEX)
+    { "\xC4\x9D", 2, "c",         1 }, // U+011D -> g       (LATIN SMALL LETTER G WITH CIRCUMFLEX)
+    { "\xC4\x9E", 2, "D",         1 }, // U+011E -> G       (LATIN CAPITAL LETTER G WITH BREVE)
+    { "\xC4\x9F", 2, "d",         1 }, // U+011F -> g       (LATIN SMALL LETTER G WITH BREVE)
+    { "\xC4\xA0", 2, "G",         1 }, // U+0120 -> G       (LATIN CAPITAL LETTER G WITH DOT ABOVE)
+    { "\xC4\xA1", 2, "g",         1 }, // U+0121 -> g       (LATIN SMALL LETTER G WITH DOT ABOVE)
+    { "\xC4\xA2", 2, "G",         1 }, // U+0122 -> G       (LATIN CAPITAL LETTER G WITH CEDILLA)
+    { "\xC4\xA3", 2, "g",         1 }, // U+0123 -> g       (LATIN SMALL LETTER G WITH CEDILLA)
+    { "\xC4\xA4", 2, "H",         1 }, // U+0124 -> H       (LATIN CAPITAL LETTER H WITH CIRCUMFLEX)
+    { "\xC4\xA5", 2, "h",         1 }, // U+0125 -> h       (LATIN SMALL LETTER H WITH CIRCUMFLEX)
+    { "\xC4\xA6", 2, "H",         1 }, // U+0126 -> H       (LATIN CAPITAL LETTER H WITH STROKE)
+    { "\xC4\xA7", 2, "h",         1 }, // U+0127 -> h       (LATIN SMALL LETTER H WITH STROKE)
+    { "\xC4\xA8", 2, "I",         1 }, // U+0128 -> I       (LATIN CAPITAL LETTER I WITH TILDE)
+    { "\xC4\xA9", 2, "i",         1 }, // U+0129 -> i       (LATIN SMALL LETTER I WITH TILDE)
+    { "\xC4\xAA", 2, "I",         1 }, // U+012A -> I       (LATIN CAPITAL LETTER I WITH MACRON)
+    { "\xC4\xAB", 2, "i",         1 }, // U+012B -> i       (LATIN SMALL LETTER I WITH MACRON)
+    { "\xC4\xAC", 2, "I",         1 }, // U+012C -> I       (LATIN CAPITAL LETTER I WITH BREVE)
+    { "\xC4\xAD", 2, "i",         1 }, // U+012D -> i       (LATIN SMALL LETTER I WITH BREVE)
+    { "\xC4\xAE", 2, "I",         1 }, // U+012E -> I       (LATIN CAPITAL LETTER I WITH OGONEK)
+    { "\xC4\xAF", 2, "i",         1 }, // U+012F -> i       (LATIN SMALL LETTER I WITH OGONEK)
+    { "\xC4\xB0", 2, "I",         1 }, // U+0130 -> I       (LATIN CAPITAL LETTER I WITH DOT ABOVE)
+    { "\xC4\xB1", 2, "i",         1 }, // U+0131 -> i       (LATIN SMALL LETTER DOTLESS I)
+    { "\xC4\xB2", 2, "Ij",        2 }, // U+0132 -> Ij      (LATIN CAPITAL LIGATURE IJ)
+    { "\xC4\xB3", 2, "ij",        2 }, // U+0133 -> ij      (LATIN SMALL LIGATURE IJ)
+    { "\xC4\xB4", 2, "J",         1 }, // U+0134 -> J       (LATIN CAPITAL LETTER J WITH CIRCUMFLEX)
+    { "\xC4\xB5", 2, "j",         1 }, // U+0135 -> j       (LATIN SMALL LETTER J WITH CIRCUMFLEX)
+    { "\xC4\xB6", 2, "K",         1 }, // U+0136 -> K       (LATIN CAPITAL LETTER K WITH CEDILLA)
+    { "\xC4\xB7", 2, "k",         1 }, // U+0137 -> k       (LATIN SMALL LETTER K WITH CEDILLA)
+    { "\xC4\xB8", 2, "?",         1 }, // U+0138 -> ?       (LATIN SMALL LETTER KRA)
+    { "\xC4\xB9", 2, "L",         1 }, // U+0139 -> L       (LATIN CAPITAL LETTER L WITH ACUTE)
+    { "\xC4\xBA", 2, "l",         1 }, // U+013A -> l       (LATIN SMALL LETTER L WITH ACUTE)
+    { "\xC4\xBB", 2, "L",         1 }, // U+013B -> L       (LATIN CAPITAL LETTER L WITH CEDILLA)
+    { "\xC4\xBC", 2, "l",         1 }, // U+013C -> l       (LATIN SMALL LETTER L WITH CEDILLA)
+    { "\xC4\xBD", 2, "L",         1 }, // U+013D -> L       (LATIN CAPITAL LETTER L WITH CARON)
+    { "\xC4\xBE", 2, "l",         1 }, // U+013E -> l       (LATIN SMALL LETTER L WITH CARON)
+    { "\xC4\xBF", 2, "L",         1 }, // U+013F -> L       (LATIN CAPITAL LETTER L WITH MIDDLE DOT)
+    { "\xC5\x80", 2, "l",         1 }, // U+0140 -> l       (LATIN SMALL LETTER L WITH MIDDLE DOT)
+    { "\xC5\x81", 2, "L",         1 }, // U+0141 -> L       (LATIN CAPITAL LETTER L WITH STROKE)
+    { "\xC5\x82", 2, "l",         1 }, // U+0142 -> l       (LATIN SMALL LETTER L WITH STROKE)
+    { "\xC5\x83", 2, "N",         1 }, // U+0143 -> N       (LATIN CAPITAL LETTER N WITH ACUTE)
+    { "\xC5\x84", 2, "n",         1 }, // U+0144 -> n       (LATIN SMALL LETTER N WITH ACUTE)
+    { "\xC5\x85", 2, "N",         1 }, // U+0145 -> N       (LATIN CAPITAL LETTER N WITH CEDILLA)
+    { "\xC5\x86", 2, "n",         1 }, // U+0146 -> n       (LATIN SMALL LETTER N WITH CEDILLA)
+    { "\xC5\x87", 2, "N",         1 }, // U+0147 -> N       (LATIN CAPITAL LETTER N WITH CARON)
+    { "\xC5\x88", 2, "n",         1 }, // U+0148 -> n       (LATIN SMALL LETTER N WITH CARON)
+    { "\xC5\x89", 2, "'n",        2 }, // U+0149 -> 'n      (LATIN SMALL LETTER N PRECEDED BY APOSTROPHE)
+    { "\xC5\x8A", 2, "Ng",        2 }, // U+014A -> Ng      (LATIN CAPITAL LETTER ENG)
+    { "\xC5\x8B", 2, "ng",        2 }, // U+014B -> ng      (LATIN SMALL LETTER ENG)
+    { "\xC5\x8C", 2, "O",         1 }, // U+014C -> O       (LATIN CAPITAL LETTER O WITH MACRON)
+    { "\xC5\x8D", 2, "o",         1 }, // U+014D -> o       (LATIN SMALL LETTER O WITH MACRON)
+    { "\xC5\x8E", 2, "O",         1 }, // U+014E -> O       (LATIN CAPITAL LETTER O WITH BREVE)
+    { "\xC5\x8F", 2, "o",         1 }, // U+014F -> o       (LATIN SMALL LETTER O WITH BREVE)
+    { "\xC5\x90", 2, "O",         1 }, // U+0150 -> O       (LATIN CAPITAL LETTER O WITH DOUBLE ACUTE)
+    { "\xC5\x91", 2, "o",         1 }, // U+0151 -> o       (LATIN SMALL LETTER O WITH DOUBLE ACUTE)
+    { "\xC5\x92", 2, "Oe",        2 }, // U+0152 -> Oe      (LATIN CAPITAL LIGATURE OE)
+    { "\xC5\x93", 2, "oe",        2 }, // U+0153 -> oe      (LATIN SMALL LIGATURE OE)
+    { "\xC5\x94", 2, "R",         1 }, // U+0154 -> R       (LATIN CAPITAL LETTER R WITH ACUTE)
+    { "\xC5\x95", 2, "r",         1 }, // U+0155 -> r       (LATIN SMALL LETTER R WITH ACUTE)
+    { "\xC5\x96", 2, "R",         1 }, // U+0156 -> R       (LATIN CAPITAL LETTER R WITH CEDILLA)
+    { "\xC5\x97", 2, "r",         1 }, // U+0157 -> r       (LATIN SMALL LETTER R WITH CEDILLA)
+    { "\xC5\x98", 2, "R",         1 }, // U+0158 -> R       (LATIN CAPITAL LETTER R WITH CARON)
+    { "\xC5\x99", 2, "r",         1 }, // U+0159 -> r       (LATIN SMALL LETTER R WITH CARON)
+    { "\xC5\x9A", 2, "S",         1 }, // U+015A -> S       (LATIN CAPITAL LETTER S WITH ACUTE)
+    { "\xC5\x9B", 2, "s",         1 }, // U+015B -> s       (LATIN SMALL LETTER S WITH ACUTE)
+    { "\xC5\x9C", 2, "S",         1 }, // U+015C -> S       (LATIN CAPITAL LETTER S WITH CIRCUMFLEX)
+    { "\xC5\x9D", 2, "s",         1 }, // U+015D -> s       (LATIN SMALL LETTER S WITH CIRCUMFLEX)
+    { "\xC5\x9E", 2, "S",         1 }, // U+015E -> S       (LATIN CAPITAL LETTER S WITH CEDILLA)
+    { "\xC5\x9F", 2, "s",         1 }, // U+015F -> s       (LATIN SMALL LETTER S WITH CEDILLA)
+    { "\xC5\xA0", 2, "S",         1 }, // U+0160 -> S       (LATIN CAPITAL LETTER S WITH CARON)
+    { "\xC5\xA1", 2, "s",         1 }, // U+0161 -> s       (LATIN SMALL LETTER S WITH CARON)
+    { "\xC5\xA2", 2, "T",         1 }, // U+0162 -> T       (LATIN CAPITAL LETTER T WITH CEDILLA)
+    { "\xC5\xA3", 2, "t",         1 }, // U+0163 -> t       (LATIN SMALL LETTER T WITH CEDILLA)
+    { "\xC5\xA4", 2, "T",         1 }, // U+0164 -> T       (LATIN CAPITAL LETTER T WITH CARON)
+    { "\xC5\xA5", 2, "t",         1 }, // U+0165 -> t       (LATIN SMALL LETTER T WITH CARON)
+    { "\xC5\xA6", 2, "T",         1 }, // U+0166 -> T       (LATIN CAPITAL LETTER T WITH STROKE)
+    { "\xC5\xA7", 2, "t",         1 }, // U+0167 -> t       (LATIN SMALL LETTER T WITH STROKE)
+    { "\xC5\xA8", 2, "U",         1 }, // U+0168 -> U       (LATIN CAPITAL LETTER U WITH TILDE)
+    { "\xC5\xA9", 2, "u",         1 }, // U+0169 -> u       (LATIN SMALL LETTER U WITH TILDE)
+    { "\xC5\xAA", 2, "U",         1 }, // U+016A -> U       (LATIN CAPITAL LETTER U WITH MACRON)
+    { "\xC5\xAB", 2, "u",         1 }, // U+016B -> u       (LATIN SMALL LETTER U WITH MACRON)
+    { "\xC5\xAC", 2, "U",         1 }, // U+016C -> U       (LATIN CAPITAL LETTER U WITH BREVE)
+    { "\xC5\xAD", 2, "u",         1 }, // U+016D -> u       (LATIN SMALL LETTER U WITH BREVE)
+    { "\xC5\xAE", 2, "U",         1 }, // U+016E -> U       (LATIN CAPITAL LETTER U WITH RING ABOVE)
+    { "\xC5\xAF", 2, "u",         1 }, // U+016F -> u       (LATIN SMALL LETTER U WITH RING ABOVE)
+    { "\xC5\xB0", 2, "U",         1 }, // U+0170 -> U       (LATIN CAPITAL LETTER U WITH DOUBLE ACUTE)
+    { "\xC5\xB1", 2, "u",         1 }, // U+0171 -> u       (LATIN SMALL LETTER U WITH DOUBLE ACUTE)
+    { "\xC5\xB2", 2, "U",         1 }, // U+0172 -> U       (LATIN CAPITAL LETTER U WITH OGONEK)
+    { "\xC5\xB3", 2, "u",         1 }, // U+0173 -> u       (LATIN SMALL LETTER U WITH OGONEK)
+    { "\xC5\xB4", 2, "W",         1 }, // U+0174 -> W       (LATIN CAPITAL LETTER W WITH CIRCUMFLEX)
+    { "\xC5\xB5", 2, "w",         1 }, // U+0175 -> w       (LATIN SMALL LETTER W WITH CIRCUMFLEX)
+    { "\xC5\xB6", 2, "Y",         1 }, // U+0176 -> Y       (LATIN CAPITAL LETTER Y WITH CIRCUMFLEX)
+    { "\xC5\xB7", 2, "y",         1 }, // U+0177 -> y       (LATIN SMALL LETTER Y WITH CIRCUMFLEX)
+    { "\xC5\xB8", 2, "Y",         1 }, // U+0178 -> Y       (LATIN CAPITAL LETTER Y WITH DIAERESIS)
+    { "\xC5\xB9", 2, "Z",         1 }, // U+0179 -> Z       (LATIN CAPITAL LETTER Z WITH ACUTE)
+    { "\xC5\xBA", 2, "z",         1 }, // U+017A -> z       (LATIN SMALL LETTER Z WITH ACUTE)
+    { "\xC5\xBB", 2, "Z",         1 }, // U+017B -> Z       (LATIN CAPITAL LETTER Z WITH DOT ABOVE)
+    { "\xC5\xBC", 2, "z",         1 }, // U+017C -> z       (LATIN SMALL LETTER Z WITH DOT ABOVE)
+    { "\xC5\xBD", 2, "Z",         1 }, // U+017D -> Z       (LATIN CAPITAL LETTER Z WITH CARON)
+    { "\xC5\xBE", 2, "z",         1 }, // U+017E -> z       (LATIN SMALL LETTER Z WITH CARON)
+    { "\xC5\xBF", 2, "?",         1 }, // U+017F -> ?       (LATIN SMALL LETTER LONG S
+
     // U+2000 ... U+206F (General Punctuation)
     { "\xE2\x80\x90", 3, "-",         1 }, // U+2010 -> -       (HYPHEN)
     { "\xE2\x80\x91", 3, "-",         1 }, // U+2011 -> -       (NON-BREAKING HYPHEN)
@@ -3466,17 +3604,12 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
   // start with no replacement string
   *dst = NULL;
 
-  // check for the UTFlength
-  if(utf8len == 3)
+  // perform a binary search in the lookup table
+  if((rep = bsearch(&key, utf8map, sizeof(utf8map) / sizeof(utf8map[0]), sizeof(utf8map[0]), compareUTF8Replacements)) != NULL)
   {
-    struct UTF8Replacement key = { (char *)src, utf8len, NULL, 0 };
-    struct UTF8Replacement *rep;
-
-    if((rep = bsearch(&key, utf8map, sizeof(utf8map) / sizeof(utf8map[0]), sizeof(utf8map[0]), compareUTF8Replacements)) != NULL)
-    {
-      *dst = rep->rep;
-      len = rep->replen;
-    }
+    // if we found something, then copy this over to the result variables
+    *dst = rep->rep;
+    len = rep->replen;
   }
 
   RETURN(len);
