@@ -3379,7 +3379,7 @@ countCodesets(struct codesetList *csList)
 struct UTF8Replacement
 {
   const char *utf8;     // the original UTF8 string we are going to replace
-  const size_t utf8len; // the length of the utf8 string
+  const size_t utf8len; // the length of the UTF8 string
   const char *rep;      // pointer to the replacement string
   const int replen;     // the length of the replacement string (minus for signalling an UTF8 string)
 };
@@ -3401,7 +3401,7 @@ static int compareUTF8Replacements(const void *p1, const void *p2)
 static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size_t utf8len)
 {
   int len = 0;
-  struct UTF8Replacement key = { src, utf8len, NULL, 0 };
+  struct UTF8Replacement key = { (char *)src, utf8len, NULL, 0 };
   struct UTF8Replacement *rep;
 
   static struct UTF8Replacement const utf8map[] =
