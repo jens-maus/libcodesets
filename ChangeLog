@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-01  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: renamed replacement function to mapUTF8toAscii() which more
+    describes what this function does. In addition the new attribute is now
+    named CSA_MapUnknownToAscii. In addition the new function contains a first
+    experimental utf8map lookup table which we can use in future instead of
+    the long switch/case statements.
+
 2008-06-30  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: fixed the PRIME character replacement.

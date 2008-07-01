@@ -3367,7 +3367,7 @@ countCodesets(struct codesetList *csList)
 }
 
 ///
-/// getReplacementUTF8Char()
+/// mapUTF8toAscii()
 // in case some UTF8 sequences can not be converted during CodesetsUTF8ToStrA(), this
 // function is used to replace these unknown sequences with lookalike characters that
 // still make the text more readable. For more replacement see
@@ -3376,10 +3376,30 @@ countCodesets(struct codesetList *csList)
 // The conversion table in this function is partly borrowed from the awebcharset plugin
 // written by Frank Weber. See http://cvs.sunsite.dk/viewcvs.cgi/aweb/plugins/charset/awebcharset.c
 //
-static int getReplacementUTF8Char(const char **dst, const unsigned char *src, const size_t utf8len)
+static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size_t utf8len)
 {
   const char *rep = NULL;
   LONG len = 0;
+
+  static struct { const char *utf8; const size_t utf8len; const char *rep; const LONG replen; } utf8map[] =
+  {
+    // U+2000 ... U+206F (General Punctuation)
+    { "\xE2\x80\x90", 3, "-",   1 }, // U+2010 -> -    (HYPHEN)
+    { "\xE2\x80\x91", 3, "-",   1 }, // U+2011 -> -    (NON-BREAKING HYPHEN)
+    { "\xE2\x80\x92", 3, "--",  2 }, // U+2012 -> --   (FIGURE DASH)
+    { "\xE2\x80\x93", 3, "--",  2 }, // U+2013 -> --   (EN DASH)
+    { "\xE2\x80\x94", 3, "---", 3 }, // U+2014 -> ---  (EM DASH)
+    { "\xE2\x80\x95", 3, "---", 3 }, // U+2015 -> ---  (HORIZONTAL BAR)
+    { "\xE2\x80\x96", 3, "||",  2 }, // U+2016 -> ||   (DOUBLE VERTICAL LINE)
+    { "\xE2\x80\x97", 3, "_",   1 }, // U+2017 -> _    (DOUBLE LOW LINE)
+    { "\xE2\x80\x98", 3, "`",   1 }, // U+2018 -> `    (LEFT SINGLE QUOTATION MARK)
+    { "\xE2\x80\x99", 3, "'",   1 }, // U+2019 -> '    (RIGHT SINGLE QUOTATION MARK)
+    { "\xE2\x80\x9A", 3, ",",   1 }, // U+201A -> ,    (SINGLE LOW-9 QUOTATION MARK)
+    { "\xE2\x80\x9B", 3, "'",   1 }, // U+201B -> '    (SINGLE HIGH-REVERSED-9 QUOTATION MARK)
+
+    { "\xE2\x80\xB5", 3, "`",   1 }, // U+2035 -> `    (REVERSED PRIME)
+
+  };
 
   ENTER();
 
@@ -5179,7 +5199,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     unsigned char *e = (src+srcLen);
     int numConvErrors = 0;
     int *numConvErrorsPtr;
-    BOOL replaceUnknownChars;
+    BOOL mapUnknownToAscii;
     APTR pool = NULL;
     struct SignalSemaphore *sem = NULL;
 
@@ -5187,10 +5207,10 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     hook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen, 0, attrs);
     numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
-    replaceUnknownChars = (BOOL)GetTagData(CSA_ReplaceUnknown, 0, attrs);
+    mapUnknownToAscii = (BOOL)GetTagData(CSA_MapUnknownToAscii, 0, attrs);
 
     #warning "DEBUG"
-    replaceUnknownChars = TRUE;
+    mapUnknownToAscii = TRUE;
 
     // first we make sure we allocate enough memory
     // for our destination buffer
@@ -5288,9 +5308,9 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             // For convienence we, however, allow users to replace these
             // UTF8 characters with char sequences that "lookalike" the
             // original char.
-            if(replaceUnknownChars == TRUE)
+            if(mapUnknownToAscii == TRUE)
             {
-              replen = getReplacementUTF8Char(&repstr, s, lenStr);
+              replen = mapUTF8toAscii(&repstr, s, lenStr);
 
               W(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
 
