@@ -7,6 +7,13 @@ $URL$
 
 2008-07-02  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c, codesets.doc: the internal and the external replacement via
+    hooks are now handled completely independently, however, the hook will be
+    called after the internal replacement and thus can override the internal
+    replacement. Furthermore if either function returns an UTF8 sequence this
+    sequence will be passed again to these functions as long as no suitable
+    code is found in the active codeset. 10 retries will be done at most to
+    avoid endless loops.
   * codesets.c, codesets.doc: renamed the attribute CSA_MapUnknownToAscii to
     CSA_MapUnknownToASCII. Also implemented CSA_MapUnknownHook, which will call
     the specified hook function in case no internal replacement for an unknown

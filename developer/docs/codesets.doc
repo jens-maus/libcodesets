@@ -431,10 +431,11 @@ codesets.library/CodesetsEncodeB64A
 
       CSA_MapUnknownHook (struct Hook *)
         If a character of the source string can not be directly
-        mapped to the destination codeset and the internal tables
-        don't yield a suitable replacement this hook will be called
-        to let the application do the replacement itself.
-
+        mapped to the destination codeset this hook, if supplied,
+        will be called to let the application do the replacement
+        itself. If both CSA_MapUnknownToASCII and CSA_MapUnknownHook
+        are specified the hook will be called after the internal
+        replacement and thus can override any internal replacement.
 
         The hook function should be declared as:
 
@@ -459,7 +460,8 @@ codesets.library/CodesetsEncodeB64A
         replacement string. Return zero if no replacement did happen.
         Positive values will be treated as lengths of ASCII strings.
         Negative values signal replacement by another UTF8 sequence,
-        which will be evaluated by codesets.library.
+        so be prepared to be called with your own UTF8 sequence again
+        if codesets.library cannot handle it!
 
 
    RESULT
@@ -1226,9 +1228,11 @@ codesets.library/CodesetsEncodeB64A
 
       CSA_MapUnknownHook (struct Hook *)
         If a character of the source string can not be directly
-        mapped to the destination codeset and the internal tables
-        don't yield a suitable replacement this hook will be called
-        to let the application do the replacement itself.
+        mapped to the destination codeset this hook, if supplied,
+        will be called to let the application do the replacement
+        itself. If both CSA_MapUnknownToASCII and CSA_MapUnknownHook
+        are specified the hook will be called after the internal
+        replacement and thus can override any internal replacement.
 
         The hook function should be declared as:
 
@@ -1253,7 +1257,8 @@ codesets.library/CodesetsEncodeB64A
         replacement string. Return zero if no replacement did happen.
         Positive values will be treated as lengths of ASCII strings.
         Negative values signal replacement by another UTF8 sequence,
-        which will be evaluated by codesets.library.
+        so be prepared to be called with your own UTF8 sequence again
+        if codesets.library cannot handle it!
 
 
    RESULT

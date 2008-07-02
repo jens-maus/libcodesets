@@ -5161,36 +5161,35 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         // check if the char is a >7bit char
         if(c > 127)
         {
-          struct single_convert *f = NULL;
+          struct single_convert *f;
           int lenAdd = trailingBytesForUTF8[c];
           int lenStr = lenAdd+1;
+          unsigned char *src = s;
+          int tries = 10; // 10 retries at most
 
-          // search in the UTF8 conversion table of the current charset if
-          // we have a replacement character for the char sequence starting at s
-          BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)s, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
-
-          if(f != NULL)
-            d = f->code;
-          else
+          do
           {
-            // the analysed char sequence (s) is not convertable to a
-            // single visible char replacement, so we normally have to put
-            // a ? sign as a "unknown char" sign at the very position.
-            //
-            // For convienence we, however, allow users to replace these
-            // UTF8 characters with char sequences that "lookalike" the
-            // original char.
-            if(mapUnknownToASCII == TRUE)
-            {
-              replen = mapUTF8toASCII(&repstr, s, lenStr);
+            // search in the UTF8 conversion table of the current charset if
+            // we have a replacement character for the char sequence starting at s
+            BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)src, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
-              // if our internal table didn't yield a suitable replacement string
-              // we will try a hook function specified by the application
-              if(replen == 0 && mapUnknownHook != NULL)
+            if(f != NULL)
+              d = f->code;
+            else
+            {
+              // the analysed char sequence (s) is not convertable to a
+              // single visible char replacement, so we normally have to put
+              // a ? sign as a "unknown char" sign at the very position.
+              //
+              // For convienence we, however, allow users to replace these
+              // UTF8 characters with char sequences that "lookalike" the
+              // original char.
+              if(mapUnknownToASCII == TRUE)
+                replen = mapUTF8toASCII(&repstr, s, lenStr);
+
+              if(mapUnknownHook != NULL)
               {
                 struct replaceMsg rmsg;
-
-              D(DBF_ALWAYS, "trying to replace by hook");
 
                 rmsg.dst = (char **)&repstr;
                 rmsg.src = s;
@@ -5202,37 +5201,25 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
               if(replen < 0)
               {
-                // if the replacementchar function returns < 0
-                // it signals that it returns a UTF8 replacement string
-                // which we need to replace as well again
-                BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)repstr, (char *)codeset->table_sorted[m].utf8+1, -replen), f);
-
-                // check if we were able to find a correct replacement
-                if(f != NULL)
-                {
-                  D(DBF_UTF, "converted alternative UTF8 replacement char '%c' for UTF8 sequence '%s' (%ld)", d, repstr, -replen);
-
-                  d = f->code;
-                  replen = -1;
-                }
-                else
-                {
-                  W(DBF_UTF, "found no alternative UTF8 replacement for repstr '%s' (%lx) (%ld)", repstr, *repstr, -replen);
-
-                  replen = 0;
-                }
-
+                // stay in the loop as long as one replacement function delivers
+                // further UTF8 replacement sequences
+                src = (unsigned char *)repstr;
+              }
+              else if(replen == 0)
+              {
+                W(DBF_UTF, "found no alternative UTF8 replacement for repstr '%s' (%lx) (%ld)", repstr, *repstr, -replen);
                 repstr = NULL;
               }
             }
+          }
+          while(replen < 0 && --tries > 0);
 
-            if(repstr == NULL || replen == 0)
+          if(repstr == NULL || replen == 0)
+          {
+            if(replen >= 0)
             {
-              if(replen >= 0)
-              {
-                d = '?';
-                numConvErrors++;
-              }
+              d = '?';
+              numConvErrors++;
             }
           }
 
