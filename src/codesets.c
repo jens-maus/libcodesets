@@ -5168,6 +5168,9 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
           do
           {
+            // start each iteration with "no replacement found yet"
+            replen = 0;
+
             // search in the UTF8 conversion table of the current charset if
             // we have a replacement character for the char sequence starting at s
             BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)src, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
@@ -5186,7 +5189,9 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               if(mapUnknownToASCII == TRUE)
                 replen = mapUTF8toASCII(&repstr, s, lenStr);
 
-              if(mapUnknownHook != NULL)
+              // call the hook only, if the internal table yielded no suitable
+              // replacement
+              if(replen == 0 && mapUnknownHook != NULL)
               {
                 struct replaceMsg rmsg;
 

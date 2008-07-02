@@ -7,6 +7,8 @@ $URL$
 
 2008-07-02  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: calling the replacement hook will be skipped now if the
+    internal table yielded a suitable replacement.
   * codesets.c: removed that silly restriction of 10 replacement tries again.
     It is up to the developer to make sure that no endless loop happens and
     that the replacement hook handles all data correctly and as documented.
