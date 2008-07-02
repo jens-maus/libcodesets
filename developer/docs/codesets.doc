@@ -420,7 +420,7 @@ codesets.library/CodesetsEncodeB64A
         If supplied, will contain the length of the converted string
         which is returned.
 
-      CSA_MapUnknownToAscii (BOOL)
+      CSA_MapUnknownToASCII (BOOL)
         If a character of the source string can not be directly
         mapped to the destination codeset, the internal routines
         will try to replace these characters by "look like" ASCII
@@ -428,6 +428,38 @@ codesets.library/CodesetsEncodeB64A
         is mostly just usable by Latin users due to the straight
         mapping to ASCII.
         Default: FALSE
+
+      CSA_MapUnknownHook (struct Hook *)
+        If a character of the source string can not be directly
+        mapped to the destination codeset and the internal tables
+        don't yield a suitable replacement this hook will be called
+        to let the application do the replacement itself.
+
+
+        The hook function should be declared as:
+
+        ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
+                             REG(a1, void *dummy),
+                             REG(a2, struct replaceMsg *msg))
+
+        struct Hook *hook
+          Your hook
+
+        msg->dst
+          place your desired replacement string here
+
+        msg->src
+          the UTF8 sequence to be replaced, this string is READ-ONLY!
+
+        msg->utf8len
+          the length of the UTF8 sequence to be replaced, do NOT peek
+          beyond this limit!
+
+        The return value of this hook function is the length of the
+        replacement string. Return zero if no replacement did happen.
+        Positive values will be treated as lengths of ASCII strings.
+        Negative values signal replacement by another UTF8 sequence,
+        which will be evaluated by codesets.library.
 
 
    RESULT
@@ -1183,7 +1215,7 @@ codesets.library/CodesetsEncodeB64A
         number of found issues (number of not convertable chars)
         Default: NULL
 
-      CSA_MapUnknownToAscii (BOOL)
+      CSA_MapUnknownToASCII (BOOL)
         If a character of the source string can not be directly
         mapped to the destination codeset, the internal routines
         will try to replace these characters by "look like" ASCII
@@ -1191,6 +1223,38 @@ codesets.library/CodesetsEncodeB64A
         is mostly just usable by Latin users due to the straight
         mapping to ASCII.
         Default: FALSE
+
+      CSA_MapUnknownHook (struct Hook *)
+        If a character of the source string can not be directly
+        mapped to the destination codeset and the internal tables
+        don't yield a suitable replacement this hook will be called
+        to let the application do the replacement itself.
+
+        The hook function should be declared as:
+
+        ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
+                             REG(a1, void *dummy),
+                             REG(a2, struct replaceMsg *msg))
+
+        struct Hook *hook
+          Your hook
+
+        msg->dst
+          place your desired replacement string here
+
+        msg->src
+          the UTF8 sequence to be replaced, this string is READ-ONLY!
+
+        msg->utf8len
+          the length of the UTF8 sequence to be replaced, do NOT peek
+          beyond this limit!
+
+        The return value of this hook function is the length of the
+        replacement string. Return zero if no replacement did happen.
+        Positive values will be treated as lengths of ASCII strings.
+        Negative values signal replacement by another UTF8 sequence,
+        which will be evaluated by codesets.library.
+
 
    RESULT
     str - the string or NULL

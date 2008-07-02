@@ -3367,7 +3367,7 @@ countCodesets(struct codesetList *csList)
 }
 
 ///
-/// mapUTF8toAscii()
+/// mapUTF8toASCII()
 // in case some UTF8 sequences can not be converted during CodesetsUTF8ToStrA(), this
 // function is used to replace these unknown sequences with lookalike characters that
 // still make the text more readable. For more replacement see
@@ -3379,7 +3379,7 @@ countCodesets(struct codesetList *csList)
 struct UTF8Replacement
 {
   const char *utf8;     // the original UTF8 string we are going to replace
-  const size_t utf8len; // the length of the UTF8 string
+  const int utf8len;    // the length of the UTF8 string
   const char *rep;      // pointer to the replacement string
   const int replen;     // the length of the replacement string (minus for signalling an UTF8 string)
 };
@@ -3398,7 +3398,7 @@ static int compareUTF8Replacements(const void *p1, const void *p2)
   return cmp;
 }
 
-static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size_t utf8len)
+static int mapUTF8toASCII(const char **dst, const unsigned char *src, const int utf8len)
 {
   int len = 0;
   struct UTF8Replacement key = { (char *)src, utf8len, NULL, 0 };
@@ -5053,12 +5053,13 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
   ENTER();
 
-  if((src = (UTF8 *)GetTagData(CSA_Source, 0, attrs)) &&
+  if((src = (UTF8 *)GetTagData(CSA_Source, (ULONG)NULL, attrs)) != NULL &&
      (srcLen = GetTagData(CSA_SourceLen, src != NULL ? strlen((char *)src) : 0, attrs)) > 0)
   {
     struct convertMsg msg;
     struct codeset *codeset;
-    struct Hook *hook = NULL;
+    struct Hook *destHook;
+    struct Hook *mapUnknownHook;
     char buf[256];
     STRPTR destIter = NULL;
     STRPTR b = NULL;
@@ -5067,20 +5068,21 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     unsigned char *s = src;
     unsigned char *e = (src+srcLen);
     int numConvErrors = 0;
-    int *numConvErrorsPtr = NULL;
-    BOOL mapUnknownToAscii = FALSE;
+    int *numConvErrorsPtr;
+    BOOL mapUnknownToASCII;
     APTR pool = NULL;
     struct SignalSemaphore *sem = NULL;
 
     // get some more optional attributes
-    hook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
+    destHook = (struct Hook *)GetTagData(CSA_DestHook, (ULONG)NULL, attrs);
     destLen = GetTagData(CSA_DestLen, 0, attrs);
-    numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
-    mapUnknownToAscii = (BOOL)GetTagData(CSA_MapUnknownToAscii, 0, attrs);
+    numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, (ULONG)NULL, attrs);
+    mapUnknownToASCII = (BOOL)GetTagData(CSA_MapUnknownToASCII, FALSE, attrs);
+    mapUnknownHook = (struct Hook *)GetTagData(CSA_MapUnknownHook, (ULONG)NULL, attrs);
 
     // first we make sure we allocate enough memory
     // for our destination buffer
-    if(hook)
+    if(destHook != NULL)
     {
       if(destLen < 16 || destLen > sizeof(buf))
         destLen = sizeof(buf);
@@ -5093,8 +5095,8 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     {
       // in case the user wants us to dynamically generate the
       // destination buffer we do it right now
-      if(!(dest = (STRPTR)GetTagData(CSA_Dest, 0, attrs)) ||
-        GetTagData(CSA_AllocIfNeeded, TRUE, attrs))
+      if((dest = (STRPTR)GetTagData(CSA_Dest, (ULONG)NULL, attrs)) == NULL ||
+         GetTagData(CSA_AllocIfNeeded, TRUE, attrs) == TRUE)
       {
         ULONG len = 0;
 
@@ -5102,21 +5104,22 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         while(s < e)
         {
           unsigned char c = *s++;
+
           len++;
           s += trailingBytesForUTF8[c];
         }
 
-        if(!dest || (destLen < len+1))
+        if(dest == NULL || (destLen < len+1))
         {
-          if((pool = (APTR)GetTagData(CSA_Pool, 0, attrs)))
+          if((pool = (APTR)GetTagData(CSA_Pool, (ULONG)NULL, attrs)) != NULL)
           {
-            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)))
+            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, (ULONG)NULL, attrs)) != NULL)
               ObtainSemaphore(sem);
 
             // allocate the destination buffer
             dest = allocVecPooled(pool, len+1);
 
-            if(sem)
+            if(sem != NULL)
               ReleaseSemaphore(sem);
           }
           else
@@ -5125,22 +5128,25 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           destLen = len+1;
         }
 
-        if(!dest)
+        if(dest == NULL)
+        {
+          RETURN(NULL);
           return NULL;
+        }
       }
 
       destIter = dest;
     }
 
     // get the destination codeset pointer
-    if(!(codeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs)))
+    if((codeset = (struct codeset *)GetTagData(CSA_DestCodeset, (ULONG)NULL, attrs)) == NULL)
       codeset = defaultCodeset(TRUE);
 
     // now we convert the src string to the
     // destination buffer.
     for(s=src;;n++)
     {
-      if(!hook && n >= destLen-1)
+      if(destHook == NULL && n >= destLen-1)
         break;
 
       // convert until we reach the end of the
@@ -5163,7 +5169,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           // we have a replacement character for the char sequence starting at s
           BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)s, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
-          if(f)
+          if(f != NULL)
             d = f->code;
           else
           {
@@ -5174,11 +5180,25 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             // For convienence we, however, allow users to replace these
             // UTF8 characters with char sequences that "lookalike" the
             // original char.
-            if(mapUnknownToAscii == TRUE)
+            if(mapUnknownToASCII == TRUE)
             {
-              replen = mapUTF8toAscii(&repstr, s, lenStr);
+              replen = mapUTF8toASCII(&repstr, s, lenStr);
 
-              W(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
+              // if our internal table didn't yield a suitable replacement string
+              // we will try a hook function specified by the application
+              if(replen == 0 && mapUnknownHook != NULL)
+              {
+                struct replaceMsg rmsg;
+
+              D(DBF_ALWAYS, "trying to replace by hook");
+
+                rmsg.dst = (char **)&repstr;
+                rmsg.src = s;
+                rmsg.utf8len = lenStr;
+                replen = CallHookPkt(mapUnknownHook, &rmsg, NULL);
+              }
+
+              D(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
 
               if(replen < 0)
               {
@@ -5190,7 +5210,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 // check if we were able to find a correct replacement
                 if(f != NULL)
                 {
-                  W(DBF_UTF, "converted alternative UTF8 replacement char '%c' for UTF8 sequence '%s' (%ld)", d, repstr, -replen);
+                  D(DBF_UTF, "converted alternative UTF8 replacement char '%c' for UTF8 sequence '%s' (%ld)", d, repstr, -replen);
 
                   d = f->code;
                   replen = -1;
@@ -5221,7 +5241,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         else
           d = c;
 
-        if(hook)
+        if(destHook != NULL)
         {
           if(replen > 1)
           {
@@ -5236,7 +5256,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               {
                 *b = '\0';
                 msg.len = i;
-                CallHookPkt(hook, &msg, buf);
+                CallHookPkt(destHook, &msg, buf);
 
                 b  = buf;
                 *b = '\0';
@@ -5254,7 +5274,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           {
             *b = '\0';
             msg.len = i;
-            CallHookPkt(hook, &msg, buf);
+            CallHookPkt(destHook, &msg, buf);
 
             b  = buf;
             *b = '\0';
@@ -5301,12 +5321,12 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         break;
     }
 
-    if(hook)
+    if(destHook != NULL)
     {
       msg.state = CSV_End;
       msg.len   = i;
       *b        = '\0';
-      CallHookPkt(hook,&msg,buf);
+      CallHookPkt(destHook,&msg,buf);
     }
     else
       *destIter = '\0';
@@ -5319,7 +5339,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
   // put the final length of our destination buffer
   // into the destLenPtr
-  if((destLenPtr = (ULONG *)GetTagData(CSA_DestLenPtr, 0, attrs)))
+  if((destLenPtr = (ULONG *)GetTagData(CSA_DestLenPtr, (ULONG)NULL, attrs)) != NULL)
     *destLenPtr = n;
 
   RETURN(dest);
@@ -5640,9 +5660,11 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       UTF8 *utf8str;
       ULONG utf8strLen = 0;
       ULONG *destLenPtr = NULL;
-      BOOL mapUnknownToAscii = FALSE;
+      BOOL mapUnknownToASCII;
+      struct Hook *mapUnknownHook;
 
-      mapUnknownToAscii = (BOOL)GetTagData(CSA_MapUnknownToAscii, 0, attrs);
+      mapUnknownToASCII = (BOOL)GetTagData(CSA_MapUnknownToASCII, FALSE, attrs);
+      mapUnknownHook = (struct Hook *)GetTagData(CSA_MapUnknownHook, (ULONG)NULL, attrs);
 
       // if the source codeset is UTF-8 we don't have to use the UTF8Create()
       // function and can directly call the UTF8ToStr() function
@@ -5669,12 +5691,13 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       // UTF8 string
       if(utf8str && utf8strLen > 0 && dstCodeset != CodesetsBase->utf8Codeset)
       {
-        struct TagItem tags[] = { { CSA_DestCodeset,       (ULONG)dstCodeset  },
-                                  { CSA_Source,            (ULONG)utf8str     },
-                                  { CSA_SourceLen,         utf8strLen         },
-                                  { CSA_DestLenPtr,        (ULONG)&dstLen     },
-                                  { CSA_MapUnknownToAscii, mapUnknownToAscii  },
-                                  { TAG_DONE,              0                  } };
+        struct TagItem tags[] = { { CSA_DestCodeset,       (ULONG)dstCodeset     },
+                                  { CSA_Source,            (ULONG)utf8str        },
+                                  { CSA_SourceLen,         utf8strLen            },
+                                  { CSA_DestLenPtr,        (ULONG)&dstLen        },
+                                  { CSA_MapUnknownToASCII, mapUnknownToASCII     },
+                                  { CSA_MapUnknownHook,    (ULONG)mapUnknownHook },
+                                  { TAG_DONE,              0                     } };
 
         dstStr = CodesetsUTF8ToStrA((struct TagItem *)&tags[0]);
 
