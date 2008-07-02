@@ -5169,6 +5169,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           do
           {
             // start each iteration with "no replacement found yet"
+            repstr = NULL;
             replen = 0;
 
             // search in the UTF8 conversion table of the current charset if
@@ -5176,7 +5177,12 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)src, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
 
             if(f != NULL)
+            {
               d = f->code;
+              replen = -1;
+
+              break;
+            }
             else
             {
               // the analysed char sequence (s) is not convertable to a
@@ -5184,7 +5190,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               // a ? sign as a "unknown char" sign at the very position.
               //
               // For convienence we, however, allow users to replace these
-              // UTF8 characters with char sequences that "lookalike" the
+              // UTF8 characters with char sequences that "looklike" the
               // original char.
               if(mapUnknownToASCII == TRUE)
                 replen = mapUTF8toASCII(&repstr, s, lenStr);
@@ -5201,19 +5207,21 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 replen = CallHookPkt(mapUnknownHook, &rmsg, NULL);
               }
 
-              D(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
-
               if(replen < 0)
               {
+                D(DBF_UTF, "got UTF8 replacement (%ld)", replen);
+
                 // stay in the loop as long as one replacement function delivers
                 // further UTF8 replacement sequences
                 src = (unsigned char *)repstr;
               }
               else if(replen == 0)
               {
-                W(DBF_UTF, "found no alternative UTF8 replacement for repstr '%s' (%lx) (%ld)", repstr, *repstr, -replen);
+                D(DBF_UTF, "found no ASCII replacement for UTF8 string (%ld)", replen);
                 repstr = NULL;
               }
+              else
+                D(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
             }
           }
           while(replen < 0);
