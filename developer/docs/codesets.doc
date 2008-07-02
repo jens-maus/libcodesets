@@ -420,6 +420,15 @@ codesets.library/CodesetsEncodeB64A
         If supplied, will contain the length of the converted string
         which is returned.
 
+      CSA_MapUnknownToAscii (BOOL)
+        If a character of the source string can not be directly
+        mapped to the destination codeset, the internal routines
+        will try to replace these characters by "look like" ASCII
+        character sequences. Please note that this functionality
+        is mostly just usable by Latin users due to the straight
+        mapping to ASCII.
+        Default: FALSE
+
 
    RESULT
     either a pointer to the generated destination string or NULL
@@ -1173,6 +1182,15 @@ codesets.library/CodesetsEncodeB64A
         Pointer to an integer variable which will be filled with the
         number of found issues (number of not convertable chars)
         Default: NULL
+
+      CSA_MapUnknownToAscii (BOOL)
+        If a character of the source string can not be directly
+        mapped to the destination codeset, the internal routines
+        will try to replace these characters by "look like" ASCII
+        character sequences. Please note that this functionality
+        is mostly just usable by Latin users due to the straight
+        mapping to ASCII.
+        Default: FALSE
 
    RESULT
     str - the string or NULL

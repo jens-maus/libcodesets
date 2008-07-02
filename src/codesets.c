@@ -3463,7 +3463,7 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
     { "\xC4\xB5", 2, "j",         1 }, // U+0135 -> j       (LATIN SMALL LETTER J WITH CIRCUMFLEX)
     { "\xC4\xB6", 2, "K",         1 }, // U+0136 -> K       (LATIN CAPITAL LETTER K WITH CEDILLA)
     { "\xC4\xB7", 2, "k",         1 }, // U+0137 -> k       (LATIN SMALL LETTER K WITH CEDILLA)
-    { "\xC4\xB8", 2, "?",         1 }, // U+0138 -> ?       (LATIN SMALL LETTER KRA)
+    { "\xC4\xB8", 2, "k",         1 }, // U+0138 -> k       (LATIN SMALL LETTER KRA)
     { "\xC4\xB9", 2, "L",         1 }, // U+0139 -> L       (LATIN CAPITAL LETTER L WITH ACUTE)
     { "\xC4\xBA", 2, "l",         1 }, // U+013A -> l       (LATIN SMALL LETTER L WITH ACUTE)
     { "\xC4\xBB", 2, "L",         1 }, // U+013B -> L       (LATIN CAPITAL LETTER L WITH CEDILLA)
@@ -3534,7 +3534,7 @@ static int mapUTF8toAscii(const char **dst, const unsigned char *src, const size
     { "\xC5\xBC", 2, "z",         1 }, // U+017C -> z       (LATIN SMALL LETTER Z WITH DOT ABOVE)
     { "\xC5\xBD", 2, "Z",         1 }, // U+017D -> Z       (LATIN CAPITAL LETTER Z WITH CARON)
     { "\xC5\xBE", 2, "z",         1 }, // U+017E -> z       (LATIN SMALL LETTER Z WITH CARON)
-    { "\xC5\xBF", 2, "?",         1 }, // U+017F -> ?       (LATIN SMALL LETTER LONG S
+    { "\xC5\xBF", 2, "s",         1 }, // U+017F -> s       (LATIN SMALL LETTER LONG S
 
     // U+2000 ... U+206F (General Punctuation)
     { "\xE2\x80\x90", 3, "-",         1 }, // U+2010 -> -       (HYPHEN)
@@ -5058,17 +5058,17 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
   {
     struct convertMsg msg;
     struct codeset *codeset;
-    struct Hook *hook;
+    struct Hook *hook = NULL;
     char buf[256];
     STRPTR destIter = NULL;
     STRPTR b = NULL;
-    ULONG destLen;
+    ULONG destLen = 0;
     int i = 0;
     unsigned char *s = src;
     unsigned char *e = (src+srcLen);
     int numConvErrors = 0;
-    int *numConvErrorsPtr;
-    BOOL mapUnknownToAscii;
+    int *numConvErrorsPtr = NULL;
+    BOOL mapUnknownToAscii = FALSE;
     APTR pool = NULL;
     struct SignalSemaphore *sem = NULL;
 
@@ -5077,9 +5077,6 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     destLen = GetTagData(CSA_DestLen, 0, attrs);
     numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
     mapUnknownToAscii = (BOOL)GetTagData(CSA_MapUnknownToAscii, 0, attrs);
-
-    #warning "DEBUG"
-    mapUnknownToAscii = TRUE;
 
     // first we make sure we allocate enough memory
     // for our destination buffer
@@ -5607,9 +5604,9 @@ STRPTR LIBFUNC
 CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
 {
 #endif
-  STRPTR srcStr;
+  STRPTR srcStr = NULL;
   STRPTR dstStr = NULL;
-  ULONG srcLen;
+  ULONG srcLen = 0;
   ULONG dstLen = 0;
 
   ENTER();
@@ -5642,7 +5639,10 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       BOOL strCreate = FALSE;
       UTF8 *utf8str;
       ULONG utf8strLen = 0;
-      ULONG *destLenPtr;
+      ULONG *destLenPtr = NULL;
+      BOOL mapUnknownToAscii = FALSE;
+
+      mapUnknownToAscii = (BOOL)GetTagData(CSA_MapUnknownToAscii, 0, attrs);
 
       // if the source codeset is UTF-8 we don't have to use the UTF8Create()
       // function and can directly call the UTF8ToStr() function
@@ -5669,11 +5669,12 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       // UTF8 string
       if(utf8str && utf8strLen > 0 && dstCodeset != CodesetsBase->utf8Codeset)
       {
-        struct TagItem tags[] = { { CSA_DestCodeset, (ULONG)dstCodeset  },
-                                  { CSA_Source,      (ULONG)utf8str     },
-                                  { CSA_SourceLen,   utf8strLen         },
-                                  { CSA_DestLenPtr,  (ULONG)&dstLen     },
-                                  { TAG_DONE,        0                  } };
+        struct TagItem tags[] = { { CSA_DestCodeset,       (ULONG)dstCodeset  },
+                                  { CSA_Source,            (ULONG)utf8str     },
+                                  { CSA_SourceLen,         utf8strLen         },
+                                  { CSA_DestLenPtr,        (ULONG)&dstLen     },
+                                  { CSA_MapUnknownToAscii, mapUnknownToAscii  },
+                                  { TAG_DONE,              0                  } };
 
         dstStr = CodesetsUTF8ToStrA((struct TagItem *)&tags[0]);
 

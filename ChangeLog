@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-02  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c, codesets.doc: added the new CSA_MapUnknownToAscii attribute to
+    our autodocs and added its use in the CodesetsConvertStrA() function
+    as well.
+
 2008-07-01  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: added the Latin Extended-A section to the lookup table.
