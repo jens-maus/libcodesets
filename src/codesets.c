@@ -5165,7 +5165,6 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
           int lenAdd = trailingBytesForUTF8[c];
           int lenStr = lenAdd+1;
           unsigned char *src = s;
-          int tries = 10; // 10 retries at most
 
           do
           {
@@ -5212,7 +5211,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               }
             }
           }
-          while(replen < 0 && --tries > 0);
+          while(replen < 0);
 
           if(repstr == NULL || replen == 0)
           {
