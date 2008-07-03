@@ -7,6 +7,7 @@ $URL$
 
 2008-07-03  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: fixed some copy'n'paste bugs in the lookup table.
   * codesets.c: in case one of the replacement functions returned an UTF8
     sequence the wrong string was used in the next loop, causing an endless
     loop.
