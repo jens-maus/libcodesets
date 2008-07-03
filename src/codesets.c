@@ -5193,7 +5193,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               // UTF8 characters with char sequences that "looklike" the
               // original char.
               if(mapUnknownToASCII == TRUE)
-                replen = mapUTF8toASCII(&repstr, s, lenStr);
+                replen = mapUTF8toASCII(&repstr, src, lenStr);
 
               // call the hook only, if the internal table yielded no suitable
               // replacement
@@ -5202,7 +5202,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 struct replaceMsg rmsg;
 
                 rmsg.dst = (char **)&repstr;
-                rmsg.src = s;
+                rmsg.src = src;
                 rmsg.utf8len = lenStr;
                 replen = CallHookPkt(mapUnknownHook, &rmsg, NULL);
               }

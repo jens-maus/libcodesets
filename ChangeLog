@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-03  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: in case one of the replacement functions returned an UTF8
+    sequence the wrong string was used in the next loop, causing an endless
+    loop.
+
 2008-07-03  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: fixed a bug in the newly reworked replacement function which
