@@ -203,9 +203,9 @@ enum
 //  < 0 signals an UTF8 replacement of negated length
 struct replaceMsg
 {
-  char **dst;                    // place the replace string here
-  unsigned char *src;            // the string to be replaced
-  int utf8len;                   // length of the string to be replaced
+  char **dst;          // place the replace string here
+  unsigned char *src;  // the string to be replaced
+  int utf8len;         // length of the string to be replaced
 };
 
 /***********************************************************************/

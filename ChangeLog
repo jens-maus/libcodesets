@@ -14,6 +14,8 @@ $URL$
 
 2008-07-03  Jens Langner <Jens.Langner@light-speed.de>
 
+  * codesets.c: added official ISO replacements for the currency symbols in
+    case the CSA_MapUnknownToASCII attribute is used.
   * codesets.c: fixed a bug in the newly reworked replacement function which
     didn't work as expected and always replace unknown chars with '?' instead
     of replacing it with the looklike char sequence.
