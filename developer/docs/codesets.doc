@@ -420,22 +420,30 @@ codesets.library/CodesetsEncodeB64A
         If supplied, will contain the length of the converted string
         which is returned.
 
-      CSA_MapUnknownToASCII (BOOL)
-        If a character of the source string can not be directly
-        mapped to the destination codeset, the internal routines
-        will try to replace these characters by "look like" ASCII
-        character sequences. Please note that this functionality
-        is mostly just usable by Latin users due to the straight
-        mapping to ASCII.
+      CSA_MapForeignToASCII (BOOL)
+        If a character of the source string cannot be directly mapped
+        to the destination codeset a "?" character will normally be used
+        to signal this case. If this attribute is set, an internal
+        replacement table will be used which tries to replace these
+        "foreign" characters by "looklike" ASCII character sequences.
+        Please note, that this functionality is mostly just usable by
+        Latin users due to the straight mapping to ASCII (7bit).
         Default: FALSE
 
-      CSA_MapUnknownHook (struct Hook *)
-        If a character of the source string can not be directly
-        mapped to the destination codeset this hook, if supplied,
-        will be called to let the application do the replacement
-        itself. If both CSA_MapUnknownToASCII and CSA_MapUnknownHook
-        are specified the hook will be called after the internal
-        replacement and thus can override any internal replacement.
+      CSA_MapForeignHook (struct Hook *)
+        If a character of the source string cannot be directly mapped
+        to the destination codeset a "?" character will normally be used
+        to signal this case. By using this attribute, a hook can be
+        supplied which is called for every such foreign character.
+        Within this hook the UTF8 sequence is supplied which cannot be
+        directly mapped to the destination codeset. During the execution
+        of the hook a replacement string might be specified, which in turn
+        will be used by the internals of codesets.library to map this
+        "foreign" char to a difference character or UTF8 sequence.
+
+        If both, CSA_MapForeignToASCII and CSA_MapForeignHook, are
+        specified the hook will only be executed in case the internal
+        routines don't supply an own mapping for the foreign UTF8 sequence.
 
         The hook function should be declared as:
 
@@ -452,16 +460,17 @@ codesets.library/CodesetsEncodeB64A
         msg->src
           the UTF8 sequence to be replaced, this string is READ-ONLY!
 
-        msg->utf8len
+        msg->srclen
           the length of the UTF8 sequence to be replaced, do NOT peek
-          beyond this limit!
+          beyond this limit.
 
-        The return value of this hook function is the length of the
-        replacement string. Return zero if no replacement did happen.
-        Positive values will be treated as lengths of ASCII strings.
-        Negative values signal replacement by another UTF8 sequence,
-        so be prepared to be called with your own UTF8 sequence again
-        if codesets.library cannot handle it!
+        The return value of this hook function is the length of the replacement
+        string. Return zero if no replacement did happen. Positive values will
+        be treated as lengths of ASCII strings. Negative values signals a
+        replacement by another UTF8 sequence. Please note, that in case you
+        supply a UTF8 sequence as a replacement for the "foreign" UTF8, your
+        hook might be called again if this sequence can still not be mapped to
+        the destination codesets, thus is again a "foreign" sequence.
 
 
    RESULT
@@ -1217,22 +1226,30 @@ codesets.library/CodesetsEncodeB64A
         number of found issues (number of not convertable chars)
         Default: NULL
 
-      CSA_MapUnknownToASCII (BOOL)
-        If a character of the source string can not be directly
-        mapped to the destination codeset, the internal routines
-        will try to replace these characters by "look like" ASCII
-        character sequences. Please note that this functionality
-        is mostly just usable by Latin users due to the straight
-        mapping to ASCII.
+      CSA_MapForeignToASCII (BOOL)
+        If a character of the source string cannot be directly mapped
+        to the destination codeset a "?" character will normally be used
+        to signal this case. If this attribute is set, an internal
+        replacement table will be used which tries to replace these
+        "foreign" characters by "looklike" ASCII character sequences.
+        Please note, that this functionality is mostly just usable by
+        Latin users due to the straight mapping to ASCII (7bit).
         Default: FALSE
 
-      CSA_MapUnknownHook (struct Hook *)
-        If a character of the source string can not be directly
-        mapped to the destination codeset this hook, if supplied,
-        will be called to let the application do the replacement
-        itself. If both CSA_MapUnknownToASCII and CSA_MapUnknownHook
-        are specified the hook will be called after the internal
-        replacement and thus can override any internal replacement.
+      CSA_MapForeignHook (struct Hook *)
+        If a character of the source string cannot be directly mapped
+        to the destination codeset a "?" character will normally be used
+        to signal this case. By using this attribute, a hook can be
+        supplied which is called for every such foreign character.
+        Within this hook the UTF8 sequence is supplied which cannot be
+        directly mapped to the destination codeset. During the execution
+        of the hook a replacement string might be specified, which in turn
+        will be used by the internals of codesets.library to map this
+        "foreign" char to a difference character or UTF8 sequence.
+
+        If both, CSA_MapForeignToASCII and CSA_MapForeignHook, are
+        specified the hook will only be executed in case the internal
+        routines don't supply an own mapping for the foreign UTF8 sequence.
 
         The hook function should be declared as:
 
@@ -1249,16 +1266,17 @@ codesets.library/CodesetsEncodeB64A
         msg->src
           the UTF8 sequence to be replaced, this string is READ-ONLY!
 
-        msg->utf8len
+        msg->srclen
           the length of the UTF8 sequence to be replaced, do NOT peek
-          beyond this limit!
+          beyond this limit.
 
-        The return value of this hook function is the length of the
-        replacement string. Return zero if no replacement did happen.
-        Positive values will be treated as lengths of ASCII strings.
-        Negative values signal replacement by another UTF8 sequence,
-        so be prepared to be called with your own UTF8 sequence again
-        if codesets.library cannot handle it!
+        The return value of this hook function is the length of the replacement
+        string. Return zero if no replacement did happen. Positive values will
+        be treated as lengths of ASCII strings. Negative values signals a
+        replacement by another UTF8 sequence. Please note, that in case you
+        supply a UTF8 sequence as a replacement for the "foreign" UTF8, your
+        hook might be called again if this sequence can still not be mapped to
+        the destination codesets, thus is again a "foreign" sequence.
 
 
    RESULT

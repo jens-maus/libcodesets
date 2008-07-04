@@ -163,8 +163,8 @@ enum
 #define CSA_B64Unix             CODESETSLIB_TAG(26)
 #define CSA_B64FLG_NtCheckErr   CODESETSLIB_TAG(27)
 
-#define CSA_MapUnknownToASCII   CODESETSLIB_TAG(28)
-#define CSA_MapUnknownHook      CODESETSLIB_TAG(29)
+#define CSA_MapForeignToASCII   CODESETSLIB_TAG(28)
+#define CSA_MapForeignHook      CODESETSLIB_TAG(29)
 
 /***********************************************************************/
 /*
@@ -196,7 +196,7 @@ enum
 
 /***********************************************************************/
 
-// the message passed to a CSA_MapUnknownHook hook
+// the message passed to a CSA_MapForeignHook hook
 // the hook function must return the length of the replacement string
 // == 0 signals 'no replacement found'
 //  > 0 will use the supplied string directly
@@ -204,8 +204,8 @@ enum
 struct replaceMsg
 {
   char **dst;          // place the replace string here
-  unsigned char *src;  // the string to be replaced
-  int utf8len;         // length of the string to be replaced
+  unsigned char *src;  // the source UTF8 string
+  int srclen;          // length of the UTF8 sequence
 };
 
 /***********************************************************************/

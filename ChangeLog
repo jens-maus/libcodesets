@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-04  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: renamed the new mapping functionality to the more untuitive
+    "CSA_MapForeignToASCII" term.
+
 2008-07-03  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: fixed some copy'n'paste bugs in the lookup table.
