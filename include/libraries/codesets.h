@@ -196,16 +196,18 @@ enum
 
 /***********************************************************************/
 
-// the message passed to a CSA_MapForeignHook hook
-// the hook function must return the length of the replacement string
-// == 0 signals 'no replacement found'
-//  > 0 will use the supplied string directly
-//  < 0 signals an UTF8 replacement of negated length
+/*
+** the message passed to a CSA_MapForeignHook hook
+** the hook function must return the length of the replacement string
+** == 0 signals 'no replacement found'
+**  > 0 will use the supplied string directly
+**  < 0 signals an UTF8 replacement of negated length
+*/
 struct replaceMsg
 {
-  char **dst;          // place the replace string here
-  unsigned char *src;  // the source UTF8 string
-  int srclen;          // length of the UTF8 sequence
+  char **dst;          /* place the replace string here */
+  unsigned char *src;  /* the source UTF8 string */
+  int srclen;          /* length of the UTF8 sequence */
 };
 
 /***********************************************************************/
