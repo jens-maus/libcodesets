@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-05  Jens Langner <Jens.Langner@light-speed.de>
+
+  * developer/examples: replaced the multiple makefiles by a single
+    multiplatform makefile.
+
 2008-07-04  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: renamed the new mapping functionality to the more untuitive
