@@ -420,7 +420,7 @@ codesets.library/CodesetsEncodeB64A
         If supplied, will contain the length of the converted string
         which is returned.
 
-      CSA_MapForeignToASCII (BOOL)
+      CSA_MapForeignChars (BOOL)
         If a character of the source string cannot be directly mapped
         to the destination codeset a "?" character will normally be used
         to signal this case. If this attribute is set, an internal
@@ -430,7 +430,7 @@ codesets.library/CodesetsEncodeB64A
         Latin users due to the straight mapping to ASCII (7bit).
         Default: FALSE
 
-      CSA_MapForeignHook (struct Hook *)
+      CSA_MapForeignCharsHook (struct Hook *)
         If a character of the source string cannot be directly mapped
         to the destination codeset a "?" character will normally be used
         to signal this case. By using this attribute, a hook can be
@@ -441,7 +441,7 @@ codesets.library/CodesetsEncodeB64A
         will be used by the internals of codesets.library to map this
         "foreign" char to a difference character or UTF8 sequence.
 
-        If both, CSA_MapForeignToASCII and CSA_MapForeignHook, are
+        If both, CSA_MapForeignChars and CSA_MapForeignCharsHook, are
         specified the hook will only be executed in case the internal
         routines don't supply an own mapping for the foreign UTF8 sequence.
 
@@ -1226,7 +1226,7 @@ codesets.library/CodesetsEncodeB64A
         number of found issues (number of not convertable chars)
         Default: NULL
 
-      CSA_MapForeignToASCII (BOOL)
+      CSA_MapForeignChars (BOOL)
         If a character of the source string cannot be directly mapped
         to the destination codeset a "?" character will normally be used
         to signal this case. If this attribute is set, an internal
@@ -1236,7 +1236,7 @@ codesets.library/CodesetsEncodeB64A
         Latin users due to the straight mapping to ASCII (7bit).
         Default: FALSE
 
-      CSA_MapForeignHook (struct Hook *)
+      CSA_MapForeignCharsHook (struct Hook *)
         If a character of the source string cannot be directly mapped
         to the destination codeset a "?" character will normally be used
         to signal this case. By using this attribute, a hook can be
@@ -1247,7 +1247,7 @@ codesets.library/CodesetsEncodeB64A
         will be used by the internals of codesets.library to map this
         "foreign" char to a difference character or UTF8 sequence.
 
-        If both, CSA_MapForeignToASCII and CSA_MapForeignHook, are
+        If both, CSA_MapForeignChars and CSA_MapForeignCharsHook, are
         specified the hook will only be executed in case the internal
         routines don't supply an own mapping for the foreign UTF8 sequence.
 
