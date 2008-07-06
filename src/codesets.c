@@ -5710,13 +5710,13 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
       // UTF8 string
       if(utf8str && utf8strLen > 0 && dstCodeset != CodesetsBase->utf8Codeset)
       {
-        struct TagItem tags[] = { { CSA_DestCodeset,          (ULONG)dstCodeset     },
-                                  { CSA_Source,               (ULONG)utf8str        },
-                                  { CSA_SourceLen,            utf8strLen            },
-                                  { CSA_DestLenPtr,           (ULONG)&dstLen        },
-                                  { CSA_MapForeignChars,      mapForeignChars       },
-                                  { CSA_MapForeignCharsHook,  (ULONG)mapForeignHook },
-                                  { TAG_DONE,                 0                     } };
+        struct TagItem tags[] = { { CSA_DestCodeset,          (ULONG)dstCodeset          },
+                                  { CSA_Source,               (ULONG)utf8str             },
+                                  { CSA_SourceLen,            utf8strLen                 },
+                                  { CSA_DestLenPtr,           (ULONG)&dstLen             },
+                                  { CSA_MapForeignChars,      mapForeignChars            },
+                                  { CSA_MapForeignCharsHook,  (ULONG)mapForeignCharsHook },
+                                  { TAG_DONE,                 0                          } };
 
         dstStr = CodesetsUTF8ToStrA((struct TagItem *)&tags[0]);
 
