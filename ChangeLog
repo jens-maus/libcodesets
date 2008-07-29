@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-07-29  Jens Langner <Jens.Langner@light-speed.de>
+
+  * developer/docs/codesets.doc: fixed the documentation on the Hook uses
+    as an incorrect hook prototype was used throughout the examples.
+
 #### 6.6 RELEASE #########################################################
 
 2008-07-06  Jens Langner <Jens.Langner@light-speed.de>

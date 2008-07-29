@@ -448,8 +448,8 @@ codesets.library/CodesetsEncodeB64A
         The hook function should be declared as:
 
         ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
-                             REG(a1, void *dummy),
-                             REG(a2, struct replaceMsg *msg))
+                             REG(a2, struct replaceMsg *msg),
+                             REG(a1, void *dummy))
 
         struct Hook *hook
           Your hook
@@ -937,8 +937,8 @@ codesets.library/CodesetsEncodeB64A
         The hook function should be declared as:
 
         ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
-                             REG(a1, STRPTR buf),
-                             REG(a2, struct convertMsg *msg))
+                             REG(a2, struct convertMsg *msg),
+                             REG(a1, STRPTR buf))
 
         struct Hook *hook
           Your hook
@@ -1090,8 +1090,8 @@ codesets.library/CodesetsEncodeB64A
     -- cut here --
     static ULONG ASM SAVEDS
     destFun(REG(a0, struct Hook *hook),
-            REG(a1, STRPTR buf),
-            REG(a2, struct convertMsg *msg))
+            REG(a2, struct convertMsg *msg),
+            REG(a1, STRPTR buf))
     {
       printf("[%3ld] [%s]\n",msg->len,buf);
       if(msg->state == CSV_End)
@@ -1168,8 +1168,8 @@ codesets.library/CodesetsEncodeB64A
         The hook function should be declared as:
 
         ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
-                             REG(a1, STRPTR buf),
-                             REG(a2, struct convertMsg *msg))
+                             REG(a2, struct convertMsg *msg),
+                             REG(a1, STRPTR buf))
 
         struct Hook *hook
           Your hook
@@ -1254,8 +1254,8 @@ codesets.library/CodesetsEncodeB64A
         The hook function should be declared as:
 
         ULONG ASM SAVEDS fun(REG(a0, struct Hook *hook),
-                             REG(a1, void *dummy),
-                             REG(a2, struct replaceMsg *msg))
+                             REG(a2, struct replaceMsg *msg),
+                             REG(a1, void *dummy))
 
         struct Hook *hook
           Your hook
