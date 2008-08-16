@@ -20,7 +20,7 @@
  from the source code of SimpleMail (http://www.sf.net/projects/simplemail)
  with full permissions by its authors.
 
- $Id: DetectCodeset.c 27196 2007-11-12 22:09:24Z mazze $
+ $Id$
 
 ***************************************************************************/
 
