@@ -30,7 +30,8 @@ allocVecPooled(APTR pool,ULONG size)
 {
   ULONG *mem;
 
-  if((mem = AllocPooled(pool,size += sizeof(ULONG))))
+  size += sizeof(ULONG);
+  if((mem = AllocPooled(pool, size)))
     *mem++ = size;
 
   return mem;
@@ -56,7 +57,7 @@ reallocVecPooled(APTR pool, APTR mem, ULONG oldSize, ULONG newSize)
 
   if((newMem = allocVecPooled(pool, newSize)) != NULL)
   {
-    memcpy(newMem, mem, oldSize);
+    memcpy(newMem, mem, (oldSize < newSize) ? oldSize : newSize);
 
     freeVecPooled(pool, mem);
   }
