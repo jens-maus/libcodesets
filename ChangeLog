@@ -11,6 +11,7 @@ $URL$
    allocation is smaller than the old one.
  * codesets.c: added missing RETURN() macro call.
  * codesets.c: added more missing macro calls and cleaned up some code passages.
+ * init.c: replaced MEMF_ANY by MEMF_SHARED for OS4.
 
 2008-08-16  Staf Verhaegen <staf.verhaegen@skynet.be>
 

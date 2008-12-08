@@ -63,6 +63,15 @@ struct LocaleBase *LocaleBase = NULL;
 struct Library *__UtilityBase = NULL; // required by clib2 & libnix
 #endif
 
+// define memory flags not existing on older platforms
+#ifndef MEMF_SHARED
+#if defined(__MORPHOS__)
+#define MEMF_SHARED MEMF_ANY
+#else
+#define MEMF_SHARED MEMF_PUBLIC
+#endif
+#endif
+
 /****************************************************************************/
 
 ULONG
@@ -361,7 +370,7 @@ initBase(struct LibraryHeader *lib)
         GETINTERFACE(IDiskfont, DiskfontBase))
       {
       #endif
-        if((lib->pool = CreatePool(MEMF_ANY, 4096, 512)))
+        if((lib->pool = CreatePool(MEMF_SHARED, 4096, 512)))
         {
           if(codesetsInit(&lib->codesets))
           {
