@@ -9,6 +9,7 @@ $URL$
 
  * utils.c: added a size check to reallocVecPooled() just in case the new
    allocation is smaller than the old one.
+ * codesets.c: added missing RETURN() macro call.
 
 2008-08-16  Staf Verhaegen <staf.verhaegen@skynet.be>
 

@@ -5320,8 +5320,11 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
             else
               dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
 
-            if(!dest)
+            if(dest == NULL)
+            {
+              RETURN(NULL);
               return NULL;
+            }
 
             destIter = dest+destPos;
             memcpy(destIter, repstr, replen);
