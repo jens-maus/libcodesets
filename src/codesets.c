@@ -3164,19 +3164,22 @@ static const char koi8r_data[] =
 static STRPTR
 mystrdup(const char *str)
 {
-  STRPTR newStr;
-  int len;
+  STRPTR newStr = NULL;
 
-  if(!str)
-    return NULL;
+  ENTER();
 
-  len = strlen(str);
-  if(!len)
-    return NULL;
+  if(str != NULL)
+  {
+    int len;
 
-  if((newStr = allocArbitrateVecPooled(len+1)))
-    strlcpy(newStr, str, len+1);
+    if((len = strlen(str)) > 0)
+    {
+      if((newStr = allocArbitrateVecPooled(len+1)) != NULL)
+        strlcpy(newStr, str, len+1);
+    }
+  }
 
+  RETURN(newStr);
   return newStr;
 }
 ///
@@ -3186,9 +3189,11 @@ mystrndup(const char *str1, int n)
 {
   STRPTR dest;
 
-  if((dest = allocArbitrateVecPooled(n+1)))
+  ENTER();
+
+  if((dest = allocArbitrateVecPooled(n+1)) != NULL)
   {
-    if(str1)
+    if(str1 != NULL)
       strlcpy(dest, str1, n+1);
     else
       dest[0] = '\0';
@@ -3196,6 +3201,7 @@ mystrndup(const char *str1, int n)
     dest[n] = '\0';
   }
 
+  RETURN(dest);
   return dest;
 }
 ///
@@ -3205,8 +3211,13 @@ readLine(BPTR fh, char *buf, ULONG size)
 {
   char *c;
 
+  ENTER();
+
   if((c = FGets(fh, buf, size)) == NULL)
+  {
+    RETURN(FALSE);
     return FALSE;
+  }
 
   for(; *c; c++)
   {
@@ -3217,6 +3228,7 @@ readLine(BPTR fh, char *buf, ULONG size)
     }
   }
 
+  RETURN(TRUE);
   return TRUE;
 }
 ///
@@ -3232,7 +3244,7 @@ static const char * getConfigItem(const char *buf, const char *item, int len)
     buf += len;
 
     /* skip spaces */
-    while((c = *buf) && isspace(c))
+    while((c = *buf) != '\0' && isspace(c))
       buf++;
 
     if(*buf != '=')
@@ -3244,7 +3256,7 @@ static const char * getConfigItem(const char *buf, const char *item, int len)
     buf++;
 
     /* skip spaces */
-    while((c = *buf) && isspace(c))
+    while((c = *buf) != '\0'  && isspace(c))
       buf++;
 
     RETURN(buf);
@@ -3641,23 +3653,23 @@ static int mapUTF8toASCII(const char **dst, const unsigned char *src, const int 
 
 /// defaultCodeset()
 static struct codeset *
-defaultCodeset(ULONG sem)
+defaultCodeset(BOOL useSemaphore)
 {
   char buf[256];
   struct codeset *codeset;
 
   ENTER();
 
-  if(sem)
+  if(useSemaphore == TRUE)
     ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  *buf = 0;
+  buf[0] = '\0';
   GetVar("codeset_default",buf,sizeof(buf),GVF_GLOBAL_ONLY);
 
-  if(!*buf || !(codeset = codesetsFind(&CodesetsBase->codesets,buf)))
+  if(buf[0] == '\0' || (codeset = codesetsFind(&CodesetsBase->codesets,buf)) == NULL)
     codeset = CodesetsBase->systemCodeset;
 
-  if(sem)
+  if(useSemaphore == TRUE)
     ReleaseSemaphore(&CodesetsBase->libSem);
 
   RETURN(codeset);
@@ -3708,7 +3720,7 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
       {
         const char *result;
 
-        if(*buf=='#')
+        if(buf[0]=='#')
           continue;
 
         if((result = getConfigItem(buf, ITEM_STANDARD, strlen(ITEM_STANDARD))))
@@ -5427,7 +5439,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
   from = (UTF8*)GetTagData(CSA_Source, 0, attrs);
   fromLen = GetTagData(CSA_SourceLen, from != NULL ? strlen((char *)from) : 0, attrs);
 
-  if(from && fromLen)
+  if(from != NULL && fromLen != 0)
   {
     struct convertMsg       msg;
     struct codeset *codeset;
@@ -5437,13 +5449,13 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     UBYTE                		buf[256];
     UBYTE          *src, *destPtr = NULL, *b = NULL, c;
 
-    if(!(codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)))
+    if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
       codeset = defaultCodeset(TRUE);
 
     hook    = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen,0,attrs);
 
-    if(hook)
+    if(hook != NULL)
     {
       if(destLen<16 || destLen>sizeof(buf))
         destLen = sizeof(buf);
@@ -5454,7 +5466,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     }
     else
     {
-      if(!(dest = (UTF8*)GetTagData(CSA_Dest, 0, attrs)) ||
+      if((dest = (UTF8*)GetTagData(CSA_Dest, 0, attrs)) != NULL ||
         GetTagData(CSA_AllocIfNeeded,TRUE,attrs))
       {
         ULONG len, flen;
@@ -5466,20 +5478,20 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
         while(((c = *src++) && (flen--)))
           len += codeset->table[c].utf8[0];
 
-        if(!dest || (destLen<len+1))
+        if(dest == NULL || (destLen<len+1))
         {
           APTR                   pool;
           struct SignalSemaphore *sem;
 
-          if((pool = (APTR)GetTagData(CSA_Pool, 0, attrs)))
+          if((pool = (APTR)GetTagData(CSA_Pool, 0, attrs)) != NULL)
           {
-            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)))
+            if((sem = (struct SignalSemaphore *)GetTagData(CSA_PoolSem, 0, attrs)) != NULL)
               ObtainSemaphore(sem);
 
             // allocate the destination buffer
             dest = allocVecPooled(pool,len+1);
 
-            if(sem)
+            if(sem != NULL)
               ReleaseSemaphore(sem);
           }
           else
@@ -5488,8 +5500,11 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
           destLen  = len;
         }
 
-        if(!dest)
+        if(dest == NULL)
+        {
+          RETURN(NULL);
           return NULL;
+        }
       }
 
       destPtr = (UBYTE*)dest;
@@ -5501,13 +5516,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
       for(utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
       {
-        if(!hook)
-        {
-          if(n>=destLen)
-            break;
-        }
-
-        if(hook)
+        if(hook != NULL)
         {
           *b++ = c;
           i++;
@@ -5525,6 +5534,9 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
         }
         else
         {
+          if(n>=destLen)
+            break;
+
           *destPtr++ = c;
         }
 
@@ -5532,7 +5544,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       }
     }
 
-    if(hook)
+    if(hook != NULL)
     {
       msg.state = CSV_End;
       msg.len   = i;
