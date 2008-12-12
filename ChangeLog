@@ -10,6 +10,9 @@ $URL$
  * codesets.c: massive code cleanup. Replaced all TAB characters by spaces and
    changed lots of implicit result checks to explicit ones.
  * utils.c: added the usual ENTER/RETURN/LEAVE macro calls.
+ * utils.c: the custom implementations of AllocVecPooled() and FreeVecPooled()
+   can now be enabled and disabled by single #define's. By default OS4 and
+   MorphOS will use their own kernel supplied versions.
 
 2008-12-08  Thore Böckelmann <tboeckel@gmx.de>
 

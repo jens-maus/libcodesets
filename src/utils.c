@@ -25,7 +25,7 @@
 
 /****************************************************************************/
 
-#if !defined(__amigaos4__)
+#if !defined(HAVE_ALLOCVECPOOLED)
 APTR
 allocVecPooled(APTR pool,ULONG size)
 {
@@ -44,7 +44,7 @@ allocVecPooled(APTR pool,ULONG size)
 
 /****************************************************************************/
 
-#if !defined(__amigaos4__)
+#if !defined(HAVE_FREEVECPOOLED)
 void
 freeVecPooled(APTR pool,APTR mem)
 {
