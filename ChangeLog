@@ -9,6 +9,7 @@ $URL$
 
  * codesets.c: massive code cleanup. Replaced all TAB characters by spaces and
    changed lots of implicit result checks to explicit ones.
+ * utils.c: added the usual ENTER/RETURN/LEAVE macro calls.
 
 2008-12-08  Thore Böckelmann <tboeckel@gmx.de>
 
