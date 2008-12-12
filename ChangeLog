@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-12  Thore Böckelmann <tboeckel@gmx.de>
+
+ * codesets.c: massive code cleanup. Replaced all TAB characters by spaces and
+   changed lots of implicit result checks to explicit ones.
+
 2008-12-08  Thore Böckelmann <tboeckel@gmx.de>
 
  * utils.c: added a size check to reallocVecPooled() just in case the new
