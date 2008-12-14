@@ -5352,13 +5352,13 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 ObtainSemaphore(sem);
 
               // allocate the destination buffer
-              dest = reallocVecPooled(pool, dest, destLen, destLen+replen-1);
+              dest = reallocVecPooled(pool, dest, destLen, destLen+replen);
 
               if(sem != NULL)
                 ReleaseSemaphore(sem);
             }
             else
-              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
+              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen);
 
             if(dest == NULL)
             {
@@ -5368,8 +5368,10 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
             destIter = dest+destPos;
             memcpy(destIter, repstr, replen);
-            destIter += replen;
 
+            // adjust our loop pointer and destination length
+            destIter += replen;
+            destLen += replen;
           }
           else if(replen == 1)
             *destIter++ = *repstr;
