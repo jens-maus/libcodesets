@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-16  Thore Böckelmann <tboeckel@gmx.de>
+
+  * init.c: replaced the obsolete CreatePool() and DeletePool() calls with
+    AllocSysObject() and FreeSysObject() call for the OS4 build. Also restored
+    the old MEMF_ANY memory flags for the other platforms. For OS4 MEMF_SHARED
+    will be used as before.
+
 2008-12-16  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: replaced the obsolete ExAll() usage with a proper ExamineDir()
