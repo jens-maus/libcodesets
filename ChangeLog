@@ -7,6 +7,8 @@ $URL$
 
 2008-12-16  Jens Langner <Jens.Langner@light-speed.de>
 
+  * codesets.c: replaced the obsolete ExAll() usage with a proper ExamineDir()
+    usage for the OS4 build.
   * base64.c: replaced the obsolete ExamineFH() use with ExamineObject() for
     the OS4 build.
   * codesets.c: added an internal list of well-known codeset aliases. This

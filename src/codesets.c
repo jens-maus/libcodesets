@@ -3650,7 +3650,7 @@ static int mapUTF8toASCII(const char **dst, const unsigned char *src, const int 
 }
 
 ///
-///
+/// matchCodesetAlias()
 //
 struct CodesetAliases
 {
@@ -3911,6 +3911,35 @@ codesetsScanDir(struct codesetList *csList, const char *dirPath)
 
   if(dirPath != NULL && dirPath[0] != '\0')
   {
+    #if defined(__amigaos4__)
+    APTR dirContext;
+
+    if((dirContext = ObtainDirContextTags(EX_StringNameInput, dirPath,
+                                          EX_DataFields,      EXF_NAME|EXF_TYPE,
+                                          TAG_END)) != NULL)
+    {
+      struct ExamineData *exd;
+
+      D(DBF_STARTUP, "scanning directory '%s' for codesets tables", dirPath);
+
+      while((exd = ExamineDir(dirContext)) != NULL)
+      {
+        if(EXD_IS_FILE(exd))
+        {
+          char filePath[620];
+
+          strlcpy(filePath, dirPath, sizeof(filePath));
+          AddPart(filePath, exd->Name, sizeof(filePath));
+
+          D(DBF_STARTUP, "about to read codeset table '%s'", filePath);
+
+          codesetsReadTable(csList, filePath);
+        }
+      }
+
+      ReleaseDirContext(dirContext);
+    }
+    #else
     BPTR dirLock;
 
     if((dirLock = Lock(dirPath, ACCESS_READ)))
@@ -3968,6 +3997,7 @@ codesetsScanDir(struct codesetList *csList, const char *dirPath)
 
       UnLock(dirLock);
     }
+    #endif
   }
 
   LEAVE();
