@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-16  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: added an internal list of well-known codeset aliases. This
+    alias list is used whenever CodesetsFind() is used. It allows applications
+    to supply an alias name of a codeset and see it directly matched to the
+    correct MIME name.
+
 2008-12-14  Thore Böckelmann <tboeckel@gmx.de>
 
  * codesets.c: when replacing UTF8 chars by ASCII look-alike replacements the

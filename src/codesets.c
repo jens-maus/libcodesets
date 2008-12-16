@@ -43,6 +43,7 @@
 
 #include "debug.h"
 
+
 /****************************************************************************/
 
 // data tables for statistically analyzing text and automatically
@@ -3647,6 +3648,99 @@ static int mapUTF8toASCII(const char **dst, const unsigned char *src, const int 
   RETURN(len);
   return len;
 }
+
+///
+///
+//
+struct CodesetAliases
+{
+  const char *MIMEname;   // The official and correct MIME name for a codeset
+  const char *Aliases;    // A space separated array with well-known aliases
+};
+
+const struct CodesetAliases const codesetAliases[] =
+{
+  // MIME name       Aliases
+  { "Amiga-1251",   "Ami1251 Amiga1251"  },
+  { "AmigaPL",      "AmiPL Amiga-PL"     },
+  { "ISO-8859-1",   "ISO8859-1 8859-1" },
+  { "ISO-8859-2",   "ISO8859-2 8859-2" },
+  { "ISO-8859-3",   "ISO8859-3 8859-3" },
+  { "ISO-8859-4",   "ISO8859-4 8859-4" },
+  { "ISO-8859-5",   "ISO8859-5 8859-5" },
+  { "ISO-8859-6",   "ISO8859-6 8859-6" },
+  { "ISO-8859-7",   "ISO8859-7 8859-7" },
+  { "ISO-8859-8",   "ISO8859-8 8859-8" },
+  { "ISO-8859-9",   "ISO8859-9 8859-9" },
+  { "ISO-8859-10",  "ISO8859-10 8859-10" },
+  { "ISO-8859-11",  "ISO8859-11 8859-11" },
+  { "ISO-8859-12",  "ISO8859-12 8859-12" },
+  { "ISO-8859-13",  "ISO8859-13 8859-13" },
+  { "ISO-8859-14",  "ISO8859-14 8859-14" },
+  { "ISO-8859-15",  "ISO8859-15 8859-15" },
+  { "ISO-8859-16",  "ISO8859-16 8859-16" },
+  { "ISO-8859-10",  "ISO8859-10 8859-10" },
+  { "KOI8-R",       "KOI8R" },
+  { "US-ASCII",     "ASCII" },
+  { "UTF-8",        "UTF8 UTF" },
+  { "UTF-16",       "UTF16" },
+  { "UTF-32",       "UTF32" },
+  { "windows-1250", "cp1250 windows1250" },
+  { "windows-1251", "cp1251 windows1251" },
+  { "windows-1252", "cp1252 windows1252" },
+  { "windows-1253", "cp1253 windows1253" },
+  { "windows-1254", "cp1254 windows1254" },
+  { "windows-1255", "cp1255 windows1255" },
+  { "windows-1256", "cp1256 windows1256" },
+  { "windows-1257", "cp1257 windows1257" },
+  { NULL,           NULL,                }
+};
+
+static char *matchCodesetAlias(const char *search)
+{
+  char *result = NULL;
+  size_t len = strlen(search);
+  int i;
+
+  ENTER();
+
+  for(i=0; codesetAliases[i].MIMEname != NULL; i++)
+  {
+    BOOL found = FALSE;
+
+    // search the MIMEname first
+    if(stricmp(search, codesetAliases[i].MIMEname) == 0)
+      found = TRUE;
+    else
+    {
+      const char *s = codesetAliases[i].Aliases;
+
+      // loop through space separated list of aliases
+      while(s != NULL && *s != '\0')
+      {
+        if(strnicmp(search, s, len) == 0)
+        {
+          found = TRUE;
+          break;
+        }
+
+        if((s = strpbrk(s, " ")) != NULL)
+          s++;
+      }
+    }
+
+    if(found == TRUE)
+    {
+      result = (char *)codesetAliases[i].MIMEname;
+
+      break;
+    }
+  }
+
+  RETURN(result);
+  return result;
+}
+
 ///
 
 /**************************************************************************/
@@ -3904,7 +3998,7 @@ codesetsInit(struct codesetList *csList)
     goto end;
 
   codeset->name             = mystrdup("UTF-8");
-  codeset->alt_name         = NULL;
+  codeset->alt_name         = mystrdup("UTF8");
   codeset->characterization = mystrdup("Unicode");
   codeset->read_only        = 0;
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
@@ -4255,7 +4349,7 @@ codesetsInit(struct codesetList *csList)
       goto end;
 
     codeset->name               = mystrdup("KOI8-R");
-    codeset->alt_name           = NULL;
+    codeset->alt_name           = mystrdup("KOI8R");
     codeset->characterization   = mystrdup("Russian");
     codeset->read_only          = 0;
     for(i = 0; i<256; i++)
@@ -4286,7 +4380,7 @@ codesetsInit(struct codesetList *csList)
       goto end;
 
     codeset->name             = mystrdup("AmigaPL");
-    codeset->alt_name         = NULL;
+    codeset->alt_name         = mystrdup("AmiPL");
     codeset->characterization = mystrdup("Polish (Amiga)");
     codeset->read_only        = 1;
     for(i=0; i<256; i++)
@@ -4383,11 +4477,19 @@ codesetsFind(struct codesetList *csList, const char *name)
   if(name && *name)
   {
     struct codeset *mstate, *succ;
+    char *matchedName = matchCodesetAlias(name);
+
+    if(matchedName != NULL)
+      name = matchedName;
 
     for(mstate = (struct codeset *)csList->list.mlh_Head; (succ = (struct codeset *)mstate->node.mln_Succ); mstate = succ)
     {
-      if(!stricmp(name, mstate->name) || (mstate->alt_name != NULL && !stricmp(name, mstate->alt_name)))
+      if(stricmp(name, mstate->name) == 0 ||
+        (mstate->alt_name != NULL && stricmp(name, mstate->alt_name) == 0))
+      {
+        // break out
         break;
+      }
     }
 
     if(succ)
