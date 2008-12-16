@@ -3658,7 +3658,7 @@ struct CodesetAliases
   const char *Aliases;    // A space separated array with well-known aliases
 };
 
-const struct CodesetAliases const codesetAliases[] =
+const struct CodesetAliases codesetAliases[] =
 {
   // MIME name       Aliases
   { "Amiga-1251",   "Ami1251 Amiga1251"  },
@@ -5484,13 +5484,13 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                 ObtainSemaphore(sem);
 
               // allocate the destination buffer
-              dest = reallocVecPooled(pool, dest, destLen, destLen+replen);
+              dest = reallocVecPooled(pool, dest, destLen, destLen+replen-1);
 
               if(sem != NULL)
                 ReleaseSemaphore(sem);
             }
             else
-              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen);
+              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
 
             if(dest == NULL)
             {
@@ -5503,7 +5503,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
             // adjust our loop pointer and destination length
             destIter += replen;
-            destLen += replen;
+            destLen += replen-1;
           }
           else if(replen == 1)
             *destIter++ = *repstr;
