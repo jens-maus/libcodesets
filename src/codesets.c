@@ -34,6 +34,11 @@
 #include <ctype.h>
 #include <limits.h>
 
+#ifdef __MORPHOS__
+#include <proto/keymap.h>
+#include <proto/locale.h>
+#endif
+
 #include "codesets_table.h"
 #include "convertUTF.h"
 
@@ -4082,6 +4087,46 @@ codesetsInit(struct codesetList *csList)
     }
   }
   while(TRUE);
+  #endif
+
+  #if defined(__MORPHOS__)
+  {
+    struct Library *KeymapBase = OpenLibrary("keymap.library", 51);
+
+    if (KeymapBase)
+    {
+      struct KeyMap *keymap = AskKeyMapDefault();
+      CONST_STRPTR name = GetKeyMapCodepage(keymap);
+
+      if (name) /* Legacy keymaps dont have codepage or Unicode mappings */
+      {
+        if ((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))))
+        {
+           codeset->name             = mystrdup(name);
+           codeset->alt_name 	       = NULL;
+           codeset->characterization = mystrdup(name);  // No more information available
+           codeset->read_only        = 0;
+
+           for(i = 0; i<256; i++)
+           {
+             UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+             LONG rc;
+
+             codeset->table[i].code = i;
+             codeset->table[i].ucs4 = src = ToUCS4(i, keymap);
+             rc = ConvertUCS4ToUTF8((CONST_WSTRPTR)&src, dest_ptr, 1);
+             dest_ptr[rc] = 0;
+             codeset->table[i].utf8[0] = rc;
+           }
+           memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+           qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+           ADDTAIL((struct List *)csList, (struct Node *)&codeset->node);
+        }
+      }
+
+      CloseLibrary(KeymapBase);
+    }
+  }
   #endif
 
   D(DBF_STARTUP, "loading charsets from Libs:Charsets...");

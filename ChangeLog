@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-18  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * codesets.c: query and add currently active code page to codesets if
+    running on MorphOS 2.
+
 2008-12-16  Thore Böckelmann <tboeckel@gmx.de>
 
   * init.c: replaced the obsolete CreatePool() and DeletePool() calls with
