@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-19  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c, codepages.c: separated the constant code pages from the actual
+    code to create smaller source files.
+
 2008-12-19  Jens Langner <Jens.Langner@light-speed.de>
 
   * codesets.c: minor cosmetic changes to make the new MorphOS functionality
