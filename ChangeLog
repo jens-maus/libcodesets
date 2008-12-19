@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2008-12-19  Jens Langner <Jens.Langner@light-speed.de>
+
+  * codesets.c: minor cosmetic changes to make the new MorphOS functionality
+    fit better into our current environment.
+
 2008-12-18  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
   * codesets.c: query and add currently active code page to codesets if

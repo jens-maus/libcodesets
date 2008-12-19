@@ -4081,8 +4081,10 @@ codesetsInit(struct codesetList *csList)
         *dest_ptr = 0;
         codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
       }
+
       memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
       qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+
       AddTail((struct List *)csList, (struct Node *)&codeset->node);
     }
   }
@@ -4093,21 +4095,23 @@ codesetsInit(struct codesetList *csList)
   {
     struct Library *KeymapBase = OpenLibrary("keymap.library", 51);
 
-    if (KeymapBase)
+    if(KeymapBase != NULL)
     {
       struct KeyMap *keymap = AskKeyMapDefault();
       CONST_STRPTR name = GetKeyMapCodepage(keymap);
 
-      if (name) /* Legacy keymaps dont have codepage or Unicode mappings */
+      if(name != NULL && keymap != NULL) // Legacy keymaps dont have codepage or Unicode mappings
       {
-        if ((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))))
+        D(DBF_STARTUP, "loading charset '%s' from keymap.library...", name);
+
+        if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) != NULL)
         {
            codeset->name             = mystrdup(name);
            codeset->alt_name 	       = NULL;
            codeset->characterization = mystrdup(name);  // No more information available
            codeset->read_only        = 0;
 
-           for(i = 0; i<256; i++)
+           for(i=0; i<256; i++)
            {
              UTF8  *dest_ptr = &codeset->table[i].utf8[1];
              LONG rc;
@@ -4118,10 +4122,14 @@ codesetsInit(struct codesetList *csList)
              dest_ptr[rc] = 0;
              codeset->table[i].utf8[0] = rc;
            }
+
            memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
            qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
-           ADDTAIL((struct List *)csList, (struct Node *)&codeset->node);
+
+           AddTail((struct List *)csList, (struct Node *)&codeset->node);
         }
+        else
+          goto end;
       }
 
       CloseLibrary(KeymapBase);
