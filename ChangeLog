@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.7 RELEASE #########################################################
+
+2008-12-20  Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: final 6.7 release preparations.
+
 2008-12-19  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c, codepages.c: separated the constant code pages from the actual
