@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-01-02  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * codesets.c: MorphOS code was using LocaleBase before it was initialised
+    and using library under MorphOS 2.0 or newer would always crash. Locale
+    library is now opened locally to make sure we have correct version (V51).
+    This fixes bug #2459558.
+  * base64.c: avoid using now obsolete AllocDosObject() in MorphOS.
+
 #### 6.7 RELEASE #########################################################
 
 2008-12-20  Jens Langner <Jens.Langner@light-speed.de>

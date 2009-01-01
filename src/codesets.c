@@ -999,8 +999,9 @@ codesetsInit(struct codesetList *csList)
   #if defined(__MORPHOS__)
   {
     struct Library *KeymapBase = OpenLibrary("keymap.library", 51);
+    struct Library *LocaleBase = OpenLibrary("locale.library", 51);
 
-    if(KeymapBase != NULL)
+    if(KeymapBase != NULL && LocaleBase != NULL)
     {
       struct KeyMap *keymap = AskKeyMapDefault();
       CONST_STRPTR name = GetKeyMapCodepage(keymap);
@@ -1036,9 +1037,10 @@ codesetsInit(struct codesetList *csList)
         else
           goto end;
       }
-
-      CloseLibrary(KeymapBase);
     }
+
+    CloseLibrary(LocaleBase);
+    CloseLibrary(KeymapBase);
   }
   #endif
 
