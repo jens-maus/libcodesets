@@ -147,6 +147,31 @@ openIn(STRPTR name, int64 *size)
   return file;
 }
 
+#elif defined(__MORPHOS__)
+static BPTR
+openIn(STRPTR name, ULONG * size)
+{
+  struct FileInfoBlock fib;
+  BPTR file;
+
+  ENTER();
+
+  if((file = Open(name,MODE_OLDFILE)))
+  {
+    if(!ExamineFH(file,&fib))
+    {
+  	   Close(file);
+      file = 0;
+    }
+    else
+    {
+    	*size = fib.fib_Size;
+    }
+  }
+
+  RETURN(file);
+  return file;
+}
 #else
 static BPTR
 openIn(STRPTR name, ULONG * size)
