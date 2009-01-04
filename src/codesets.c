@@ -998,49 +998,53 @@ codesetsInit(struct codesetList *csList)
 
   #if defined(__MORPHOS__)
   {
-    struct Library *KeymapBase = OpenLibrary("keymap.library", 51);
-    struct Library *LocaleBase = OpenLibrary("locale.library", 51);
+    struct Library *KeymapBase;
+    struct Library *LocaleBase;
 
-    if(KeymapBase != NULL && LocaleBase != NULL)
+    if((KeymapBase = OpenLibrary("keymap.library", 51)) != NULL)
     {
-      struct KeyMap *keymap = AskKeyMapDefault();
-      CONST_STRPTR name = GetKeyMapCodepage(keymap);
-
-      if(name != NULL && keymap != NULL) // Legacy keymaps dont have codepage or Unicode mappings
+      if((LocaleBase = OpenLibrary("locale.library", 51)) != NULL)
       {
-        D(DBF_STARTUP, "loading charset '%s' from keymap.library...", name);
+        struct KeyMap *keymap = AskKeyMapDefault();
+        CONST_STRPTR name = GetKeyMapCodepage(keymap);
 
-        if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) != NULL)
+        if(name != NULL && keymap != NULL) // Legacy keymaps dont have codepage or Unicode mappings
         {
-           codeset->name             = mystrdup(name);
-           codeset->alt_name 	       = NULL;
-           codeset->characterization = mystrdup(name);  // No more information available
-           codeset->read_only        = 0;
+          D(DBF_STARTUP, "loading charset '%s' from keymap.library...", name);
 
-           for(i=0; i<256; i++)
-           {
-             UTF8  *dest_ptr = &codeset->table[i].utf8[1];
-             LONG rc;
+          if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) != NULL)
+          {
+             codeset->name             = mystrdup(name);
+             codeset->alt_name 	       = NULL;
+             codeset->characterization = mystrdup(name);  // No more information available
+             codeset->read_only        = 0;
 
-             codeset->table[i].code = i;
-             codeset->table[i].ucs4 = src = ToUCS4(i, keymap);
-             rc = ConvertUCS4ToUTF8((CONST_WSTRPTR)&src, dest_ptr, 1);
-             dest_ptr[rc] = 0;
-             codeset->table[i].utf8[0] = rc;
-           }
+             for(i=0; i<256; i++)
+             {
+               UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+               LONG rc;
 
-           memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-           qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+               codeset->table[i].code = i;
+               codeset->table[i].ucs4 = src = ToUCS4(i, keymap);
+               rc = ConvertUCS4ToUTF8((CONST_WSTRPTR)&src, dest_ptr, 1);
+               dest_ptr[rc] = 0;
+               codeset->table[i].utf8[0] = rc;
+             }
 
-           AddTail((struct List *)csList, (struct Node *)&codeset->node);
+             memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
+            qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+
+             AddTail((struct List *)csList, (struct Node *)&codeset->node);
+          }
+          else
+            goto end;
         }
-        else
-          goto end;
-      }
-    }
 
-    CloseLibrary(LocaleBase);
-    CloseLibrary(KeymapBase);
+        CloseLibrary(LocaleBase);
+      }
+
+      CloseLibrary(KeymapBase);
+    }
   }
   #endif
 

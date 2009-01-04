@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.8 RELEASE #########################################################
+
+2009-01-04  Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: final 6.8 release preparations.
+
 2009-01-02  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
   * codesets.c: MorphOS code was using LocaleBase before it was initialised
