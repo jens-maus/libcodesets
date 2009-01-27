@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-01-27  Thore Böckelmann <tboeckel@gmx.de>
+
+  * developer/examples/demo1.c: added some NULL checks to avoid stricmp() to be
+    called with NULL pointers. This should fix bug #2539755.
+
 2009-01-10  Staf Verhaegen <staf.verhaegen@skynet.be>
 
   * codesets.conf (AROS): Update version, date and copyright info

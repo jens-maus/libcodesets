@@ -177,20 +177,23 @@ HOOKPROTONH(popupOpenFun, ULONG, Object *list, Object *str)
 
     get(str, MUIA_Textinput_Contents, (ULONG)&s);
 
-    for (i = 0; ;i++)
+    if(s != NULL)
     {
-        DoMethod(list,MUIM_List_GetEntry,i,&x);
-        if (!x)
+        for (i = 0; ;i++)
         {
-            set(list,MUIA_List_Active,MUIV_List_Active_Off);
-            break;
-        }
-        else
-            if (!stricmp(x,s))
+            DoMethod(list,MUIM_List_GetEntry,i,&x);
+            if (x == NULL)
             {
-                set(list,MUIA_List_Active,i);
+                set(list,MUIA_List_Active,MUIV_List_Active_Off);
                 break;
             }
+            else
+                if (stricmp(x,s) == 0)
+                {
+                    set(list,MUIA_List_Active,i);
+                    break;
+                }
+        }
     }
 
     return TRUE;
