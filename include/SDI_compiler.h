@@ -123,7 +123,10 @@
     #define INLINE static __inline __attribute__((always_inline))
   #endif
   /* we have to distinguish between AmigaOS4 and MorphOS */
-  #if defined(__PPC__)
+  #if defined(__M68000__)
+    #define REG(reg,arg) arg __asm(#reg)
+    #define LREG(reg,arg) register REG(reg,arg)
+  #else
     #define REG(reg,arg) arg
     #define SAVEDS
     #define STDARGS
@@ -134,9 +137,6 @@
     #endif
     #define INTERRUPT
     #define CHIP
-  #else
-    #define REG(reg,arg) arg __asm(#reg)
-    #define LREG(reg,arg) register REG(reg,arg)
   #endif
   #define FAR
 #elif defined(_DCC)
@@ -202,17 +202,5 @@
 #endif
 
 /*************************************************************************/
-#ifdef __AROS__
-
-  #undef REG
-  #define REG(reg, arg) arg
-
-  #undef SAVEDS
-  #define SAVEDS
-
-  #undef ASM
-  #define ASM
-
-#endif /* __AROS__ */
 
 #endif /* SDI_COMPILER_H */

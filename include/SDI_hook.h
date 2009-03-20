@@ -100,23 +100,7 @@
 ** The ENTRY macro, which also gets the function name as argument.
 */
 
-#if  defined(__PPC__) || defined(__AROS__)
-  #define HOOKPROTO(name, ret, obj, param) static SAVEDS ret                 \
-    name(struct Hook *hook, obj, param)
-  #define HOOKPROTONO(name, ret, param) static SAVEDS ret                    \
-    name(struct Hook *hook, UNUSED APTR obj, param)
-  #define HOOKPROTONP(name, ret, obj) static SAVEDS ret                      \
-    name(struct Hook *hook, obj, UNUSED APTR param)
-  #define HOOKPROTONONP(name, ret) static SAVEDS ret                         \
-    name(struct Hook *hook, UNUSED APTR obj, UNUSED APTR param)
-  #define HOOKPROTONH(name, ret, obj, param) static SAVEDS ret               \
-    name(UNUSED struct Hook *hook, obj, param)
-  #define HOOKPROTONHNO(name, ret, param) static SAVEDS ret                  \
-    name(UNUSED struct Hook *hook, UNUSED APTR obj, param)
-  #define HOOKPROTONHNP(name, ret, obj) static SAVEDS ret                    \
-    name(UNUSED struct Hook *hook, obj, UNUSED APTR param)
-  #define HOOKPROTONHNONP(name, ret) static SAVEDS ret name(void)
-#else
+#if defined(__M68000__)
   #define HOOKPROTO(name, ret, obj, param) static SAVEDS ASM ret             \
     name(REG(a0, struct Hook *hook), REG(a2, obj), REG(a1, param))
   #define HOOKPROTONO(name, ret, param) static SAVEDS ASM ret                \
@@ -131,6 +115,22 @@
     name(REG(a1, param))
   #define HOOKPROTONHNP(name, ret, obj) static SAVEDS ASM ret                \
     name(REG(a2, obj))
+  #define HOOKPROTONHNONP(name, ret) static SAVEDS ret name(void)
+#else
+  #define HOOKPROTO(name, ret, obj, param) static SAVEDS ret                 \
+    name(struct Hook *hook, obj, param)
+  #define HOOKPROTONO(name, ret, param) static SAVEDS ret                    \
+    name(struct Hook *hook, UNUSED APTR obj, param)
+  #define HOOKPROTONP(name, ret, obj) static SAVEDS ret                      \
+    name(struct Hook *hook, obj, UNUSED APTR param)
+  #define HOOKPROTONONP(name, ret) static SAVEDS ret                         \
+    name(struct Hook *hook, UNUSED APTR obj, UNUSED APTR param)
+  #define HOOKPROTONH(name, ret, obj, param) static SAVEDS ret               \
+    name(UNUSED struct Hook *hook, obj, param)
+  #define HOOKPROTONHNO(name, ret, param) static SAVEDS ret                  \
+    name(UNUSED struct Hook *hook, UNUSED APTR obj, param)
+  #define HOOKPROTONHNP(name, ret, obj) static SAVEDS ret                    \
+    name(UNUSED struct Hook *hook, obj, UNUSED APTR param)
   #define HOOKPROTONHNONP(name, ret) static SAVEDS ret name(void)
 #endif
 
@@ -174,14 +174,8 @@
   #define MakeStaticHook(hookname, funcname) static struct Hook hookname =   \
     {{NULL, NULL}, (HOOKFUNC)funcname, NULL, NULL}
   #define ENTRY(func) (APTR)func
-
-  #if defined(__AROS__)
-    #define DISPATCHERPROTO(name) IPTR                                       \
-    name( struct IClass * cl, Object * obj, Msg msg)
-  #else
-    #define DISPATCHERPROTO(name) SAVEDS ASM ULONG  name(REG(a0,             \
+  #define DISPATCHERPROTO(name) SAVEDS ASM ULONG  name(REG(a0,             \
     struct IClass * cl), REG(a2, Object * obj), REG(a1, Msg msg))
-  #endif
 
 #endif
 

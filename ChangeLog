@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-20  Pavel Fedin <sonic.amiga@gmail.com>
+
+  * misc: many fixes in various places, code merge, got rid of many #ifdef's. AROS
+    version can be built or cross-built outside of AROS build system. Fixed "demo1"
+    program to work under MorphOS
+
 2009-01-28  Thore Böckelmann <tboeckel@gmx.de>
 
   * developer/examples/demo1.c: replaced use of the custom class Textinput.mcc

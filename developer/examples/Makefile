@@ -151,7 +151,7 @@ WARN     = -W -Wall -Wwrite-strings -Wpointer-arith -Wsign-compare
 OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
 DEBUG    = -DDEBUG -O0
 DEBUGSYM = -gstabs
-CFLAGS   = -I. -I../include -I../../include $(CPU) $(WARN) $(OPTFLAGS) $(DEBUG) $(DEBUGSYM)
+CFLAGS   = -I. -I../include -I../../include $(CPU) $(WARN) $(OPTFLAGS) $(DEBUG) $(DEBUGSYM) $(USER_CFLAGS)
 LDFLAGS  = $(CPU) $(DEBUGSYM)
 LDLIBS   =
 
@@ -224,14 +224,17 @@ ifeq ($(OS), aros)
   # AROS
 
   # Compiler/link/strip commands
-  ifneq ($(HOST), Aros)
-    CC      = i686-aros-gcc
-    STRIP   = i686-aros-strip
-    OBJDUMP = i686-aros-objdump
+  ifeq ($(TARGET_CPU),)
+    TARGET_CPU = i386
+  endif
+  ifneq ($(HOST), aros)
+    CC      = $(TARGET_CPU)-aros-gcc
+    STRIP   = $(TARGET_CPU)-aros-strip
+    OBJDUMP = $(TARGET_CPU)-aros-objdump
   endif
 
   # Compiler/Linker flags
-  CPU =
+  LDLIBS  += -lmui
 
 endif
 endif
@@ -290,6 +293,7 @@ $(BINDIR)/demo1: demo1.c vastubs.c
 	@echo "  LD $@"
 	@$(CC) $(LDFLAGS) -o $@.debug $(OBJDIR)/demo1.o $(OBJDIR)/vastubs.o $(LDLIBS)
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
+	@$(CHMOD) $@
 
 # cleanup target
 .PHONY: clean
