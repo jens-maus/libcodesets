@@ -96,7 +96,7 @@ RM      = delete force
 RMDIR   = delete force all
 MKDIR   = makedir
 CHMOD   = protect FLAGS=rwed
-CP	= copy
+CP      = copy
 CC      = gcc
 STRIP   = strip
 OBJDUMP = objdump
@@ -112,11 +112,11 @@ ifneq ($(HOST), MorphOS)
 
   # when we end up here this is either a unix or Aros host
   # so lets use unix kind of commands
-  RM      = rm -f
-  RMDIR   = rm -rf
-  MKDIR   = mkdir -p
-  CHMOD   = chmod 755
-  CP	  = cp -f
+  RM    = rm -f
+  RMDIR = rm -rf
+  MKDIR = mkdir -p
+  CHMOD = chmod 755
+  CP    = cp -f
 
   CDUP  = ../
   CDTHIS= ./
