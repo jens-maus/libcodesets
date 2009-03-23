@@ -290,6 +290,7 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
   ULONG result = CSR_ConversionOK;
   const UTF16 *source = *sourceStart;
   UTF8 *target = *targetStart;
+  UTF8 *start = target;
 
   ENTER();
 
@@ -371,34 +372,37 @@ CodesetsConvertUTF16toUTF8(REG(a0, const UTF16 ** sourceStart),
     }
 
     target += bytesToWrite;
-    if(target > targetEnd)
+    if(start)
     {
-      source = oldSource; /* Back up source pointer! */
-      target -= bytesToWrite;
-      result = CSR_TargetExhausted;
+      if(target > targetEnd)
+      {
+	source = oldSource; /* Back up source pointer! */
+        target -= bytesToWrite;
+        result = CSR_TargetExhausted;
 
-      break;
+        break;
+      }
+      switch(bytesToWrite)
+      {
+	/* note: everything falls through. */
+        case 4:
+	  *--target = (UTF8) ((ch | byteMark) & byteMask);
+	  ch >>= 6;
+
+        case 3:
+	  *--target = (UTF8) ((ch | byteMark) & byteMask);
+	  ch >>= 6;
+
+        case 2:
+	  *--target = (UTF8) ((ch | byteMark) & byteMask);
+	  ch >>= 6;
+
+        case 1:
+	  *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
+      }
+
+      target += bytesToWrite;
     }
-    switch(bytesToWrite)
-    {
-      /* note: everything falls through. */
-      case 4:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 3:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 2:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 1:
-        *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
-    }
-
-    target += bytesToWrite;
   }
 
   *sourceStart = source;
@@ -559,6 +563,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
   ULONG result = CSR_ConversionOK;
   const UTF8 *source = *sourceStart;
   UTF16 *target = *targetStart;
+  UTF16 *start = target;
 
   ENTER();
 
@@ -611,7 +616,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
 
     ch -= offsetsFromUTF8[extraBytesToRead];
 
-    if(target >= targetEnd)
+    if(start && (target >= targetEnd))
     {
       source -= (extraBytesToRead + 1);   /* Back up source pointer! */
       result = CSR_TargetExhausted;
@@ -633,14 +638,11 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
           break;
         }
         else
-        {
-          *target++ = UNI_REPLACEMENT_CHAR;
-        }
+	  ch = UNI_REPLACEMENT_CHAR;
       }
-      else
-      {
-        *target++ = (UTF16) ch; /* normal case */
-      }
+      if(start)
+	*target = (UTF16) ch; /* normal case */
+      target++;
     }
     else if(ch > UNI_MAX_UTF16)
     {
@@ -651,25 +653,28 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
 
         break;          /* Bail out; shouldn't continue */
       }
-      else
-      {
-        *target++ = UNI_REPLACEMENT_CHAR;
-      }
+      if(start)
+	*target = UNI_REPLACEMENT_CHAR;
+      target++;
     }
     else
     {
       /* target is a character in range 0xFFFF - 0x10FFFF. */
-      if(target + 1 >= targetEnd)
+      if(start)
       {
-        source -= (extraBytesToRead + 1);   /* Back up source pointer! */
-        result = CSR_TargetExhausted;
+        if(target + 1 >= targetEnd)
+        {
+	  source -= (extraBytesToRead + 1);   /* Back up source pointer! */
+	  result = CSR_TargetExhausted;
 
-        break;
+	  break;
+        }
+
+        ch -= halfBase;
+	target[0] = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
+	target[1] = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
       }
-
-      ch -= halfBase;
-      *target++ = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
-      *target++ = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
+      target += 2;
     }
   }
 

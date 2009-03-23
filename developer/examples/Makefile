@@ -144,7 +144,8 @@ TARGET = $(BINDIR)/b64d \
          $(BINDIR)/b64e \
          $(BINDIR)/UTF8ToStrHook \
          $(BINDIR)/DetectCodeset \
-         $(BINDIR)/demo1
+	 $(BINDIR)/demo1 \
+	 $(BINDIR)/Convert
 
 # Common compiler/linker flags
 WARN     = -W -Wall -Wwrite-strings -Wpointer-arith -Wsign-compare
@@ -269,16 +270,19 @@ $(BINDIR)/b64d: $(OBJDIR)/b64d.o
 	@echo "  LD $@"
 	@$(CC) $(LDFLAGS) -o $@.debug $< $(LDLIBS)
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
+	@$(CHMOD) $@
 
 $(BINDIR)/b64e: $(OBJDIR)/b64e.o
 	@echo "  LD $@"
 	@$(CC) $(LDFLAGS) -o $@.debug $< $(LDLIBS)
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
+	@$(CHMOD) $@
 
 $(BINDIR)/UTF8ToStrHook: $(OBJDIR)/UTF8ToStrHook.o
 	@echo "  LD $@"
 	@$(CC) $(LDFLAGS) -o $@.debug $< $(LDLIBS)
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
+	@$(CHMOD) $@
 
 $(BINDIR)/DetectCodeset: $(OBJDIR)/DetectCodeset.o
 	@echo "  LD $@"
@@ -292,6 +296,12 @@ $(BINDIR)/demo1: demo1.c vastubs.c
 	@$(CC) $(CFLAGS) $(NOINLINE) -c vastubs.c -o $(OBJDIR)/vastubs.o
 	@echo "  LD $@"
 	@$(CC) $(LDFLAGS) -o $@.debug $(OBJDIR)/demo1.o $(OBJDIR)/vastubs.o $(LDLIBS)
+	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
+	@$(CHMOD) $@
+
+$(BINDIR)/Convert: $(OBJDIR)/Convert.o
+	@echo "  LD $@"
+	@$(CC) $(LDFLAGS) -o $@.debug $< $(LDLIBS)
 	@$(STRIP) --preserve-dates -R.comment -R.sdata2 -S -o $@ $@.debug
 	@$(CHMOD) $@
 

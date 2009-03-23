@@ -930,8 +930,8 @@ codesetsInit(struct codesetList *csList)
 
   NewList((struct List *)&CodesetsBase->codesets);
 
-  // to make the list of the supported codesets complete we also add a
-  // fake 'UTF-8' only so that our users can query for that codeset as well.
+  // to make the list of the supported codesets complete we also add fake
+  // 'UTF-8' and 'UTF-16' only so that our users can query for those codesets as well.
   if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) == NULL)
     goto end;
 
@@ -941,6 +941,16 @@ codesetsInit(struct codesetList *csList)
   codeset->read_only        = 0;
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf8Codeset = codeset;
+
+  if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) == NULL)
+    goto end;
+
+  codeset->name             = mystrdup("UTF-16");
+  codeset->alt_name         = mystrdup("UTF16");
+  codeset->characterization = mystrdup("16-bit Unicode");
+  codeset->read_only        = 0;
+  AddTail((struct List *)csList, (struct Node *)&codeset->node);
+  CodesetsBase->utf16Codeset = codeset;
 
   // on AmigaOS4 we can use diskfont.library to inquire charset information as
   // it comes with a quite rich implementation of different charsets.
@@ -1913,9 +1923,11 @@ CodesetsStrLenA(REG(a0, STRPTR str),
                 REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset;
-  int            len, res;
+  int            len;
+  ULONG          res;
   STRPTR         src;
   UBYTE          c;
+  int            utf;
 
   ENTER();
 
@@ -1924,17 +1936,39 @@ CodesetsStrLenA(REG(a0, STRPTR str),
 
   if(!(codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)))
     codeset = defaultCodeset(TRUE);
+  if(codeset == CodesetsBase->utf16Codeset)
+  {
+    utf = 16;
+    len = utf16_strlen((UTF16 *)str);
+  }
+  else
+  {
+    utf = 0;
+    len = strlen(str);
+  }
 
-  len = GetTagData(CSA_SourceLen, strlen(str), attrs);
+  len = GetTagData(CSA_SourceLen, len, attrs);
 
   src = str;
-  res = 0;
 
-  while(((c = *src++) && (len--)))
-    res += codeset->table[c].utf8[0];
+  if(utf)
+  {
+    UTF8 *srcend = src + len;
+    UTF8 *dstlen = NULL;
 
-  RETURN((ULONG)res);
-  return (ULONG)res;
+    CodesetsConvertUTF16toUTF8(&src, srcend, &dstlen, NULL, 0);
+    res	= (ULONG)dstlen;
+  }
+  else
+  {
+    res = 0;
+
+    while(((c = *src++) && (len--)))
+      res += codeset->table[c].utf8[0];
+  }
+
+  RETURN(res);
+  return res;
 }
 
 ///
@@ -1963,7 +1997,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     struct Hook *mapForeignCharsHook;
     char buf[256];
     STRPTR destIter = NULL;
-    STRPTR b = NULL;
+    char *b = NULL;
     ULONG destLen = 0;
     int i = 0;
     unsigned char *s = src;
@@ -1973,6 +2007,8 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     BOOL mapForeignChars;
     APTR pool = NULL;
     struct SignalSemaphore *sem = NULL;
+    int utf;
+    ULONG char_size;
 
     // get some more optional attributes
     destHook = (struct Hook *)GetTagData(CSA_DestHook, (ULONG)NULL, attrs);
@@ -1980,6 +2016,20 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     numConvErrorsPtr = (int *)GetTagData(CSA_ErrPtr, (ULONG)NULL, attrs);
     mapForeignChars = (BOOL)GetTagData(CSA_MapForeignChars, FALSE, attrs);
     mapForeignCharsHook = (struct Hook *)GetTagData(CSA_MapForeignCharsHook, (ULONG)NULL, attrs);
+
+    // get the destination codeset pointer
+    if((codeset = (struct codeset *)GetTagData(CSA_DestCodeset, (ULONG)NULL, attrs)) == NULL)
+      codeset = defaultCodeset(TRUE);
+    if(codeset == CodesetsBase->utf16Codeset)
+    {
+      utf = 16;
+      char_size = 2;
+    }
+    else
+    {
+      utf = 0;
+      char_size = 1;
+    }
 
     // first we make sure we allocate enough memory
     // for our destination buffer
@@ -2002,12 +2052,22 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         ULONG len = 0;
 
         // calculate the destLen
-        while(s < e)
-        {
-          unsigned char c = *s++;
+	if(utf)
+	{
+	  UTF16 *dstlen = NULL;
 
-          len++;
-          s += trailingBytesForUTF8[c];
+	  CodesetsConvertUTF8toUTF16(&s, e, &dstlen, NULL, 0);
+	  len = (ULONG)dstlen;
+	}
+	else
+	{
+	  while(s < e)
+	  {
+	    unsigned char c = *s++;
+
+	    len++;
+	    s += trailingBytesForUTF8[c];
+	  }
         }
 
         if(dest == NULL || (destLen < len+1))
@@ -2018,15 +2078,15 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               ObtainSemaphore(sem);
 
             // allocate the destination buffer
-            dest = allocVecPooled(pool, len+1);
+	    dest = allocVecPooled(pool, len+char_size);
 
             if(sem != NULL)
               ReleaseSemaphore(sem);
           }
           else
-            dest = allocArbitrateVecPooled(len+1);
+	    dest = allocArbitrateVecPooled(len+char_size);
 
-          destLen = len+1;
+	  destLen = len+char_size;
         }
 
         if(dest == NULL)
@@ -2039,202 +2099,234 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       destIter = dest;
     }
 
-    // get the destination codeset pointer
-    if((codeset = (struct codeset *)GetTagData(CSA_DestCodeset, (ULONG)NULL, attrs)) == NULL)
-      codeset = defaultCodeset(TRUE);
-
     // now we convert the src string to the
     // destination buffer.
-    for(s=src;;n++)
+    s = src;
+    if (utf)
     {
-      if(destHook == NULL && n >= destLen-1)
-        break;
+      UTF8 *dstend;
 
-      // convert until we reach the end of the
-      // source buffer.
-      if(s < e)
+      if(destHook != NULL)
       {
-        unsigned char c = *s;
-        unsigned char d = '?';
-        const char *repstr = NULL;
-        int replen = 0;
+	ULONG r;
 
-        // check if the char is a >7bit char
-        if(c > 127)
+	dstend = b + destLen - char_size;
+        do
         {
-          struct single_convert *f;
-          int lenAdd = trailingBytesForUTF8[c];
-          int lenStr = lenAdd+1;
-          unsigned char *src = s;
+	  r = CodesetsConvertUTF8toUTF16(&s, e, &b, dstend, 0);
+	  b[0] = 0;
+	  if(char_size > 1)
+	    b[1] = 0;
+	  if(r != CSR_TargetExhausted)
+	    msg.state = CSV_End;
+	  msg.len = b-buf;
+	  CallHookPkt(destHook,&msg,buf);
 
-          do
-          {
-            // start each iteration with "no replacement found yet"
-            repstr = NULL;
-            replen = 0;
-
-            // search in the UTF8 conversion table of the current charset if
-            // we have a replacement character for the char sequence starting at s
-            BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)src, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
-
-            if(f != NULL)
-            {
-              d = f->code;
-              replen = -1;
-
-              break;
-            }
-            else
-            {
-              // the analysed char sequence (s) is not convertable to a
-              // single visible char replacement, so we normally have to put
-              // a ? sign as a "unknown char" sign at the very position.
-              //
-              // For convienence we, however, allow users to replace these
-              // UTF8 characters with char sequences that "looklike" the
-              // original char.
-              if(mapForeignChars == TRUE)
-                replen = mapUTF8toASCII(&repstr, src, lenStr);
-
-              // call the hook only, if the internal table yielded no suitable
-              // replacement
-              if(replen == 0 && mapForeignCharsHook != NULL)
-              {
-                struct replaceMsg rmsg;
-
-                rmsg.dst = (char **)&repstr;
-                rmsg.src = src;
-                rmsg.srclen = lenStr;
-                replen = CallHookPkt(mapForeignCharsHook, &rmsg, NULL);
-              }
-
-              if(replen < 0)
-              {
-                D(DBF_UTF, "got UTF8 replacement (%ld)", replen);
-
-                // stay in the loop as long as one replacement function delivers
-                // further UTF8 replacement sequences
-                src = (unsigned char *)repstr;
-              }
-              else if(replen == 0)
-              {
-                D(DBF_UTF, "found no ASCII replacement for UTF8 string (%ld)", replen);
-                repstr = NULL;
-              }
-              else
-                D(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
-            }
-          }
-          while(replen < 0);
-
-          if(repstr == NULL || replen == 0)
-          {
-            if(replen >= 0)
-            {
-              d = '?';
-              numConvErrors++;
-            }
-          }
-
-          s += lenAdd;
-        }
-        else
-          d = c;
-
-        if(destHook != NULL)
-        {
-          if(replen > 1)
-          {
-            while(replen > 0)
-            {
-              *b++ = *repstr;
-              repstr++;
-              i++;
-              replen--;
-
-              if(i%(destLen-1)==0)
-              {
-                *b = '\0';
-                msg.len = i;
-                CallHookPkt(destHook, &msg, buf);
-
-                b  = buf;
-                *b = '\0';
-                i  = 0;
-              }
-            }
-          }
-          else
-          {
-            *b++ = replen > 0 ? *repstr : d;
-            i++;
-          }
-
-          if(i%(destLen-1)==0)
-          {
-            *b = '\0';
-            msg.len = i;
-            CallHookPkt(destHook, &msg, buf);
-
-            b  = buf;
-            *b = '\0';
-            i  = 0;
-          }
-        }
-        else
-        {
-          if(replen > 1)
-          {
-            ULONG destPos = destIter-dest;
-
-            if(pool != NULL)
-            {
-              if(sem != NULL)
-                ObtainSemaphore(sem);
-
-              // allocate the destination buffer
-              dest = reallocVecPooled(pool, dest, destLen, destLen+replen-1);
-
-              if(sem != NULL)
-                ReleaseSemaphore(sem);
-            }
-            else
-              dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
-
-            if(dest == NULL)
-            {
-              RETURN(NULL);
-              return NULL;
-            }
-
-            destIter = dest+destPos;
-            memcpy(destIter, repstr, replen);
-
-            // adjust our loop pointer and destination length
-            destIter += replen;
-            destLen += replen-1;
-          }
-          else if(replen == 1)
-            *destIter++ = *repstr;
-          else
-            *destIter++ = d;
-        }
-
-        s++;
+	  b  = buf;
+	  n += msg.len;
+	}
+        while(r == CSR_TargetExhausted);
       }
       else
-        break;
-    }
-
-    if(destHook != NULL)
-    {
-      msg.state = CSV_End;
-      msg.len   = i;
-      *b        = '\0';
-      CallHookPkt(destHook,&msg,buf);
+      {
+	dstend = destIter + destLen - char_size;
+	CodesetsConvertUTF8toUTF16(&s, e, &destIter, dstend, 0);
+	n = destIter-dest;
+      }
     }
     else
-      *destIter = '\0';
+    {
+      for(;;n++)
+      {
+        if(destHook == NULL && n >= destLen-1)
+          break;
+
+        // convert until we reach the end of the
+        // source buffer.
+        if(s < e)
+        {
+          unsigned char c = *s;
+          unsigned char d = '?';
+          const char *repstr = NULL;
+          int replen = 0;
+
+          // check if the char is a >7bit char
+          if(c > 127)
+          {
+            struct single_convert *f;
+            int lenAdd = trailingBytesForUTF8[c];
+            int lenStr = lenAdd+1;
+            unsigned char *src = s;
+
+            do
+            {
+              // start each iteration with "no replacement found yet"
+              repstr = NULL;
+              replen = 0;
+
+              // search in the UTF8 conversion table of the current charset if
+              // we have a replacement character for the char sequence starting at s
+              BIN_SEARCH(codeset->table_sorted, 0, 255, strncmp((char *)src, (char *)codeset->table_sorted[m].utf8+1, lenStr), f);
+
+              if(f != NULL)
+              {
+                d = f->code;
+                replen = -1;
+
+                break;
+              }
+              else
+              {
+                // the analysed char sequence (s) is not convertable to a
+                // single visible char replacement, so we normally have to put
+                // a ? sign as a "unknown char" sign at the very position.
+                //
+                // For convienence we, however, allow users to replace these
+                // UTF8 characters with char sequences that "looklike" the
+                // original char.
+                if(mapForeignChars == TRUE)
+                  replen = mapUTF8toASCII(&repstr, src, lenStr);
+
+                // call the hook only, if the internal table yielded no suitable
+                // replacement
+                if(replen == 0 && mapForeignCharsHook != NULL)
+                {
+                  struct replaceMsg rmsg;
+
+                  rmsg.dst = (char **)&repstr;
+                  rmsg.src = src;
+                  rmsg.srclen = lenStr;
+                  replen = CallHookPkt(mapForeignCharsHook, &rmsg, NULL);
+                }
+
+                if(replen < 0)
+                {
+                  D(DBF_UTF, "got UTF8 replacement (%ld)", replen);
+
+                  // stay in the loop as long as one replacement function delivers
+                  // further UTF8 replacement sequences
+                  src = (unsigned char *)repstr;
+                }
+                else if(replen == 0)
+                {
+                  D(DBF_UTF, "found no ASCII replacement for UTF8 string (%ld)", replen);
+                  repstr = NULL;
+                }
+                else
+                  D(DBF_UTF, "got replacement string '%s' (%ld)", repstr ? repstr : "<null>", replen);
+              }
+            }
+            while(replen < 0);
+
+            if(repstr == NULL || replen == 0)
+            {
+              if(replen >= 0)
+              {
+                d = '?';
+                numConvErrors++;
+              }
+            }
+
+            s += lenAdd;
+          }
+          else
+            d = c;
+
+          if(destHook != NULL)
+          {
+            if(replen > 1)
+            {
+              while(replen > 0)
+              {
+                *b++ = *repstr;
+                repstr++;
+                i++;
+                replen--;
+
+                if(i%(destLen-1)==0)
+                {
+                  *b = '\0';
+                  msg.len = i;
+                  CallHookPkt(destHook, &msg, buf);
+
+                  b  = buf;
+                  *b = '\0';
+                  i  = 0;
+                }
+              }
+            }
+            else
+            {
+              *b++ = replen > 0 ? *repstr : d;
+              i++;
+            }
+
+            if(i%(destLen-1)==0)
+            {
+              *b = '\0';
+              msg.len = i;
+              CallHookPkt(destHook, &msg, buf);
+
+              b  = buf;
+              *b = '\0';
+              i  = 0;
+            }
+          }
+          else
+          {
+            if(replen > 1)
+            {
+              ULONG destPos = destIter-dest;
+
+              if(pool != NULL)
+              {
+                if(sem != NULL)
+                  ObtainSemaphore(sem);
+
+                // allocate the destination buffer
+                dest = reallocVecPooled(pool, dest, destLen, destLen+replen-1);
+
+                if(sem != NULL)
+                  ReleaseSemaphore(sem);
+              }
+              else
+                dest = reallocArbitrateVecPooled(dest, destLen, destLen+replen-1);
+
+              if(dest == NULL)
+              {
+                RETURN(NULL);
+                return NULL;
+              }
+
+              destIter = dest+destPos;
+              memcpy(destIter, repstr, replen);
+
+              // adjust our loop pointer and destination length
+              destIter += replen;
+              destLen += replen-1;
+            }
+            else if(replen == 1)
+              *destIter++ = *repstr;
+            else
+              *destIter++ = d;
+          }
+
+          s++;
+        }
+        else
+          break;
+      }
+
+      if(destHook != NULL)
+      {
+        msg.state = CSV_End;
+        msg.len   = i;
+        *b        = '\0';
+        CallHookPkt(destHook,&msg,buf);
+      }
+      else
+        *destIter = '\0';
+    }
 
     // let us write the number of conversion errors
     // to the proper variable pointer, if wanted
@@ -2261,29 +2353,49 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 {
   UTF8   *from;
   UTF8   *dest;
+  struct codeset *codeset;
   ULONG  fromLen, *destLenPtr;
   ULONG  n;
+  int    utf;
 
   ENTER();
 
   dest = NULL;
   n    = 0;
 
+  if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
+    codeset = defaultCodeset(TRUE);
+  if(codeset == CodesetsBase->utf16Codeset)
+    utf = 16;
+  else
+    utf = 0;
+
   from = (UTF8*)GetTagData(CSA_Source, 0, attrs);
-  fromLen = GetTagData(CSA_SourceLen, from != NULL ? strlen((char *)from) : 0, attrs);
+  if(from)
+  {
+    switch(utf)
+    {
+      case 16:
+        fromLen = utf16_strlen((UTF16 *)from);
+        break;
+
+      default:
+        fromLen = strlen((char *)from);
+        break;
+    }
+  }
+  else
+    fromLen = 0;
+  fromLen = GetTagData(CSA_SourceLen, fromLen, attrs);
 
   if(from != NULL && fromLen != 0)
   {
     struct convertMsg       msg;
-    struct codeset *codeset;
     struct Hook    *hook;
     ULONG          destLen;
     int            i = 0;
     UBYTE          buf[256];
     UBYTE          *src, *destPtr = NULL, *b = NULL, c;
-
-    if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
-      codeset = defaultCodeset(TRUE);
 
     hook    = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen,0,attrs);
@@ -2302,14 +2414,27 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       if((dest = (UTF8*)GetTagData(CSA_Dest, 0, attrs)) != NULL ||
         GetTagData(CSA_AllocIfNeeded,TRUE,attrs))
       {
-        ULONG len, flen;
+	ULONG len;
 
-        flen = fromLen;
-        len  = 0;
         src  = from;
 
-        while(((c = *src++) && (flen--)))
-          len += codeset->table[c].utf8[0];
+	if(utf)
+	{
+	  UTF8 *srcend = src + fromLen;
+	  UTF8 *dstlen = NULL;
+
+	  CodesetsConvertUTF16toUTF8(&src, srcend, &dstlen, NULL, 0);
+	  len = (ULONG)dstlen;
+	}
+	else
+	{
+	  ULONG flen = fromLen;
+
+	  len = 0;
+	  while(((c = *src++) && (flen--)))
+	    len += codeset->table[c].utf8[0];
+	}
+	D(DBF_UTF, "Calculated output UTF-8 buffer length: %lu\n", len);
 
         if(dest == NULL || (destLen<len+1))
         {
@@ -2343,50 +2468,85 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       destPtr = (UBYTE*)dest;
     }
 
-    for(src = from; fromLen && (c = *src); src++, fromLen--)
+    src = from;
+    if(utf)
     {
-      UTF8* utf8_seq;
+      UTF8 *srcend = src + fromLen;
+      UTF8 *dstend;
 
-      for(utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
+      if(hook != NULL)
       {
-        if(hook != NULL)
+	ULONG r;
+
+	dstend = b + destLen - 1;
+        do
         {
-          *b++ = c;
-          i++;
+	  r = CodesetsConvertUTF16toUTF8(&src, srcend, &b, dstend, 0);
+	  *b = 0;
+	  if(r != CSR_TargetExhausted)
+	    msg.state = CSV_End;
+	  msg.len = b-buf;
+	  CallHookPkt(hook,&msg,buf);
 
-          if(i%(destLen-1)==0)
-          {
-            *b = 0;
-            msg.len = i;
-            CallHookPkt(hook,&msg,buf);
-
-            b  = buf;
-            *b = 0;
-            i  = 0;
-          }
-        }
-        else
-        {
-          if(n>=destLen)
-            break;
-
-          *destPtr++ = c;
-        }
-
-        n++;
+	  b  = buf;
+	  n += msg.len;
+	}
+        while(r == CSR_TargetExhausted);
       }
-    }
-
-    if(hook != NULL)
-    {
-      msg.state = CSV_End;
-      msg.len   = i;
-      *b = 0;
-      CallHookPkt(hook,&msg,buf);
+      else
+      {
+	dstend = destPtr + destLen;
+	CodesetsConvertUTF16toUTF8(&src, srcend, &destPtr, dstend, 0);
+	n = destPtr-dest;
+      }
     }
     else
     {
-      *destPtr = 0;
+      for(; fromLen && (c = *src); src++, fromLen--)
+      {
+        UTF8* utf8_seq;
+
+        for(utf8_seq = &codeset->table[c].utf8[1]; (c = *utf8_seq); utf8_seq++)
+        {
+          if(hook != NULL)
+          {
+            *b++ = c;
+            i++;
+
+            if(i%(destLen-1)==0)
+            {
+              *b = 0;
+              msg.len = i;
+              CallHookPkt(hook,&msg,buf);
+
+              b  = buf;
+              *b = 0;
+              i  = 0;
+            }
+          }
+          else
+          {
+            if(n>=destLen)
+              break;
+
+            *destPtr++ = c;
+          }
+
+          n++;
+        }
+      }
+
+      if(hook != NULL)
+      {
+        msg.state = CSV_End;
+        msg.len   = i;
+        *b = 0;
+        CallHookPkt(hook,&msg,buf);
+      }
+      else
+      {
+        *destPtr = 0;
+      }
     }
   }
 
@@ -2431,6 +2591,7 @@ CodesetsIsValidUTF8(REG(a0, STRPTR s))
 STRPTR LIBFUNC
 CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
 {
+  struct codeset *srcCodeset;
   STRPTR srcStr = NULL;
   STRPTR dstStr = NULL;
   ULONG srcLen = 0;
@@ -2441,16 +2602,25 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   // get the ptr to the src string we want to convert
   // from the source codeset to the dest codeset.
   srcStr = (STRPTR)GetTagData(CSA_Source, (ULONG)NULL, attrs);
-  srcLen = GetTagData(CSA_SourceLen, srcStr != NULL ? strlen(srcStr) : 0, attrs);
+
+  // get the pointer to the codeset in which the src string is encoded
+  if((srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, (ULONG)NULL, attrs)) == NULL)
+    srcCodeset = defaultCodeset(TRUE);
+
+  if (srcStr)
+  {
+    if (srcCodeset == CodesetsBase->utf16Codeset)
+      srcLen = utf16_strlen(srcStr);
+    else
+      srcLen = strlen(srcStr);
+  }
+  else
+    srcLen = 0;
+  srcLen = GetTagData(CSA_SourceLen, srcLen, attrs);
 
   if(srcStr != NULL && srcLen > 0)
   {
-    struct codeset *srcCodeset;
     struct codeset *dstCodeset;
-
-    // get the pointer to the codeset in which the src string is encoded
-    if((srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, (ULONG)NULL, attrs)) == NULL)
-      srcCodeset = defaultCodeset(TRUE);
 
     // get the pointer to the codeset in which the dst string should be encoded
     if((dstCodeset = (struct codeset *)GetTagData(CSA_DestCodeset, (ULONG)NULL, attrs)) == NULL)
