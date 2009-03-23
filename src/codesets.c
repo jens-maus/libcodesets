@@ -1922,49 +1922,55 @@ ULONG LIBFUNC
 CodesetsStrLenA(REG(a0, STRPTR str),
                 REG(a1, struct TagItem *attrs))
 {
-  struct codeset *codeset;
-  int            len;
-  ULONG          res;
-  STRPTR         src;
-  UBYTE          c;
-  int            utf;
+  ULONG res = 0;
 
   ENTER();
 
-  if(!str)
-    return 0;
-
-  if(!(codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)))
-    codeset = defaultCodeset(TRUE);
-  if(codeset == CodesetsBase->utf16Codeset)
+  if(str != NULL)
   {
-    utf = 16;
-    len = utf16_strlen((UTF16 *)str);
-  }
-  else
-  {
-    utf = 0;
-    len = strlen(str);
-  }
+    struct codeset *codeset;
+    int len;
+    STRPTR src;
+    int utf;
 
-  len = GetTagData(CSA_SourceLen, len, attrs);
+    if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
+      codeset = defaultCodeset(TRUE);
+    if(codeset == CodesetsBase->utf16Codeset)
+    {
+      utf = 16;
+      len = utf16_strlen((UTF16 *)str);
+    }
+    else
+    {
+      utf = 0;
+      len = strlen(str);
+    }
 
-  src = str;
+    len = GetTagData(CSA_SourceLen, len, attrs);
 
-  if(utf)
-  {
-    UTF8 *srcend = src + len;
-    UTF8 *dstlen = NULL;
+    src = str;
 
-    CodesetsConvertUTF16toUTF8(&src, srcend, &dstlen, NULL, 0);
-    res	= (ULONG)dstlen;
-  }
-  else
-  {
-    res = 0;
+    if(utf != 0)
+    {
+      const UTF16 *src16 = (const UTF16 *)src;
+      const UTF16 *src16end = (const UTF16 *)(src + len);
+      UTF8 *dstlen = NULL;
 
-    while(((c = *src++) && (len--)))
-      res += codeset->table[c].utf8[0];
+      CodesetsConvertUTF16toUTF8(&src16, src16end, &dstlen, NULL, 0);
+      res = (ULONG)dstlen;
+    }
+    else
+    {
+      UBYTE c;
+
+      res = 0;
+
+      while((c = *src++) != '\0' && len != 0)
+      {
+        res += codeset->table[c].utf8[0];
+        len--;
+      }
+    }
   }
 
   RETURN(res);
@@ -2052,22 +2058,22 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         ULONG len = 0;
 
         // calculate the destLen
-	if(utf)
-	{
-	  UTF16 *dstlen = NULL;
+        if(utf)
+        {
+          UTF16 *dstlen = NULL;
 
-	  CodesetsConvertUTF8toUTF16(&s, e, &dstlen, NULL, 0);
-	  len = (ULONG)dstlen;
-	}
-	else
-	{
-	  while(s < e)
-	  {
-	    unsigned char c = *s++;
+          CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dstlen, NULL, 0);
+          len = (ULONG)dstlen;
+        }
+        else
+        {
+          while(s < e)
+          {
+            unsigned char c = *s++;
 
-	    len++;
-	    s += trailingBytesForUTF8[c];
-	  }
+            len++;
+            s += trailingBytesForUTF8[c];
+          }
         }
 
         if(dest == NULL || (destLen < len+1))
@@ -2078,15 +2084,15 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               ObtainSemaphore(sem);
 
             // allocate the destination buffer
-	    dest = allocVecPooled(pool, len+char_size);
+            dest = allocVecPooled(pool, len+char_size);
 
             if(sem != NULL)
               ReleaseSemaphore(sem);
           }
           else
-	    dest = allocArbitrateVecPooled(len+char_size);
+            dest = allocArbitrateVecPooled(len+char_size);
 
-	  destLen = len+char_size;
+          destLen = len+char_size;
         }
 
         if(dest == NULL)
@@ -2104,34 +2110,38 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     s = src;
     if (utf)
     {
-      UTF8 *dstend;
-
       if(destHook != NULL)
       {
-	ULONG r;
+        UTF16 *dst16 = (UTF16 *)b;
+        UTF16 *dst16end;
+        ULONG r;
 
-	dstend = b + destLen - char_size;
+        dst16end = (UTF16 *)(b + destLen - char_size);
         do
         {
-	  r = CodesetsConvertUTF8toUTF16(&s, e, &b, dstend, 0);
-	  b[0] = 0;
-	  if(char_size > 1)
-	    b[1] = 0;
-	  if(r != CSR_TargetExhausted)
-	    msg.state = CSV_End;
-	  msg.len = b-buf;
-	  CallHookPkt(destHook,&msg,buf);
+          r = CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dst16, dst16end, 0);
+          b[0] = 0;
+          if(char_size > 1)
+            b[1] = 0;
+          if(r != CSR_TargetExhausted)
+            msg.state = CSV_End;
 
-	  b  = buf;
-	  n += msg.len;
-	}
+          msg.len = b-buf;
+          CallHookPkt(destHook,&msg,buf);
+
+          b  = buf;
+          n += msg.len;
+        }
         while(r == CSR_TargetExhausted);
       }
       else
       {
-	dstend = destIter + destLen - char_size;
-	CodesetsConvertUTF8toUTF16(&s, e, &destIter, dstend, 0);
-	n = destIter-dest;
+        UTF16 *dst16 = (UTF16 *)destIter;
+        UTF16 *dst16end;
+
+        dst16end = (UTF16 *)(destIter + destLen - char_size);
+        CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dst16, dst16end, 0);
+        n = destIter-dest;
       }
     }
     else
@@ -2414,27 +2424,31 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       if((dest = (UTF8*)GetTagData(CSA_Dest, 0, attrs)) != NULL ||
         GetTagData(CSA_AllocIfNeeded,TRUE,attrs))
       {
-	ULONG len;
+        ULONG len;
 
         src  = from;
 
-	if(utf)
-	{
-	  UTF8 *srcend = src + fromLen;
-	  UTF8 *dstlen = NULL;
+        if(utf)
+        {
+          const UTF16 *src16 = (const UTF16 *)src;
+          const UTF16 *src16end = (const UTF16 *)(src + fromLen);
+          UTF8 *dstlen = NULL;
 
-	  CodesetsConvertUTF16toUTF8(&src, srcend, &dstlen, NULL, 0);
-	  len = (ULONG)dstlen;
-	}
-	else
-	{
-	  ULONG flen = fromLen;
+          CodesetsConvertUTF16toUTF8(&src16, src16end, &dstlen, NULL, 0);
+          len = (ULONG)dstlen;
+        }
+        else
+        {
+          ULONG flen = fromLen;
 
-	  len = 0;
-	  while(((c = *src++) && (flen--)))
-	    len += codeset->table[c].utf8[0];
-	}
-	D(DBF_UTF, "Calculated output UTF-8 buffer length: %lu\n", len);
+          len = 0;
+          while((c = *src++) != '\0' && flen != 0)
+          {
+            len += codeset->table[c].utf8[0];
+            flen--;
+          }
+        }
+        D(DBF_UTF, "Calculated output UTF-8 buffer length: %lu\n", len);
 
         if(dest == NULL || (destLen<len+1))
         {
@@ -2476,28 +2490,34 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
       if(hook != NULL)
       {
-	ULONG r;
+        const UTF16 *src16 = (const UTF16 *)src;
+        const UTF16 *src16end = (const UTF16 *)srcend;
+        ULONG r;
 
-	dstend = b + destLen - 1;
+        dstend = b + destLen - 1;
         do
         {
-	  r = CodesetsConvertUTF16toUTF8(&src, srcend, &b, dstend, 0);
-	  *b = 0;
-	  if(r != CSR_TargetExhausted)
-	    msg.state = CSV_End;
-	  msg.len = b-buf;
-	  CallHookPkt(hook,&msg,buf);
+          r = CodesetsConvertUTF16toUTF8(&src16, src16end, &b, dstend, 0);
+          *b = 0;
+          if(r != CSR_TargetExhausted)
+            msg.state = CSV_End;
 
-	  b  = buf;
-	  n += msg.len;
-	}
+          msg.len = b-buf;
+          CallHookPkt(hook,&msg,buf);
+
+          b  = buf;
+          n += msg.len;
+        }
         while(r == CSR_TargetExhausted);
       }
       else
       {
-	dstend = destPtr + destLen;
-	CodesetsConvertUTF16toUTF8(&src, srcend, &destPtr, dstend, 0);
-	n = destPtr-dest;
+        const UTF16 *src16 = (const UTF16 *)src;
+        const UTF16 *src16end = (const UTF16 *)srcend;
+
+        dstend = destPtr + destLen;
+        CodesetsConvertUTF16toUTF8(&src16, src16end, &destPtr, dstend, 0);
+        n = destPtr-dest;
       }
     }
     else
@@ -2607,10 +2627,10 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   if((srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, (ULONG)NULL, attrs)) == NULL)
     srcCodeset = defaultCodeset(TRUE);
 
-  if (srcStr)
+  if(srcStr != NULL)
   {
-    if (srcCodeset == CodesetsBase->utf16Codeset)
-      srcLen = utf16_strlen(srcStr);
+    if(srcCodeset == CodesetsBase->utf16Codeset)
+      srcLen = utf16_strlen((UTF16 *)srcStr);
     else
       srcLen = strlen(srcStr);
   }

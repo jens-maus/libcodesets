@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-23  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: fixed various warnings about wrong types. Also removed all TAB
+    characters I have spotted. Please note that we are using space characters
+    only for indentation.
+
 2009-03-21  Jens Langner <Jens.Langner@light-speed.de>
 
   * misc: minor adaptions
