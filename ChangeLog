@@ -7,6 +7,7 @@ $URL$
 
 2009-03-23  Thore Böckelmann <tboeckel@gmx.de>
 
+  * developer/examples/Convert.c: made the demo program compilable for OS4.
   * codesets.c: fixed various warnings about wrong types. Also removed all TAB
     characters I have spotted. Please note that we are using space characters
     only for indentation.
