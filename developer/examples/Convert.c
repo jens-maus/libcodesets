@@ -20,7 +20,7 @@
  from the source code of SimpleMail (http://www.sf.net/projects/simplemail)
  with full permissions by its authors.
 
- $Id: b64d.c 126 2008-07-05 16:13:27Z damato $
+ $Id$
 
 ***************************************************************************/
 
