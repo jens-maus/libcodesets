@@ -8,7 +8,7 @@ include $(TOP)/config/make.cfg
 
 #MM workbench-libs-codesets-test : linklibs includes workbench-libs-codesets-lib
 
-FILES  := b64d b64e DetectCodeset UTF8ToStrHook demo1 Convert
+FILES  := b64d b64e DetectCodeset UTF8ToStrHook demo1 Convert autoopen
 
 EXEDIR := $(AROS_TESTS)/Codesetslib
 
@@ -16,6 +16,6 @@ USER_CFLAGS = -I../include -I../../include
 
 %build_progs mmake=workbench-libs-codesets-test \
     files=$(FILES) targetdir=$(EXEDIR) \
-    uselibs="amiga mui"
+    uselibs="amiga mui codesets"
 
 %common
