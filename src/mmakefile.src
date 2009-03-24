@@ -23,8 +23,4 @@ USER_CFLAGS = -I. -I../include
     files=$(FILES) \
     uselibs="amiga rom"
 
-#MM
-workbench-libs-codesets-clean :
-	$(RM) $(GENDIR)/workbench/libs/codesets-extern
-
 %common
