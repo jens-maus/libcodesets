@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-24  Pavel Fedin <sonic.amiga@gmail.com>
+
+  * codesets.c, convertUTF.c, util.c, lib_protos.h : implemented complete UTF32 support
+  * libcodesets: added portable autoinit code
+  * developer/examples/autoopen.c: added autoopen test
+
 2009-03-23  Thore Böckelmann <tboeckel@gmx.de>
 
   * developer/examples/Convert.c: added the usual information header.
