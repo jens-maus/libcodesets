@@ -50,6 +50,7 @@ APTR allocArbitrateVecPooled(ULONG size);
 void freeArbitrateVecPooled(APTR mem);
 APTR reallocArbitrateVecPooled(APTR mem, ULONG oldSize, ULONG newSize);
 ULONG utf16_strlen(UTF16 *ptr);
+ULONG utf32_strlen(UTF32 *ptr);
 
 /* base64.c */
 LIBPROTO(CodesetsEncodeB64A, ULONG, REG(a0, struct TagItem *attrs));

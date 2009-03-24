@@ -931,7 +931,7 @@ codesetsInit(struct codesetList *csList)
   NewList((struct List *)&CodesetsBase->codesets);
 
   // to make the list of the supported codesets complete we also add fake
-  // 'UTF-8' and 'UTF-16' only so that our users can query for those codesets as well.
+  // 'UTF-8' , 'UTF-16' and 'UTF-32' only so that our users can query for those codesets as well.
   if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) == NULL)
     goto end;
 
@@ -951,6 +951,16 @@ codesetsInit(struct codesetList *csList)
   codeset->read_only        = 0;
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf16Codeset = codeset;
+
+  if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) == NULL)
+    goto end;
+
+  codeset->name             = mystrdup("UTF-32");
+  codeset->alt_name         = mystrdup("UTF32");
+  codeset->characterization = mystrdup("32-bit Unicode");
+  codeset->read_only        = 0;
+  AddTail((struct List *)csList, (struct Node *)&codeset->node);
+  CodesetsBase->utf32Codeset = codeset;
 
   // on AmigaOS4 we can use diskfont.library to inquire charset information as
   // it comes with a quite rich implementation of different charsets.
@@ -1929,13 +1939,18 @@ CodesetsStrLenA(REG(a0, STRPTR str),
   if(str != NULL)
   {
     struct codeset *codeset;
-    int len;
-    STRPTR src;
-    int utf;
+    int            len;
+    STRPTR         src;
+    int            utf;
 
     if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
       codeset = defaultCodeset(TRUE);
-    if(codeset == CodesetsBase->utf16Codeset)
+    if(codeset == CodesetsBase->utf32Codeset)
+    {
+      utf = 32;
+      len = utf32_strlen((UTF32 *)str);
+    }
+    else if(codeset == CodesetsBase->utf16Codeset)
     {
       utf = 16;
       len = utf16_strlen((UTF16 *)str);
@@ -1952,12 +1967,19 @@ CodesetsStrLenA(REG(a0, STRPTR str),
 
     if(utf != 0)
     {
-      const UTF16 *src16 = (const UTF16 *)src;
-      const UTF16 *src16end = (const UTF16 *)(src + len);
+      void *srcend = src + len;
       UTF8 *dstlen = NULL;
 
-      CodesetsConvertUTF16toUTF8(&src16, src16end, &dstlen, NULL, 0);
-      res = (ULONG)dstlen;
+      switch(utf)
+      {
+        case 32:
+          CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &dstlen, NULL, 0);
+          break;
+        case 16:
+          CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
+          break;
+      }
+      res	= (ULONG)dstlen;
     }
     else
     {
@@ -2026,7 +2048,12 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     // get the destination codeset pointer
     if((codeset = (struct codeset *)GetTagData(CSA_DestCodeset, (ULONG)NULL, attrs)) == NULL)
       codeset = defaultCodeset(TRUE);
-    if(codeset == CodesetsBase->utf16Codeset)
+    if(codeset == CodesetsBase->utf32Codeset)
+    {
+      utf = 32;
+      char_size = 4;
+    }
+    else if(codeset == CodesetsBase->utf16Codeset)
     {
       utf = 16;
       char_size = 2;
@@ -2060,20 +2087,28 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         // calculate the destLen
         if(utf)
         {
-          UTF16 *dstlen = NULL;
+          void *dstlen = NULL;
 
-          CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dstlen, NULL, 0);
-          len = (ULONG)dstlen;
-        }
-        else
-        {
-          while(s < e)
+          switch(utf)
           {
-            unsigned char c = *s++;
-
-            len++;
-            s += trailingBytesForUTF8[c];
+            case 32:
+              CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&dstlen, NULL, 0);
+              break;
+            case 16:
+      	      CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&dstlen, NULL, 0);
+              break;
           }
+      	  len = (ULONG)dstlen;
+      	}
+      	else
+      	{
+      	  while(s < e)
+      	  {
+      	    unsigned char c = *s++;
+
+      	    len++;
+      	    s += trailingBytesForUTF8[c];
+      	  }
         }
 
         if(dest == NULL || (destLen < len+1))
@@ -2110,22 +2145,29 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
     s = src;
     if (utf)
     {
+      void *dstend;
+
       if(destHook != NULL)
       {
-        UTF16 *dst16 = (UTF16 *)b;
-        UTF16 *dst16end;
         ULONG r;
 
-        dst16end = (UTF16 *)(b + destLen - char_size);
+        dstend = b + destLen - char_size;
         do
         {
-          r = CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dst16, dst16end, 0);
+          switch(utf)
+          {
+            case 32:
+              r = CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&b, dstend, 0);
+              break;
+            case 16:
+              r = CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&b, dstend, 0);
+              break;
+          }
           b[0] = 0;
           if(char_size > 1)
             b[1] = 0;
           if(r != CSR_TargetExhausted)
             msg.state = CSV_End;
-
           msg.len = b-buf;
           CallHookPkt(destHook,&msg,buf);
 
@@ -2136,11 +2178,16 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       }
       else
       {
-        UTF16 *dst16 = (UTF16 *)destIter;
-        UTF16 *dst16end;
-
-        dst16end = (UTF16 *)(destIter + destLen - char_size);
-        CodesetsConvertUTF8toUTF16((const UTF8 **)&s, (const UTF8 *)e, &dst16, dst16end, 0);
+        dstend = destIter + destLen - char_size;
+        switch(utf)
+        {
+          case 32:
+            CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&destIter, dstend, 0);
+            break;
+          case 16:
+            CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&destIter, dstend, 0);
+            break;
+        }
         n = destIter-dest;
       }
     }
@@ -2375,7 +2422,9 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
   if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
     codeset = defaultCodeset(TRUE);
-  if(codeset == CodesetsBase->utf16Codeset)
+  if(codeset == CodesetsBase->utf32Codeset)
+    utf = 32;
+  else if(codeset == CodesetsBase->utf16Codeset)
     utf = 16;
   else
     utf = 0;
@@ -2385,6 +2434,10 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
   {
     switch(utf)
     {
+      case 32:
+        fromLen = utf32_strlen((UTF32 *)from);
+        break;
+
       case 16:
         fromLen = utf16_strlen((UTF16 *)from);
         break;
@@ -2428,14 +2481,21 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
         src  = from;
 
-        if(utf)
+        if(utf != 0)
         {
-          const UTF16 *src16 = (const UTF16 *)src;
-          const UTF16 *src16end = (const UTF16 *)(src + fromLen);
+          void *srcend = src + fromLen;
           UTF8 *dstlen = NULL;
 
-          CodesetsConvertUTF16toUTF8(&src16, src16end, &dstlen, NULL, 0);
-          len = (ULONG)dstlen;
+          switch(utf)
+          {
+            case 32:
+              CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &dstlen, NULL, 0);
+              break;
+            case 16:
+      	      CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
+              break;
+          }
+      	  len = (ULONG)dstlen;
         }
         else
         {
@@ -2485,23 +2545,28 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     src = from;
     if(utf)
     {
-      UTF8 *srcend = src + fromLen;
+      void *srcend = src + fromLen;
       UTF8 *dstend;
 
       if(hook != NULL)
       {
-        const UTF16 *src16 = (const UTF16 *)src;
-        const UTF16 *src16end = (const UTF16 *)srcend;
         ULONG r;
 
         dstend = b + destLen - 1;
         do
         {
-          r = CodesetsConvertUTF16toUTF8(&src16, src16end, &b, dstend, 0);
+          switch(utf)
+          {
+            case 32:
+              r = CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &b, dstend, 0);
+              break;
+            case 16:
+              r = CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &b, dstend, 0);
+              break;
+          }
           *b = 0;
           if(r != CSR_TargetExhausted)
             msg.state = CSV_End;
-
           msg.len = b-buf;
           CallHookPkt(hook,&msg,buf);
 
@@ -2512,11 +2577,16 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       }
       else
       {
-        const UTF16 *src16 = (const UTF16 *)src;
-        const UTF16 *src16end = (const UTF16 *)srcend;
-
         dstend = destPtr + destLen;
-        CodesetsConvertUTF16toUTF8(&src16, src16end, &destPtr, dstend, 0);
+        switch(utf)
+        {
+          case 32:
+            CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &destPtr, dstend, 0);
+            break;
+          case 16:
+            CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &destPtr, dstend, 0);
+            break;
+        }
         n = destPtr-dest;
       }
     }
@@ -2627,9 +2697,11 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   if((srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, (ULONG)NULL, attrs)) == NULL)
     srcCodeset = defaultCodeset(TRUE);
 
-  if(srcStr != NULL)
+  if (srcStr != NULL)
   {
-    if(srcCodeset == CodesetsBase->utf16Codeset)
+    if (srcCodeset == CodesetsBase->utf32Codeset)
+      srcLen = utf32_strlen((UTF32 *)srcStr);
+    else if (srcCodeset == CodesetsBase->utf16Codeset)
       srcLen = utf16_strlen((UTF16 *)srcStr);
     else
       srcLen = strlen(srcStr);

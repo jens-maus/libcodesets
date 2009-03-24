@@ -132,3 +132,12 @@ ULONG utf16_strlen(UTF16 *ptr)
   return l<<1;
 }
 
+/****************************************************************************/
+
+ULONG utf32_strlen(UTF32 *ptr)
+{
+  ULONG l;
+
+  for (l=0; ptr[l]; l++);
+  return l<<2;
+}

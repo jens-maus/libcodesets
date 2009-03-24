@@ -638,10 +638,10 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
           break;
         }
         else
-	  ch = UNI_REPLACEMENT_CHAR;
+	        ch = UNI_REPLACEMENT_CHAR;
       }
       if(start)
-	*target = (UTF16) ch; /* normal case */
+	      *target = (UTF16) ch; /* normal case */
       target++;
     }
     else if(ch > UNI_MAX_UTF16)
@@ -654,7 +654,7 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
         break;          /* Bail out; shouldn't continue */
       }
       if(start)
-	*target = UNI_REPLACEMENT_CHAR;
+	      *target = UNI_REPLACEMENT_CHAR;
       target++;
     }
     else
@@ -664,15 +664,15 @@ CodesetsConvertUTF8toUTF16(REG(a0, const UTF8 ** sourceStart),
       {
         if(target + 1 >= targetEnd)
         {
-	  source -= (extraBytesToRead + 1);   /* Back up source pointer! */
-	  result = CSR_TargetExhausted;
+	        source -= (extraBytesToRead + 1);   /* Back up source pointer! */
+	        result = CSR_TargetExhausted;
 
-	  break;
+	        break;
         }
 
         ch -= halfBase;
-	target[0] = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
-	target[1] = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
+        target[0] = (UTF16) ((ch >> halfShift) + UNI_SUR_HIGH_START);
+        target[1] = (UTF16) ((ch & halfMask) + UNI_SUR_LOW_START);
       }
       target += 2;
     }
@@ -697,6 +697,7 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
   ULONG result = CSR_ConversionOK;
   const UTF32 *source = *sourceStart;
   UTF8 *target = *targetStart;
+  UTF8 *start = target;
 
   ENTER();
 
@@ -749,34 +750,37 @@ CodesetsConvertUTF32toUTF8(REG(a0, const UTF32 ** sourceStart),
     }
 
     target += bytesToWrite;
-    if(target > targetEnd)
+    if(start)
     {
-      --source;           /* Back up source pointer! */
-      target -= bytesToWrite;
-      result = CSR_TargetExhausted;
+      if(target > targetEnd)
+      {
+        --source;           /* Back up source pointer! */
+        target -= bytesToWrite;
+        result = CSR_TargetExhausted;
 
-      break;
+        break;
+      }
+      switch(bytesToWrite)
+      {
+        /* note: everything falls through. */
+        case 4:
+          *--target = (UTF8) ((ch | byteMark) & byteMask);
+          ch >>= 6;
+
+        case 3:
+          *--target = (UTF8) ((ch | byteMark) & byteMask);
+          ch >>= 6;
+
+        case 2:
+          *--target = (UTF8) ((ch | byteMark) & byteMask);
+          ch >>= 6;
+
+        case 1:
+          *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
+      }
+
+      target += bytesToWrite;
     }
-    switch(bytesToWrite)
-    {
-      /* note: everything falls through. */
-      case 4:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 3:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 2:
-        *--target = (UTF8) ((ch | byteMark) & byteMask);
-        ch >>= 6;
-
-      case 1:
-        *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
-    }
-
-    target += bytesToWrite;
   }
 
   *sourceStart = source;
@@ -798,6 +802,7 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
   ULONG result = CSR_ConversionOK;
   const UTF8 *source = *sourceStart;
   UTF32 *target = *targetStart;
+  UTF32 *start = target;
 
   ENTER();
 
@@ -850,45 +855,50 @@ CodesetsConvertUTF8toUTF32(REG(a0, const UTF8 ** sourceStart),
 
     ch -= offsetsFromUTF8[extraBytesToRead];
 
-    if(target >= targetEnd)
+    if(start)
     {
-      source -= (extraBytesToRead + 1);   /* Back up the source pointer! */
-      result = CSR_TargetExhausted;
-
-      break;
-    }
-
-    if(ch <= UNI_MAX_LEGAL_UTF32)
-    {
-      /*
-       * UTF-16 surrogate values are illegal in UTF-32, and anything
-       * over Plane 17 (> 0x10FFFF) is illegal.
-      */
-      if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
+      if(target >= targetEnd)
       {
-        if(flags == CSF_StrictConversion)
-        {
-          source -= (extraBytesToRead + 1);   /* return to the illegal value itself */
-          result = CSR_SourceIllegal;
+        source -= (extraBytesToRead + 1);   /* Back up the source pointer! */
+        result = CSR_TargetExhausted;
 
-          break;
+        break;
+      }
+
+      if(ch <= UNI_MAX_LEGAL_UTF32)
+      {
+        /*
+         * UTF-16 surrogate values are illegal in UTF-32, and anything
+         * over Plane 17 (> 0x10FFFF) is illegal.
+        */
+        if(ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_LOW_END)
+        {
+          if(flags == CSF_StrictConversion)
+          {
+            source -= (extraBytesToRead + 1);   /* return to the illegal value itself */
+            result = CSR_SourceIllegal;
+
+            break;
+          }
+          else
+          {
+            *target++ = UNI_REPLACEMENT_CHAR;
+          }
         }
         else
         {
-          *target++ = UNI_REPLACEMENT_CHAR;
+          *target++ = ch;
         }
       }
       else
       {
-        *target++ = ch;
+        /* i.e., ch > UNI_MAX_LEGAL_UTF32 */
+        result = CSR_SourceIllegal;
+        *target++ = UNI_REPLACEMENT_CHAR;
       }
     }
     else
-    {
-      /* i.e., ch > UNI_MAX_LEGAL_UTF32 */
-      result = CSR_SourceIllegal;
-      *target++ = UNI_REPLACEMENT_CHAR;
-    }
+      target++;
   }
 
   *sourceStart = source;
