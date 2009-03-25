@@ -306,6 +306,8 @@ static const USED_VAR struct Resident ROMTag =
   RTF_AUTOINIT|RTF_NATIVE,      // The Library should be set up according to the given table.
   #elif defined(__MORPHOS__)
   RTF_AUTOINIT|RTF_PPC,
+  #elif defined(__AROS__)
+  RTF_AUTOINIT|RTF_EXTENDED,
   #else
   RTF_AUTOINIT,
   #endif
@@ -319,7 +321,7 @@ static const USED_VAR struct Resident ROMTag =
   #else
   (APTR)LibInitTab,
   #endif
-  #if defined(__MORPHOS__)
+  #if defined(__MORPHOS__) || defined(__AROS__)
   LIB_REVISION,
   0
   #endif
