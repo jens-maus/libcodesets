@@ -211,6 +211,9 @@
 #if !defined(DEPRECATED)
   #define DEPRECATED
 #endif
+#if !defined(IPTR)
+  #define IPTR ULONG
+#endif
 
 /*************************************************************************/
 
