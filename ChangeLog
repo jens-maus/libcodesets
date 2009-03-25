@@ -7,6 +7,9 @@ $URL$
 
 2009-03-25  Jens Langner <Jens.Langner@light-speed.de>
 
+  * libinit.c: introduced a small fix to get the file compiled with the fixed
+    SDI headers again.
+  * include: fixed the SDI headers.
   * Makefile: adapted makefile to directly specify the target CPU for the AROS
     build. If you now want to compile AROS you have to explicitly set
     "OS=aros-i386" or "OS=aros-ppc", for example.

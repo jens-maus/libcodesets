@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_hook.h
-        Versionstring:  $VER: SDI_hook.h 1.18 (20.03.2009)
+        Versionstring:  $VER: SDI_hook.h 1.19 (25.03.2009)
         Author:         SDI & Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -46,6 +46,7 @@
                   a user does not use those definition on accident.
  1.18  20.03.09 : modified macros to be somewhat more compatible for an AROS
                   usage (Pavel Fedin)
+ 1.19  25.03.09 : fixed the DISPATCHERPROTO() macros for x86_64 AROS.
 */
 
 /*
@@ -185,7 +186,7 @@
   #define MakeStaticHook(hookname, funcname) static struct Hook hookname =   \
     {{NULL, NULL}, (HOOKFUNC)funcname, NULL, NULL}
   #define ENTRY(func) (APTR)func
-  #define DISPATCHERPROTO(name) SAVEDS ASM IPTR  name(REG(a0,               \
+  #define DISPATCHERPROTO(name) SAVEDS ASM IPTR name(REG(a0,                 \
     struct IClass * cl), REG(a2, Object * obj), REG(a1, Msg msg))
   #define DISPATCHER(name) DISPATCHERPROTO(name)
 
