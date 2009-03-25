@@ -7,6 +7,11 @@ $URL$
 
 2009-03-25  Jens Langner <Jens.Langner@light-speed.de>
 
+  * Makefile: adapted makefile to directly specify the target CPU for the AROS
+    build. If you now want to compile AROS you have to explicitly set
+    "OS=aros-i386" or "OS=aros-ppc", for example.
+  * version.h: added x86_64 CPU type to allow compilation of codesets.library
+    for x86_64 AROS target.
   * libinit.c: added RTF_EXTENDED and library revision number for the AROS
     build.
 

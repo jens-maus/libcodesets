@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_compiler.h
-        Versionstring:  $VER: SDI_compiler.h 1.27 (20.03.2009)
+        Versionstring:  $VER: SDI_compiler.h 1.28 (25.03.2009)
         Author:         Dirk Stöcker & Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -48,6 +48,8 @@
                   for GCC compiles.
  1.27  20.03.09 : applied some changes and fixes to get the header more usable
                   for an AROS compilation. (Pavel Fedin)
+ 1.28  25.03.09 : added missing IPTR definition to make SDI_compiler.h more compatible
+                  to AROS. (Pavel Fedin)
 */
 
 /*
