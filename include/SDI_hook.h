@@ -185,7 +185,7 @@
   #define MakeStaticHook(hookname, funcname) static struct Hook hookname =   \
     {{NULL, NULL}, (HOOKFUNC)funcname, NULL, NULL}
   #define ENTRY(func) (APTR)func
-  #define DISPATCHERPROTO(name) SAVEDS ASM ULONG  name(REG(a0,               \
+  #define DISPATCHERPROTO(name) SAVEDS ASM IPTR  name(REG(a0,               \
     struct IClass * cl), REG(a2, Object * obj), REG(a1, Msg msg))
   #define DISPATCHER(name) DISPATCHERPROTO(name)
 
