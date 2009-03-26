@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_compiler.h
-        Versionstring:  $VER: SDI_compiler.h 1.29 (25.03.2009)
+        Versionstring:  $VER: SDI_compiler.h 1.30 (26.03.2009)
         Author:         Dirk Stoecker & Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -51,6 +51,7 @@
  1.28  25.03.09 : added missing IPTR definition to make SDI_compiler.h more compatible
                   to AROS. (Pavel Fedin)
  1.29  25.03.09 : fixed the IPTR definition and also the use of the __M68000__ define.
+ 1.30  26.03.09 : fixed the IPTR definition by only defining it for non AROS targets.
 
 */
 
@@ -215,7 +216,7 @@
 #if !defined(DEPRECATED)
   #define DEPRECATED
 #endif
-#if defined(_M68000) || defined(__M68000) || defined(__mc68000)
+#if !defined(__AROS__) && !defined(IPTR)
   #define IPTR ULONG
 #endif
 

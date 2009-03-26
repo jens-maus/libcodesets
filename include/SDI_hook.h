@@ -4,7 +4,7 @@
 /* Includeheader
 
         Name:           SDI_hook.h
-        Versionstring:  $VER: SDI_hook.h 1.19 (25.03.2009)
+        Versionstring:  $VER: SDI_hook.h 1.20 (26.03.2009)
         Author:         SDI & Jens Langner
         Distribution:   PD
         Project page:   http://www.sf.net/projects/sditools/
@@ -47,6 +47,7 @@
  1.18  20.03.09 : modified macros to be somewhat more compatible for an AROS
                   usage (Pavel Fedin)
  1.19  25.03.09 : fixed the DISPATCHERPROTO() macros for x86_64 AROS.
+ 1.20  26.03.09 : fixed m68k define checks.
 */
 
 /*
@@ -109,7 +110,7 @@
 ** The ENTRY macro, which also gets the function name as argument.
 */
 
-#if defined(__M68000__)
+#if defined(_M68000) || defined(__M68000) || defined(__mc68000)
   #define HOOKPROTO(name, ret, obj, param) static SAVEDS ASM ret             \
     name(REG(a0, struct Hook *hook), REG(a2, obj), REG(a1, param))
   #define HOOKPROTONO(name, ret, param) static SAVEDS ASM ret                \

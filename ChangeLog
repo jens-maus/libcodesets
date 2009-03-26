@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-26  Jens Langner <Jens.Langner@light-speed.de>
+
+  * include: updated SDI headers to very latest versions.
+
 2009-03-25  Jens Langner <Jens.Langner@light-speed.de>
 
   * libinit.c: introduced a small fix to get the file compiled with the fixed
