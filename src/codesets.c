@@ -1033,7 +1033,7 @@ codesetsInit(struct codesetList *csList)
           if((codeset = allocVecPooled(CodesetsBase->pool, sizeof(struct codeset))) != NULL)
           {
              codeset->name             = mystrdup(name);
-             codeset->alt_name 	       = NULL;
+             codeset->alt_name         = NULL;
              codeset->characterization = mystrdup(name);  // No more information available
              codeset->read_only        = 0;
 
@@ -1979,7 +1979,7 @@ CodesetsStrLenA(REG(a0, STRPTR str),
           CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
           break;
       }
-      res	= (ULONG)dstlen;
+      res = (ULONG)dstlen;
     }
     else
     {
@@ -2095,20 +2095,20 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
               CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&dstlen, NULL, 0);
               break;
             case 16:
-      	      CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&dstlen, NULL, 0);
+              CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&dstlen, NULL, 0);
               break;
           }
-      	  len = (ULONG)dstlen;
-      	}
-      	else
-      	{
-      	  while(s < e)
-      	  {
-      	    unsigned char c = *s++;
+          len = (ULONG)dstlen;
+        }
+        else
+        {
+          while(s < e)
+          {
+            unsigned char c = *s++;
 
-      	    len++;
-      	    s += trailingBytesForUTF8[c];
-      	  }
+            len++;
+            s += trailingBytesForUTF8[c];
+          }
         }
 
         if(dest == NULL || (destLen < len+1))
@@ -2492,10 +2492,10 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
               CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &dstlen, NULL, 0);
               break;
             case 16:
-      	      CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
+              CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
               break;
           }
-      	  len = (ULONG)dstlen;
+          len = (ULONG)dstlen;
         }
         else
         {
