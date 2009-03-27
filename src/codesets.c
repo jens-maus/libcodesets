@@ -2149,7 +2149,7 @@ CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
 
       if(destHook != NULL)
       {
-        ULONG r;
+        ULONG r = CSR_TargetExhausted;
 
         dstend = b + destLen - char_size;
         do
@@ -2550,7 +2550,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
 
       if(hook != NULL)
       {
-        ULONG r;
+        ULONG r = CSR_TargetExhausted;
 
         dstend = b + destLen - 1;
         do

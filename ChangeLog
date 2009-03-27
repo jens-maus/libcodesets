@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-27  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: fixed some warnings about uninitialized variables.
+
 2009-03-26  Jens Langner <Jens.Langner@light-speed.de>
 
   * include: updated SDI headers to very latest versions.
