@@ -196,8 +196,8 @@ STATIC uint32 _manager_Release(struct LibraryManagerInterface *Self)
 
 STATIC CONST CONST_APTR lib_manager_vectors[] =
 {
-	(CONST_APTR)_manager_Obtain,
-	(CONST_APTR)_manager_Release,
+  (CONST_APTR)_manager_Obtain,
+  (CONST_APTR)_manager_Release,
   (CONST_APTR)NULL,
   (CONST_APTR)NULL,
   (CONST_APTR)LibOpen,
@@ -239,17 +239,17 @@ STATIC CONST CONST_APTR main_vectors[] =
 
 STATIC CONST struct TagItem mainTags[] =
 {
-	{ MIT_Name,         (Tag)"main" },
-	{ MIT_VectorTable,	(Tag)main_vectors	},
-	{ MIT_Version,      1 },
-	{ TAG_DONE,         0	}
+  { MIT_Name,         (Tag)"main" },
+  { MIT_VectorTable,  (Tag)main_vectors },
+  { MIT_Version,      1 },
+  { TAG_DONE,         0 }
 };
 
 STATIC CONST CONST_APTR libInterfaces[] =
 {
-	(CONST_APTR)lib_managerTags,
-	(CONST_APTR)mainTags,
-	(CONST_APTR)NULL
+  (CONST_APTR)lib_managerTags,
+  (CONST_APTR)mainTags,
+  (CONST_APTR)NULL
 };
 
 // Our libraries always have to carry a 68k jump table with it, so
@@ -343,9 +343,9 @@ const USED_VAR ULONG __abox__ = 1;
 
 /* generic StackSwap() function which calls function() surrounded by
    StackSwap() calls */
-/*extern REGARGS ULONG stackswap_call(struct StackSwapStruct *stack,
-                            ULONG (*function)(struct LibraryHeader *),
-                            struct LibraryHeader *arg);*/
+extern REGARGS ULONG stackswap_call(struct StackSwapStruct *stack,
+                                    ULONG (*function)(struct LibraryHeader *),
+                                    struct LibraryHeader *arg);
 
 #if defined(__mc68000__)
 asm(".text                    \n\
@@ -377,6 +377,7 @@ ULONG stackswap_call(struct StackSwapStruct *stack,
    struct PPCStackSwapArgs swapargs;
 
    swapargs.Args[0] = (ULONG)arg;
+
    return NewPPCStackSwap(stack, function, &swapargs);
 }
 #else
@@ -384,13 +385,15 @@ ULONG stackswap_call(struct StackSwapStruct *stack,
           On AmigaOS v4 it ocassionally works because function's parameters are placed
           in registers on PPC */
 ULONG REGARGS stackswap_call(struct StackSwapStruct *stack,
-                     ULONG (*function)(struct LibraryHeader *),
-                     struct LibraryHeader *arg)
+                             ULONG (*function)(struct LibraryHeader *),
+                             struct LibraryHeader *arg)
 {
    register ULONG result;
+
    StackSwap(stack);
    result = function(arg);
    StackSwap(stack);
+
    return result;
 }
 #endif
@@ -553,7 +556,7 @@ static BPTR LibExpunge(struct LibraryManagerInterface *Self)
 #elif defined(__MORPHOS__)
 static BPTR LibExpunge(void)
 {
-	struct LibraryHeader *base = (struct LibraryHeader*)REG_A6;
+  struct LibraryHeader *base = (struct LibraryHeader*)REG_A6;
 #else
 static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
 {
@@ -653,7 +656,7 @@ static BPTR LibClose(struct LibraryManagerInterface *Self)
 #elif defined(__MORPHOS__)
 static BPTR LibClose(void)
 {
-	struct LibraryHeader *base = (struct LibraryHeader *)REG_A6;
+  struct LibraryHeader *base = (struct LibraryHeader *)REG_A6;
 #else
 static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
 {

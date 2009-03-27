@@ -7,6 +7,8 @@ $URL$
 
 2009-03-27  Thore Böckelmann <tboeckel@gmx.de>
 
+  * libinit.c: reenabled the prototype for the stackswap_call() function to
+    avoid warnings about implicitly declared functions.
   * codesets.c: fixed some warnings about uninitialized variables.
 
 2009-03-26  Jens Langner <Jens.Langner@light-speed.de>
