@@ -681,8 +681,11 @@ defaultCodeset(BOOL useSemaphore)
 /// codesetsCmpUnicode()
 // The compare function
 static int
-codesetsCmpUnicode(struct single_convert *arg1,struct single_convert *arg2)
+codesetsCmpUnicode(const void *a1, const void *a2)
 {
+  struct single_convert *arg1 = (struct single_convert *)a1;
+  struct single_convert *arg2 = (struct single_convert *)a2;
+
   return strcmp((char*)&arg1->utf8[1], (char*)&arg2->utf8[1]);
 }
 ///
@@ -789,7 +792,7 @@ codesetsReadTable(struct codesetList *csList, STRPTR name)
         }
 
         memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
-        qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+        qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
         AddTail((struct List *)csList, (struct Node *)&codeset->node);
 
         res = TRUE;
@@ -1006,7 +1009,7 @@ codesetsInit(struct codesetList *csList)
       }
 
       memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-      qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+      qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
       AddTail((struct List *)csList, (struct Node *)&codeset->node);
     }
@@ -1051,7 +1054,7 @@ codesetsInit(struct codesetList *csList)
              }
 
              memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-             qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+             qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
              AddTail((struct List *)csList, (struct Node *)&codeset->node);
 
@@ -1109,7 +1112,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1137,7 +1141,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1168,7 +1173,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1199,7 +1205,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1230,7 +1237,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1261,7 +1269,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1292,7 +1301,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1323,7 +1333,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof (codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1354,7 +1365,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr - (ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
-    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), (int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1385,7 +1397,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1416,7 +1429,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1,const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1447,7 +1461,8 @@ codesetsInit(struct codesetList *csList)
       codeset->table[i].utf8[0] = (char*)dest_ptr - (char*)&codeset->table[i].utf8[1];
     }
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-    qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+    qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 

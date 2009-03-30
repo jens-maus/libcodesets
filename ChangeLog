@@ -7,6 +7,8 @@ $URL$
 
 2009-03-30  Thore Böckelmann <tboeckel@gmx.de>
 
+  * codesets.c: the UTF8 compare function now uses a proper prototype to be used
+    with qsort().
   * codesets.c: in case the default codeset could not be created two libraties
     were left open in the MOS build.
 
