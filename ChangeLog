@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-03-30  Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: in case the default codeset could not be created two libraties
+    were left open in the MOS build.
+
 2009-03-27  Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c: reenabled the prototype for the stackswap_call() function to

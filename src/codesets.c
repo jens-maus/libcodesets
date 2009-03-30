@@ -928,7 +928,7 @@ codesetsInit(struct codesetList *csList)
 
   ObtainSemaphore(&CodesetsBase->poolSem);
 
-  NewList((struct List *)&CodesetsBase->codesets);
+  NewList((struct List *)csList);
 
   // to make the list of the supported codesets complete we also add fake
   // 'UTF-8' , 'UTF-16' and 'UTF-32' only so that our users can query for those codesets as well.
@@ -1018,6 +1018,7 @@ codesetsInit(struct codesetList *csList)
   {
     struct Library *KeymapBase;
     struct Library *LocaleBase;
+    BOOL success = FALSE;
 
     if((KeymapBase = OpenLibrary("keymap.library", 51)) != NULL)
     {
@@ -1050,12 +1051,12 @@ codesetsInit(struct codesetList *csList)
              }
 
              memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
-            qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
+             qsort(codeset->table_sorted,256,sizeof(codeset->table[0]),(int (*)(const void *arg1, const void *arg2))codesetsCmpUnicode);
 
              AddTail((struct List *)csList, (struct Node *)&codeset->node);
+
+             success = TRUE;
           }
-          else
-            goto end;
         }
 
         CloseLibrary(LocaleBase);
@@ -1063,6 +1064,9 @@ codesetsInit(struct codesetList *csList)
 
       CloseLibrary(KeymapBase);
     }
+
+    if(success == FALSE)
+      goto end;
   }
   #endif
 
@@ -1094,7 +1098,7 @@ codesetsInit(struct codesetList *csList)
       UTF8  *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i==164)
-        src = 0x20AC; /* the EURO sign */
+        src = 0x20AC; // the EURO sign
       else
         src = i;
 
