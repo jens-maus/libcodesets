@@ -343,11 +343,12 @@ const USED_VAR ULONG __abox__ = 1;
 
 /* generic StackSwap() function which calls function() surrounded by
    StackSwap() calls */
-extern REGARGS ULONG stackswap_call(struct StackSwapStruct *stack,
-                                    ULONG (*function)(struct LibraryHeader *),
-                                    struct LibraryHeader *arg);
 
 #if defined(__mc68000__)
+ULONG stackswap_call(struct StackSwapStruct *stack,
+                     ULONG (*function)(struct LibraryHeader *),
+                     struct LibraryHeader *arg);
+
 asm(".text                    \n\
      .even                    \n\
      .globl _stackswap_call   \n\
@@ -538,7 +539,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(d0, struct LibraryHeader *base
     #endif
   }
 
-  return(NULL);
+  return NULL;
 }
 
 /****************************************************************************/
@@ -683,8 +684,6 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
       #else
       rc = LibExpunge(base);
       #endif
-
-      return rc;
     }
   }
 

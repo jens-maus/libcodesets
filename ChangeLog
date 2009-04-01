@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-04-01  Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: fixed broken stackswap_call() prototype for the assembler
+    version.
+
 2009-04-01  Jens Langner <Jens.Langner@light-speed.de>
 
   * include/defines/codesets.h: updated the AROS codesets.h file to the one
@@ -14,7 +19,7 @@ $URL$
 
   * codesets.c: the UTF8 compare function now uses a proper prototype to be used
     with qsort().
-  * codesets.c: in case the default codeset could not be created two libraties
+  * codesets.c: in case the default codeset could not be created two libraries
     were left open in the MOS build.
 
 2009-03-27  Thore Böckelmann <tboeckel@gmx.de>
