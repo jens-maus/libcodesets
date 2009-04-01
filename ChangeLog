@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-04-01  Jens Langner <Jens.Langner@light-speed.de>
+
+  * include/defines/codesets.h: updated the AROS codesets.h file to the one
+    that is distributed with AROS.
+
 2009-03-30  Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: the UTF8 compare function now uses a proper prototype to be used
