@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-04-06  Jens Langner <Jens.Langner@light-speed.de>
+
+  * include/defines/codesets.h: fixed the codesets AROS defines.h include by
+    shifting the function offsets by one to match the offsets using in the 68k
+    build.
+
 2009-04-01  Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c: fixed broken stackswap_call() prototype for the assembler
