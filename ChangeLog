@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-04-17  Jens Langner <Jens.Langner@light-speed.de>
+
+  * include/defines/codesets.h: regenerated the AROS codesets.h includes by
+    using the very latest sfdc 1.4 tool. That should hopefully fix all existing
+    issues with using codesets.lib for an AROS project.
+
 2009-04-06  Jens Langner <Jens.Langner@light-speed.de>
 
   * include/defines/codesets.h: fixed the codesets AROS defines.h include by
