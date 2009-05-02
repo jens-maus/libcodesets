@@ -305,7 +305,7 @@ static const USED_VAR struct Resident ROMTag =
   #if defined(__amigaos4__)
   RTF_AUTOINIT|RTF_NATIVE,      // The Library should be set up according to the given table.
   #elif defined(__MORPHOS__)
-  RTF_AUTOINIT|RTF_PPC,
+  RTF_AUTOINIT|RTF_EXTENDED|RTF_PPC,
   #elif defined(__AROS__)
   RTF_AUTOINIT|RTF_EXTENDED,
   #else
