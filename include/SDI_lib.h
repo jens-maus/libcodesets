@@ -36,7 +36,9 @@
  1.9   15.03.09 : fixed some missing function prototype in LIBPROTOVA()
  1.10  30.04.09 : added approriate LIBPROTOVA() definition for OS3 and MorphOS
                   to at least make the functions known. The same pattern as for
-                  LIBSTUBVA() will be used now.
+                  LIBSTUBVA() will be used now (Thore Böckelmann)
+ 1.11  04.05.09 : reverted the faulty LIBPROTOVA() definition to its previous
+                  version (Thore Böckelmann)
 
 */
 
@@ -137,7 +139,7 @@
       LIBFUNC ret libstub_##name(struct Interface *self UNUSED,       \
       ## __VA_ARGS__)
     #define LIBPROTOVA(name, ret, ...)                                \
-      LIBFUNC ret VARARGS68K name(__VA_ARGS__);                       \
+      /*LIBFUNC ret VARARGS68K name(__VA_ARGS__);*/                   \
       LIBFUNC ret VARARGS68K                                          \
       libstub_##name(struct Interface *self UNUSED, ## __VA_ARGS__)
     #define LIBSTUB(name, ret, ...)                                   \
