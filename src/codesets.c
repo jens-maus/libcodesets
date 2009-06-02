@@ -1630,7 +1630,7 @@ codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_le
 
       // now we walk through our taglist and check if the user
       // supplied
-      while((tag = NextTagItem(&tstate)))
+      while((tag = NextTagItem((APTR)&tstate)))
       {
         if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
         {
@@ -1660,7 +1660,7 @@ codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_le
     struct TagItem *tag;
     BOOL lastIteration = FALSE;
 
-    while((tag = NextTagItem(&tstate)) || (lastIteration = TRUE))
+    while((tag = NextTagItem((APTR)&tstate)) || (lastIteration = TRUE))
     {
       if(lastIteration == TRUE || (tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0))
       {
@@ -1740,7 +1740,7 @@ CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
   // first we need to check how many codesets our supplied
   // lists carry.
   numCodesets = countCodesets(&CodesetsBase->codesets);
-  while((tag = NextTagItem(&tstate)))
+  while((tag = NextTagItem((APTR)&tstate)))
   {
     if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
       numCodesets += countCodesets((struct codesetList *)tag->ti_Data);
@@ -1767,7 +1767,7 @@ CodesetsSupportedA(REG(a0, UNUSED struct TagItem * attrs))
         array[i] = code->name;
 
       // then we also iterate through our private codesets list
-      while((tag = NextTagItem(&tstate)))
+      while((tag = NextTagItem((APTR)&tstate)))
       {
         if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
         {
@@ -1855,7 +1855,7 @@ CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 
       // now we walk through our taglist and check if the user
       // supplied
-      while((tag = NextTagItem(&tstate)))
+      while((tag = NextTagItem((APTR)&tstate)))
       {
         if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
         {
@@ -2885,7 +2885,7 @@ CodesetsListCreateA(REG(a0, struct TagItem *attrs))
 
     // first we get the path of the directory from which we go
     // and scan for charset tables from
-    while((tag = NextTagItem(&tstate)))
+    while((tag = NextTagItem((APTR)&tstate)))
     {
       switch(tag->ti_Tag)
       {
@@ -2950,7 +2950,7 @@ CodesetsListDeleteA(REG(a0, struct TagItem *attrs))
 
     // now we iterate through or tagItems and see what the
     // user wants to remove from the list
-    while((tag = NextTagItem(&tstate)))
+    while((tag = NextTagItem((APTR)&tstate)))
     {
       switch(tag->ti_Tag)
       {
@@ -2998,7 +2998,7 @@ CodesetsListAddA(REG(a0, struct codesetList *csList),
 
     // now we iterate through or tagItems and see if the user
     // wants to scan a whole directory or just adds a file.
-    while((tag = NextTagItem(&tstate)))
+    while((tag = NextTagItem((APTR)&tstate)))
     {
       switch(tag->ti_Tag)
       {
@@ -3055,7 +3055,7 @@ CodesetsListRemoveA(REG(a0, struct TagItem *attrs))
 
     // now we iterate through or tagItems and see what the
     // user wants to remove from the list
-    while((tag = NextTagItem(&tstate)))
+    while((tag = NextTagItem((APTR)&tstate)))
     {
       switch(tag->ti_Tag)
       {
