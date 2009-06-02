@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-06-02  Matthias Rustler <mrustler@gmx.de>
+
+  * Some warnings removed
+  * Use standard MUIM_Application_AboutMUI because custom method
+    crashes under AROS
+
 2009-06-02  Jens Langner <Jens.Langner@light-speed.de>
 
   * lib_protos.h: fixed the compilation for OS3, MOS and AROS because of

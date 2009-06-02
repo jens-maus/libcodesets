@@ -79,14 +79,14 @@ int main(int argc, char **argv)
           {
             fread(buf, BUF_SIZE-1, 1, f);
             fclose(f);
-            destbuf = CodesetsConvertStr(CSA_SourceCodeset, srcCodeset,
-                                         CSA_DestCodeset, destCodeset,
-                                         CSA_Source, buf,
-                                         CSA_DestLenPtr, &destlen,
+            destbuf = CodesetsConvertStr(CSA_SourceCodeset, (Tag)srcCodeset,
+                                         CSA_DestCodeset, (Tag)destCodeset,
+                                         CSA_Source, (Tag)buf,
+                                         CSA_DestLenPtr, (Tag)&destlen,
                                          TAG_DONE);
             if (destbuf)
             {
-              fprintf(stderr, "Result length: %lu\n", destlen);
+              fprintf(stderr, "Result length: %u\n", destlen);
               fwrite(destbuf, destlen, 1, stdout);
               fputc('\n', stderr);
               CodesetsFreeA(destbuf, NULL);
