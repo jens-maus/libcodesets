@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-06-02  Jens Langner <Jens.Langner@light-speed.de>
+
+  * lib_protos.h: fixed the compilation for OS3, MOS and AROS because of
+    incompatible function prototypes for the library functions with a variable
+    argument list.
+
 2009-05-04 Thore Böckelmann <tboeckel@gmx.de>
 
   * include/SDI_lib.h: updated to the latest version.
