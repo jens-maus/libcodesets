@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-06-07  Matthias Rustler <mrustler@gmx.de>
+
+  * Makefiles for examples and linkerlib fixed.
+  * Bugfix in demo1.c. (variable codesets defined outside application
+    to ensure that it exists when it's used)
+
 2009-06-02  Matthias Rustler <mrustler@gmx.de>
 
   * Some warnings removed

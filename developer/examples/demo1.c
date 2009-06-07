@@ -586,6 +586,8 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *strip, *win, *codesets = NULL, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
 
+    codesets = popupCodesetObject, End;
+
     if((obj = (Object *)DoSuperNew(cl,obj,
                 MUIA_Application_Title,        "Codesets Demo1",
                 MUIA_Application_Version,      "$VER: CodesetsDemo1 1.0 (10.11.2004)",
@@ -602,7 +604,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 
                         Child, HGroup,
                             Child, Label2("Charset"),
-                            Child, codesets = popupCodesetObject, End,
+                            Child, codesets,
                         End,
 
                         Child, HGroup,
@@ -629,7 +631,6 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
                 TAG_MORE,msg->ops_AttrList)))
     {
         struct appData *data = INST_DATA(cl,obj);
-
         data->win = win;
 
         set(editor,MUIA_TextEditor_Slider,sb);

@@ -47,7 +47,7 @@ struct CodesetsIFace* ICodesets = NULL;
 #define DROPINTERFACE(iface)
 #endif
 
-int main(int argc,char **argv)
+int main(void)
 {
   int res;
 
