@@ -1043,14 +1043,18 @@ codesetsInit(struct codesetList *csList)
 
              for(i=0; i<256; i++)
              {
-               UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+               UTF8 *dest_ptr = &codeset->table[i].utf8[1];
                LONG rc;
 
                codeset->table[i].code = i;
                codeset->table[i].ucs4 = src = ToUCS4(i, keymap);
+
+               // here we use UTF8_Encode() instead of ConvertUCS4ToUTF8() because
+               // of an internal bug in MorphOS 2.2.
                rc = UTF8_Encode(src, dest_ptr);
-					rc = rc ? rc : 1;
-               dest_ptr[rc] = 0;
+               rc = rc > 0 ? rc : 1;
+
+               dest_ptr[rc] = '\0';
                codeset->table[i].utf8[0] = rc;
              }
 
