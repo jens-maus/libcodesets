@@ -1048,7 +1048,8 @@ codesetsInit(struct codesetList *csList)
 
                codeset->table[i].code = i;
                codeset->table[i].ucs4 = src = ToUCS4(i, keymap);
-               rc = ConvertUCS4ToUTF8((CONST_WSTRPTR)&src, dest_ptr, 1);
+               rc = UTF8_Encode(src, dest_ptr);
+					rc = rc ? rc : 1;
                dest_ptr[rc] = 0;
                codeset->table[i].utf8[0] = rc;
              }

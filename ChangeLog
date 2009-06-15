@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-06-15  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * codesets.c: workaround for locale.library bug in MorphOS 2.2.
+
 2009-06-08  Staf Verhaegen <staf.verhaegen@skynet.be>
   * libinit.c: On AROS library base is not necessarily passed on the stack
     to the lib (de)init functions. Use AROS macros for the definition of those
