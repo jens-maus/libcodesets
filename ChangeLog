@@ -8,6 +8,7 @@ $URL$
 2009-06-15  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
   * codesets.c: workaround for locale.library bug in MorphOS 2.2.
+    Fixes bug #2496990.
 
 2009-06-08  Staf Verhaegen <staf.verhaegen@skynet.be>
   * libinit.c: On AROS library base is not necessarily passed on the stack
