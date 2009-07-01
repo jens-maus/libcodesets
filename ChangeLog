@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-07-02  Ilkka Lehtoranta <ilkleht@isoveli.org>
+
+  * libraries/codesets.h: Added standard UTF#?_TYPEDEF around UTF8, UTF16 and
+    UTF32 typedefs to make sure they dont clash with system types in the future.
+
 2009-06-15  Ilkka Lehtoranta <ilkleht@isoveli.org>
 
   * codesets.c: workaround for locale.library bug in MorphOS 2.2.
