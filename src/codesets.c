@@ -2710,6 +2710,7 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   STRPTR dstStr = NULL;
   ULONG srcLen = 0;
   ULONG dstLen = 0;
+  ULONG charSize = 0;
 
   ENTER();
 
@@ -2724,11 +2725,20 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   if(srcStr != NULL)
   {
     if(srcCodeset == CodesetsBase->utf32Codeset)
+    {
       srcLen = utf32_strlen((UTF32 *)srcStr);
+      charSize = sizeof(UTF32);
+    }
     else if(srcCodeset == CodesetsBase->utf16Codeset)
+    {
       srcLen = utf16_strlen((UTF16 *)srcStr);
+      charSize = sizeof(UTF16);
+    }
     else
+    {
       srcLen = strlen(srcStr);
+      charSize = sizeof(char);
+    }
   }
   else
     srcLen = 0;
@@ -2845,12 +2855,12 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
         ULONG *destLenPtr = NULL;
 
         // allocate memory for the destination string, including a trailing NUL byte
-        if((dstStr = allocArbitrateVecPooled(srcLen+1)) != NULL)
+        if((dstStr = allocArbitrateVecPooled(srcLen + charSize)) != NULL)
         {
           // just copy the source string without any further modification
           // we must use memcpy() as the source string could be UTF16/32 encoded and
           // thus strcpy() would not do what we want.
-          memcpy(dstStr, srcStr, srcLen+1);
+          memcpy(dstStr, srcStr, srcLen + charSize);
           dstLen = srcLen;
           D(DBF_UTF, "successfully copied string with len %ld", dstLen);
         }
