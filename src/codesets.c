@@ -2848,6 +2848,8 @@ CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
         if((dstStr = allocArbitrateVecPooled(srcLen+1)) != NULL)
         {
           // just copy the source string without any further modification
+          // we must use memcpy() as the source string could be UTF16/32 encoded and
+          // thus strcpy() would not do what we want.
           memcpy(dstStr, srcStr, srcLen+1);
           dstLen = srcLen;
           D(DBF_UTF, "successfully copied string with len %ld", dstLen);
