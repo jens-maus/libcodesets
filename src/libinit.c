@@ -562,9 +562,9 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(d0, struct LibraryHeader *base
     else
     {
       #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
-      success = callLibFunction(freeBase, base);
+      callLibFunction(freeBase, base);
       #else
-      success = freeBase(base);
+      freeBase(base);
       #endif
       CodesetsBase = NULL;
     }
