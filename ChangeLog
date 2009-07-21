@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-07-21 Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: in case something in the LibInit() call fails everything set up
+    before will now correctly be freed again to avoid memory leaks.
+
 2009-07-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: a conversion with identical source and destination codesets no
