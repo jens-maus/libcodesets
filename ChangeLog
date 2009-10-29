@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-10-29 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: removed a superflous LF from a debug message.
+
 #### 6.9 RELEASE #########################################################
 
 2009-10-24  Jens Langner <Jens.Langner@light-speed.de>

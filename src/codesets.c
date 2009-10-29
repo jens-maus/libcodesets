@@ -2532,7 +2532,7 @@ CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
             flen--;
           }
         }
-        D(DBF_UTF, "Calculated output UTF-8 buffer length: %lu\n", len);
+        D(DBF_UTF, "Calculated output UTF-8 buffer length: %lu", len);
 
         if(dest == NULL || (destLen<len+1))
         {
