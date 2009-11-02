@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-11-02 Thore Böckelmann <tboeckel@gmx.de>
+
+  * debug.c, libinit.c: reworked the debug system to use the same stuff as YAM
+    does. Furthermore we now have a semaphore to prevent several concurring
+    applications from screwing up the log by writing out debug messages at the
+    same time.
+
 2009-10-29 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: removed a superflous LF from a debug message.

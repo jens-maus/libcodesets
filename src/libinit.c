@@ -510,6 +510,8 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(d0, struct LibraryHeader *base
   {
     BOOL success = FALSE;
 
+    // this must be called ahead of any debug output, otherwise we get stuck
+    InitDebug();
     D(DBF_STARTUP, "LibInit()");
 
     // cleanup the library header structure beginning with the
