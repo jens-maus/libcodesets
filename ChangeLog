@@ -5,6 +5,15 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-12-08 Thore Böckelmann <tboeckel@gmx.de>
+
+  * misc: cleaned up several parts of the source code for better readability and
+    maintainability. The pool semaphore was often used to protect some code
+    parts against concurrent execution where it was not needed at all. The pool
+    semaphore is for meant to protect the memory pool and nothing else!
+    Added the GetHead/Tail/Succ/Pred functions to navigate within the codeset
+    lists to make things more safe.
+
 2009-11-02 Thore Böckelmann <tboeckel@gmx.de>
 
   * debug.c, libinit.c: reworked the debug system to use the same stuff as YAM

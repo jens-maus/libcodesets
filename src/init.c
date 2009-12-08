@@ -377,11 +377,11 @@ initBase(struct LibraryHeader *lib)
         #endif
         if(lib->pool != NULL)
         {
-          if(codesetsInit(&lib->codesets))
+          if(codesetsInit(&lib->codesets) == TRUE)
           {
-            lib->systemCodeset = (struct codeset *)lib->codesets.list.mlh_Head;
+            lib->systemCodeset = (struct codeset *)GetHead((struct List *)&lib->codesets);
 
-            if((LocaleBase = (APTR)OpenLibrary("locale.library", 37)) &&
+            if((LocaleBase = (APTR)OpenLibrary("locale.library", 37)) != NULL &&
                GETINTERFACE(ILocale, LocaleBase))
             {
               getSystemCodeset(lib);
