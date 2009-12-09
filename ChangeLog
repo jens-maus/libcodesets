@@ -9,6 +9,8 @@ $URL$
 
   * codesets.c: added some debug output when adding the individual internal and
     external codesets.
+  * codesets.c: broke down the text check against a single codeset into smaller
+    functions to make things easier to understand and maintain.
 
 2009-12-08 Thore Böckelmann <tboeckel@gmx.de>
 

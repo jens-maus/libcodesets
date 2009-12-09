@@ -714,7 +714,7 @@ static BOOL codesetsReadTable(struct codesetList *csList, STRPTR name)
       int i;
       char buf[512];
 
-      memset(codeset,0,sizeof(struct codeset));
+      memset(codeset, 0, sizeof(struct codeset));
 
       for(i = 0; i<256; i++)
         codeset->table[i].code = codeset->table[i].ucs4 = i;
@@ -1556,9 +1556,81 @@ struct codeset *codesetsFind(struct codesetList *csList, const char *name)
 }
 
 ///
+/// checkTextAgainstSingleCodeset
+// check how good a text can be represented by a specific codeset
+static int checkTextAgainstSingleCodeset(CONST_STRPTR text, ULONG textLen, struct codeset *codeset)
+{
+  int errors = textLen;
+
+  ENTER();
+
+  if(codeset->read_only == 0 && codeset != CodesetsBase->utf8Codeset)
+  {
+    CONST_STRPTR text_ptr = text;
+    ULONG i;
+
+    errors = 0;
+
+    // the following identification/detection routine is NOT really smart.
+    // we just see how each UTF8 string is the representation of each char
+    // in our source text and then check if they are valid or not. As said,
+    // not very smart, but we don't have anything better right now :(
+    for(i=0; i < textLen; i++)
+    {
+      unsigned char c = *text_ptr++;
+
+      if(c != '\0')
+      {
+        struct single_convert *f = &codeset->table[c];
+
+        if(f->utf8[0] == 0x00 || f->utf8[1] == 0x00)
+          errors++;
+      }
+      else
+        break;
+    }
+  }
+
+  D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, textLen);
+
+  RETURN(errors);
+  return errors;
+}
+
+///
+/// checkTextAgainstCodesetList
+static int checkTextAgainstCodesetList(CONST_STRPTR text, ULONG textLen, struct codesetList *csList, struct codeset **bestCodeset)
+{
+  struct Node *node;
+  int bestErrors = textLen;
+
+  ENTER();
+
+  *bestCodeset = NULL;
+
+  for(node = GetHead((struct List *)csList); node != NULL; node = GetSucc(node))
+  {
+    struct codeset *codeset = (struct codeset *)node;
+    int errors;
+
+    errors = checkTextAgainstSingleCodeset(text, textLen, codeset);
+    if(errors < bestErrors)
+    {
+      *bestCodeset = codeset;
+      bestErrors = errors;
+
+      if(bestErrors == 0)
+        break;
+    }
+  }
+
+  RETURN(bestErrors);
+  return bestErrors;
+}
+
 /// codesetsFindBest()
 // Returns the best codeset for the given text
-static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, ULONG textLen, int *errorPtr)
+static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, CONST_STRPTR text, ULONG textLen, int *errorPtr)
 {
   struct codeset *bestCodeset = NULL;
   int bestErrors = textLen;
@@ -1589,6 +1661,8 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
     int max;
     int gr = 0;
     int lr = 0;
+
+    D(DBF_STARTUP, "performing cyrillic analysis");
 
     search[0].name = "windows-1251";
     search[0].data = cp1251_data;
@@ -1684,60 +1758,46 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
   {
     struct TagItem *tstate = attrs;
     struct TagItem *tag;
-    BOOL lastIteration = FALSE;
 
-    while((tag = NextTagItem((APTR)&tstate)) != NULL || (lastIteration = TRUE))
+    // check text against all codesets in all supplied lists of codesets
+    while((tag = NextTagItem((APTR)&tstate)) != NULL)
     {
-      if(lastIteration == TRUE || (tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0))
+      switch(tag->ti_Tag)
       {
-        struct codesetList *csList = (lastIteration ? &CodesetsBase->codesets : (struct codesetList *)tag->ti_Data);
-        struct codeset *codeset = (struct codeset *)GetHead((struct List *)csList);
-
-        // the following identification/detection routines is NOT really smart.
-        // we just see how each UTF8 string is the representation of each char
-        // in our source text and then check if they are valid or not. As said,
-        // not very smart, but we don't have anything better right now :(
-
-        while(codeset != NULL)
+        case CSA_CodesetList:
         {
-          if(codeset->read_only == FALSE && codeset != CodesetsBase->utf8Codeset)
+          struct codesetList *csList = (struct codesetList *)tag->ti_Data;
+          struct codeset *bestCodesetInList;
+          int bestErrorsInList;
+
+          D(DBF_STARTUP, "checking against external codeset list");
+          bestErrorsInList = checkTextAgainstCodesetList(text, textLen, csList, &bestCodesetInList);
+          if(bestErrorsInList < bestErrors && bestCodesetInList != NULL)
           {
-            char *text_ptr = text;
-            ULONG i;
-            int errors = 0;
-
-            for(i=0; i < textLen; i++)
-            {
-              unsigned char c = *text_ptr++;
-
-              if(c != '\0')
-              {
-                struct single_convert *f = &codeset->table[c];
-
-                if(f->utf8[0] == 0x00 || f->utf8[1] == 0x00)
-                  errors++;
-              }
-              else
-                break;
-            }
-
-            D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, textLen);
-
-            if(errors < bestErrors)
-            {
-              bestCodeset = codeset;
-              bestErrors = errors;
-            }
+            bestCodeset = bestCodesetInList;
+            bestErrors = bestErrorsInList;
 
             if(bestErrors == 0)
               break;
           }
-
-          codeset = (struct codeset *)GetSucc((struct Node *)codeset);
         }
+        break;
+      }
+    }
 
-        if(lastIteration == TRUE)
-          break;
+    // we didn't find a "best" codeset in the supplied codesets lists so far,
+    // so now we check against our internal list
+    if(bestErrors != 0)
+    {
+      struct codeset *bestCodesetInList;
+      int bestErrorsInList;
+
+      D(DBF_STARTUP, "checking against internal codeset list");
+      bestErrorsInList = checkTextAgainstCodesetList(text, textLen, &CodesetsBase->codesets, &bestCodesetInList);
+      if(bestErrorsInList < bestErrors && bestCodesetInList != NULL)
+      {
+        bestCodeset = bestCodesetInList;
+        bestErrors = bestErrorsInList;
       }
     }
   }
