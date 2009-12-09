@@ -1558,7 +1558,7 @@ struct codeset *codesetsFind(struct codesetList *csList, const char *name)
 ///
 /// codesetsFindBest()
 // Returns the best codeset for the given text
-static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, ULONGt textLen, int *errorPtr)
+static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, ULONG textLen, int *errorPtr)
 {
   struct codeset *bestCodeset = NULL;
   int bestErrors = textLen;
@@ -1703,7 +1703,7 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
           if(codeset->read_only == FALSE && codeset != CodesetsBase->utf8Codeset)
           {
             char *text_ptr = text;
-            int i;
+            ULONG i;
             int errors = 0;
 
             for(i=0; i < textLen; i++)
@@ -1935,7 +1935,7 @@ struct codeset * LIBFUNC CodesetsFindBestA(REG(a0, struct TagItem *attrs))
   text = (char *)GetTagData(CSA_Source, 0, attrs);
   textLen = GetTagData(CSA_SourceLen, text != NULL ? strlen(text) : 0, attrs);
 
-  if(text != NULL && text_len > 0)
+  if(text != NULL && textLen != 0)
   {
     int numErrors = 0;
     ULONG csFamily = GetTagData(CSA_CodesetFamily, CSV_CodesetFamily_Latin, attrs);
