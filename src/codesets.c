@@ -972,6 +972,7 @@ BOOL codesetsInit(struct codesetList *csList)
   // on AmigaOS4 we can use diskfont.library to inquire charset information as
   // it comes with a quite rich implementation of different charsets.
   #if defined(__amigaos4__)
+  D(DBF_STARTUP, "OS4, asking diskfont.library for codesets");
   do
   {
     char *mimename;
@@ -1001,7 +1002,7 @@ BOOL codesetsInit(struct codesetList *csList)
       for(i=0; i<256; i++)
       {
         UTF32 *src_ptr = &src;
-        UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+        UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
         src = mapTable[i];
 
@@ -1026,16 +1027,20 @@ BOOL codesetsInit(struct codesetList *csList)
   {
     struct Library *KeymapBase;
     struct Library *LocaleBase;
-    BOOL success = FALSE;
+    // assume success at first
+    BOOL success = TRUE;
 
+    D(DBF_STARTUP, "MorphOS, asking keymap.library for codesets");
     if((KeymapBase = OpenLibrary("keymap.library", 51)) != NULL)
     {
       if((LocaleBase = OpenLibrary("locale.library", 51)) != NULL)
       {
         struct KeyMap *keymap = AskKeyMapDefault();
+        // it doesn't matter if this call fails, as we don't depend on the system codesets
         CONST_STRPTR name = GetKeyMapCodepage(keymap);
 
-        if(name != NULL && keymap != NULL) // Legacy keymaps dont have codepage or Unicode mappings
+        // legacy keymaps dont have codepage or Unicode mappings
+        if(name != NULL && keymap != NULL) 
         {
           D(DBF_STARTUP, "loading charset '%s' from keymap.library...", name);
 
@@ -1043,7 +1048,7 @@ BOOL codesetsInit(struct codesetList *csList)
           {
              codeset->name             = mystrdup(name);
              codeset->alt_name         = NULL;
-             codeset->characterization = mystrdup(name);  // No more information available
+             codeset->characterization = mystrdup(name);  // No further information available
              codeset->read_only        = 0;
 
              for(i=0; i<256; i++)
@@ -1068,8 +1073,11 @@ BOOL codesetsInit(struct codesetList *csList)
 
              D(DBF_STARTUP, "adding keymap.library codeset '%s'", codeset->name);
              AddTail((struct List *)csList, (struct Node *)&codeset->node);
-
-             success = TRUE;
+          }
+          else
+          {
+            // only failed memory allocations are treated as error
+            success = FALSE;
           }
         }
 
@@ -1084,7 +1092,7 @@ BOOL codesetsInit(struct codesetList *csList)
   }
   #endif
 
-  D(DBF_STARTUP, "loading charsets from Libs:Charsets...");
+  D(DBF_STARTUP, "loading charsets from LIBS:Charsets...");
 
   // we try to walk to the LIBS:Charsets directory on our own and readin our
   // own charset tables
@@ -1109,7 +1117,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i==164)
         src = 0x20AC; // the EURO sign
@@ -1172,7 +1180,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1205,7 +1213,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1238,7 +1246,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1271,7 +1279,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1304,7 +1312,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1337,7 +1345,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1403,7 +1411,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i = 0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0x80)
         src = i;
@@ -1436,7 +1444,7 @@ BOOL codesetsInit(struct codesetList *csList)
     for(i=0; i<256; i++)
     {
       UTF32 *src_ptr = &src;
-      UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+      UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
       if(i<0xa0)
         src = i;
@@ -1628,6 +1636,7 @@ static int checkTextAgainstCodesetList(CONST_STRPTR text, ULONG textLen, struct 
   return bestErrors;
 }
 
+///
 /// codesetsFindBest()
 // Returns the best codeset for the given text
 static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, CONST_STRPTR text, ULONG textLen, int *errorPtr)

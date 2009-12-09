@@ -11,6 +11,12 @@ $URL$
     external codesets.
   * codesets.c: broke down the text check against a single codeset into smaller
     functions to make things easier to understand and maintain.
+  * codesets.c: asking MorphOS for system codesets could fail if there is either
+    no default keymap or the keymap has no codepage. This let the complete
+    initial codeset scanning fail. Now only failed memory allocations will be
+    treated as errors. This conforms with treatment of all other codesets. I
+    guess this caused much of the recent trouble with MorphOS and codesets.lib
+    V6.9.
 
 2009-12-08 Thore Böckelmann <tboeckel@gmx.de>
 
