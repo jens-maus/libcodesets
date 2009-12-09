@@ -703,7 +703,7 @@ static BOOL codesetsReadTable(struct codesetList *csList, STRPTR name)
 
   ENTER();
 
-  D(DBF_STARTUP, "trying to fetch charset file '%s'...", name);
+  D(DBF_STARTUP, "trying to read charset file '%s'...", name);
 
   if((fh = Open(name, MODE_OLDFILE)))
   {
@@ -781,16 +781,18 @@ static BOOL codesetsReadTable(struct codesetList *csList, STRPTR name)
       {
         for(i=0; i<256; i++)
         {
-          UTF32 src = codeset->table[i].ucs4, *src_ptr = &src;
-          UTF8  *dest_ptr = &codeset->table[i].utf8[1];
+          UTF32 src = codeset->table[i].ucs4;
+          UTF32 *src_ptr = &src;
+          UTF8 *dest_ptr = &codeset->table[i].utf8[1];
 
-          CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr,src_ptr+1,&dest_ptr,dest_ptr+6,CSF_StrictConversion);
+          CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CSF_StrictConversion);
           *dest_ptr = 0;
           codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)(&codeset->table[i].utf8[1]);
         }
 
         memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
         qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
+        D(DBF_STARTUP, "adding external codeset '%s'", codeset->name);
         AddTail((struct List *)csList, (struct Node *)&codeset->node);
 
         res = TRUE;
@@ -920,7 +922,8 @@ static void codesetsScanDir(struct codesetList *csList, const char *dirPath)
 // Initialized and loads the codesets
 BOOL codesetsInit(struct codesetList *csList)
 {
-  struct codeset *codeset = NULL;
+  BOOL success = FALSE;
+  struct codeset *codeset;
   UTF32 src;
   int i;
   #if defined(__amigaos4__)
@@ -940,6 +943,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF8");
   codeset->characterization = mystrdup("Unicode");
   codeset->read_only        = 0;
+  D(DBF_STARTUP, "adding internal codeset 'UTF-8'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf8Codeset = codeset;
 
@@ -950,6 +954,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF16");
   codeset->characterization = mystrdup("16-bit Unicode");
   codeset->read_only        = 0;
+  D(DBF_STARTUP, "adding internal codeset 'UTF-16'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf16Codeset = codeset;
 
@@ -960,6 +965,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF32");
   codeset->characterization = mystrdup("32-bit Unicode");
   codeset->read_only        = 0;
+  D(DBF_STARTUP, "adding internal codeset 'UTF-32'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf32Codeset = codeset;
 
@@ -1009,6 +1015,7 @@ BOOL codesetsInit(struct codesetList *csList)
       memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
       qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+      D(DBF_STARTUP, "adding diskfont.library codeset '%s'", codeset->name);
       AddTail((struct List *)csList, (struct Node *)&codeset->node);
     }
   }
@@ -1059,6 +1066,7 @@ BOOL codesetsInit(struct codesetList *csList)
              memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
              qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+             D(DBF_STARTUP, "adding keymap.library codeset '%s'", codeset->name);
              AddTail((struct List *)csList, (struct Node *)&codeset->node);
 
              success = TRUE;
@@ -1117,6 +1125,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1146,6 +1155,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1178,6 +1188,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1210,6 +1221,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1242,6 +1254,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1274,6 +1287,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1306,6 +1320,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1338,6 +1353,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof (codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1370,6 +1386,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1402,6 +1419,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1434,6 +1452,7 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
@@ -1466,12 +1485,15 @@ BOOL codesetsInit(struct codesetList *csList)
     memcpy(codeset->table_sorted,codeset->table,sizeof(codeset->table));
     qsort(codeset->table_sorted, 256, sizeof(codeset->table[0]), codesetsCmpUnicode);
 
+    D(DBF_STARTUP, "adding internal codeset '%s'", codeset->name);
     AddTail((struct List *)csList, (struct Node *)&codeset->node);
   }
 
+  success = TRUE;
+
 end:
-  RETURN(codeset != NULL);
-  return codeset != NULL;
+  RETURN(success);
+  return success;
 }
 
 ///
@@ -1536,10 +1558,10 @@ struct codeset *codesetsFind(struct codesetList *csList, const char *name)
 ///
 /// codesetsFindBest()
 // Returns the best codeset for the given text
-static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, int text_len, int *error_ptr)
+static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, STRPTR text, ULONGt textLen, int *errorPtr)
 {
-  struct codeset *best_codeset = NULL;
-  int best_errors = text_len;
+  struct codeset *bestCodeset = NULL;
+  int bestErrors = textLen;
   BOOL found = FALSE;
 
   ENTER();
@@ -1640,17 +1662,17 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
         {
           struct codesetList *csList = (struct codesetList *)tag->ti_Data;
 
-          if((best_codeset = codesetsFind(csList, search[Nmax-1].name)) != NULL)
+          if((bestCodeset = codesetsFind(csList, search[Nmax-1].name)) != NULL)
             break;
         }
       }
 
       // if we still haven't found the matching codeset
       // we search the internal list
-      if(best_codeset == NULL)
-        best_codeset = codesetsFind(&CodesetsBase->codesets, search[Nmax-1].name);
+      if(bestCodeset == NULL)
+        bestCodeset = codesetsFind(&CodesetsBase->codesets, search[Nmax-1].name);
 
-      best_errors = 0;
+      bestErrors = 0;
 
       found = TRUE;
     }
@@ -1684,7 +1706,7 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
             int i;
             int errors = 0;
 
-            for(i=0; i < text_len; i++)
+            for(i=0; i < textLen; i++)
             {
               unsigned char c = *text_ptr++;
 
@@ -1699,15 +1721,15 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
                 break;
             }
 
-            D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, text_len);
+            D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, textLen);
 
-            if(errors < best_errors)
+            if(errors < bestErrors)
             {
-              best_codeset = codeset;
-              best_errors = errors;
+              bestCodeset = codeset;
+              bestErrors = errors;
             }
 
-            if(best_errors == 0)
+            if(bestErrors == 0)
               break;
           }
 
@@ -1722,11 +1744,11 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, S
 
   ReleaseSemaphore(&CodesetsBase->libSem);
 
-  if(error_ptr != NULL)
-    *error_ptr = best_errors;
+  if(errorPtr != NULL)
+    *errorPtr = bestErrors;
 
-  RETURN(best_codeset);
-  return best_codeset;
+  RETURN(bestCodeset);
+  return bestCodeset;
 }
 
 ///
@@ -1904,25 +1926,25 @@ struct codeset * LIBFUNC CodesetsFindBestA(REG(a0, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
   char *text;
-  ULONG text_len;
+  ULONG textLen;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
   text = (char *)GetTagData(CSA_Source, 0, attrs);
-  text_len = GetTagData(CSA_SourceLen, text != NULL ? strlen(text) : 0, attrs);
+  textLen = GetTagData(CSA_SourceLen, text != NULL ? strlen(text) : 0, attrs);
 
   if(text != NULL && text_len > 0)
   {
     int numErrors = 0;
     ULONG csFamily = GetTagData(CSA_CodesetFamily, CSV_CodesetFamily_Latin, attrs);
-    int *error_ptr = (int *)GetTagData(CSA_ErrPtr, 0, attrs);
+    int *errorPtr = (int *)GetTagData(CSA_ErrPtr, (ULONG)NULL, attrs);
 
-    codeset = codesetsFindBest(attrs, csFamily, text, text_len, &numErrors);
+    codeset = codesetsFindBest(attrs, csFamily, text, textLen, &numErrors);
 
-    if(error_ptr != NULL)
-      *error_ptr = numErrors;
+    if(errorPtr != NULL)
+      *errorPtr = numErrors;
 
     // if we still haven't got the codeset we fallback to the default
     if(codeset == NULL && GetTagData(CSA_FallbackToDefault, FALSE, attrs))

@@ -251,7 +251,7 @@ getSystemCodeset(struct LibraryHeader *lib)
       foundCodeset = codesetsFind(&lib->codesets, charset);
     }
 
-    D(DBF_STARTUP, "%s system default codeset: '%s' (ENV:CHARSET)", foundCodeset ? "found" : "not found", charset);
+    D(DBF_STARTUP, "%s system default codeset: '%s' (ENV:CHARSET)", foundCodeset ? "found" : "did not find", charset);
   }
 
   // and if even the CHARSET environment variable didn't work

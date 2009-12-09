@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2009-12-09 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: added some debug output when adding the individual internal and
+    external codesets.
+
 2009-12-08 Thore Böckelmann <tboeckel@gmx.de>
 
   * misc: cleaned up several parts of the source code for better readability and
