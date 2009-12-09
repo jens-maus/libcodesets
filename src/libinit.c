@@ -191,32 +191,32 @@ static LONG LIBFUNC LibNull(VOID)
 /* ------------------- OS4 Manager Interface ------------------------ */
 STATIC uint32 _manager_Obtain(struct LibraryManagerInterface *Self)
 {
-	uint32 res;
-	__asm__ __volatile__(
-	"1:	lwarx	%0,0,%1\n"
-	"addic	%0,%0,1\n"
-	"stwcx.	%0,0,%1\n"
-	"bne-	1b"
-	: "=&r" (res)
-	: "r" (&Self->Data.RefCount)
-	: "cc", "memory");
+  uint32 res;
+  __asm__ __volatile__(
+  "1: lwarx  %0,0,%1\n"
+  "   addic  %0,%0,1\n"
+  "   stwcx. %0,0,%1\n"
+  "   bne-   1b"
+  : "=&r" (res)
+  : "r" (&Self->Data.RefCount)
+  : "cc", "memory");
 
-	return res;
+  return res;
 }
 
 STATIC uint32 _manager_Release(struct LibraryManagerInterface *Self)
 {
-	uint32 res;
-	__asm__ __volatile__(
-	"1:	lwarx	%0,0,%1\n"
-	"addic	%0,%0,-1\n"
-	"stwcx.	%0,0,%1\n"
-	"bne-	1b"
-	: "=&r" (res)
-	: "r" (&Self->Data.RefCount)
-	: "cc", "memory");
+  uint32 res;
+  __asm__ __volatile__(
+  "1: lwarx  %0,0,%1\n"
+  "   addic  %0,%0,-1\n"
+  "   stwcx. %0,0,%1\n"
+  "   bne-   1b"
+  : "=&r" (res)
+  : "r" (&Self->Data.RefCount)
+  : "cc", "memory");
 
-	return res;
+  return res;
 }
 
 STATIC CONST CONST_APTR lib_manager_vectors[] =
@@ -607,8 +607,8 @@ static BPTR LibExpunge(void)
   struct LibraryHeader *base = (struct LibraryHeader*)REG_A6;
 #elif defined(__AROS__)
 static AROS_LH1(BPTR, LibExpunge,
-		AROS_LHA(UNUSED struct LibraryHeader *, __extrabase, D0),
-		struct LibraryHeader *, base, 3, Codesets
+  AROS_LHA(UNUSED struct LibraryHeader *, __extrabase, D0),
+  struct LibraryHeader *, base, 3, Codesets
 )
 {
     AROS_LIBFUNC_INIT

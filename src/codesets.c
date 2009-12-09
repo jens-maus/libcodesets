@@ -1531,7 +1531,7 @@ struct codeset *codesetsFind(struct codesetList *csList, const char *name)
 
   if(name != NULL && name[0] != '\0')
   {
-  	struct Node *node;
+    struct Node *node;
     char *matchedName = matchCodesetAlias(name);
 
     if(matchedName != NULL)
