@@ -12,6 +12,8 @@ $URL$
     that the code tables of these codesets only contain zero values. Otherwise
     CodesetsFindBestCodeset() might choose one of these by accident, even if
     they are just fake entries.
+  * codesets.c: excluded the UTF16 and UTF32 codesets from the "find best" check
+    completely, like the UTF8 codeset was excluded before already.
 
 2009-12-09 Thore Böckelmann <tboeckel@gmx.de>
 

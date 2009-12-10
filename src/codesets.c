@@ -1593,7 +1593,10 @@ static int checkTextAgainstSingleCodeset(CONST_STRPTR text, ULONG textLen, struc
 
   ENTER();
 
-  if(codeset->read_only == 0 && codeset != CodesetsBase->utf8Codeset)
+  if(codeset->read_only == 0 &&
+     codeset != CodesetsBase->utf8Codeset &&
+     codeset != CodesetsBase->utf16Codeset &&
+     codeset != CodesetsBase->utf32Codeset)
   {
     CONST_STRPTR text_ptr = text;
     ULONG i;
@@ -1620,7 +1623,7 @@ static int checkTextAgainstSingleCodeset(CONST_STRPTR text, ULONG textLen, struc
     }
   }
   else
-    W(DBF_STARTUP, "codeset '%s' is either ready-only (%ld) or UTF8 (%ld)", codeset->name, codeset->read_only, codeset == CodesetsBase->utf8Codeset);
+    W(DBF_STARTUP, "codeset '%s' is either ready-only (%ld) or UTF8/16/32 (%ld)", codeset->name, codeset->read_only, codeset == CodesetsBase->utf8Codeset || codeset == CodesetsBase->utf16Codeset || codeset == CodesetsBase->utf32Codeset);
 
   D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, textLen);
 
