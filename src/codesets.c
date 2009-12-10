@@ -1606,13 +1606,12 @@ static int checkTextAgainstSingleCodeset(CONST_STRPTR text, ULONG textLen, struc
     // not very smart, but we don't have anything better right now :(
     for(i=0; i < textLen; i++)
     {
-      int c = *text_ptr++;
+      unsigned char c = *text_ptr++;
 
-      if(c != 0)
+      if(c != '\0')
       {
         struct single_convert *f = &codeset->table[c];
 
-		D(DBF_STARTUP, "c=%ld utf8=%02lx %02lx", c, f->utf8[0], f->utf8[1]);
         if(f->utf8[0] == 0x00 || f->utf8[1] == 0x00)
           errors++;
       }
