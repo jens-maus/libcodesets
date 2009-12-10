@@ -8,6 +8,10 @@ $URL$
 2009-12-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * init.c: removed some unnecessary type casts.
+  * codesets.c: adding the fake UTF8, UTF16 and UTF32 codesets now makes sure
+    that the code tables of these codesets only contain zero values. Otherwise
+    CodesetsFindBestCodeset() might choose one of these by accident, even if
+    they are just fake entries.
 
 2009-12-09 Thore Böckelmann <tboeckel@gmx.de>
 
