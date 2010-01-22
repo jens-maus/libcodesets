@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-01-22 Thore Böckelmann <tboeckel@gmx.de>
+
+  * charsets/windows-1253.txt: added greek Windows-1253 codepage as this one is
+    documented to be incompatible to ISO8859-7 (see http://de.wikipedia.org/wiki/
+    Windows-1253).
+
 #### 6.10 RELEASE ########################################################
 
 2009-12-21  Jens Langner <Jens.Langner@light-speed.de>
