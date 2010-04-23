@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-04-23 Pavel Fedin <pavel_fedin@mail.ru>
+
+  * src/libinit.c: use NewStackSwap() under AROS, re-enabled stack swapping under MorphOS
+  * src/debug.c: use VNewRawDoFmt() for debugging output under AROS, the same as in MorphOS
+
 2010-04-23 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/libinit.c: replaced some #ifdef's by macros.
