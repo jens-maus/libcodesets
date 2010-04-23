@@ -469,8 +469,9 @@ static BOOL callLibFunction(ULONG (*function)(struct LibraryHeader *), struct Li
 
   return success;
 }
-
-#endif // !__amigaos4__
+#else // MIN_STACKSIZE && !__amigaos4__
+#define callLibFunction(func, arg) func(arg)
+#endif // MIN_STACKSIZE && !__amigaos4__
 
 /****************************************************************************/
 
@@ -543,11 +544,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(d0, struct LibraryHeader *base
     // If we are not running on AmigaOS4 (no stackswap required) we go and
     // do an explicit StackSwap() in case the user wants to make sure we
     // have enough stack for his user functions
-    #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
     success = callLibFunction(initBase, base);
-    #else
-    success = initBase(base);
-    #endif
 
     // unprotect initBase()
     ReleaseSemaphore(&base->libSem);
@@ -565,11 +562,7 @@ static struct LibraryHeader * LIBFUNC LibInit(REG(d0, struct LibraryHeader *base
     }
     else
     {
-      #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
       callLibFunction(freeBase, base);
-      #else
-      freeBase(base);
-      #endif
       CodesetsBase = NULL;
     }
 
@@ -639,11 +632,7 @@ static BPTR LIBFUNC LibExpunge(REG(a6, struct LibraryHeader *base))
     ObtainSemaphore(&base->libSem);
 
     // make sure we have enough stack here
-    #if defined(MIN_STACKSIZE) && !defined(__amigaos4__)
     callLibFunction(freeBase, base);
-    #else
-    freeBase(base);
-    #endif
 
     // unprotect
     ReleaseSemaphore(&base->libSem);

@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-04-23 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/libinit.c: replaced some #ifdef's by macros.
+
 2010-01-22 Thore Böckelmann <tboeckel@gmx.de>
 
   * charsets/windows-1253.txt: added greek Windows-1253 codepage as this one is
