@@ -411,7 +411,7 @@ ULONG stackswap_call(struct StackSwapStruct *stack,
 {
    struct StackSwapArgs swapargs;
 
-   swapargs.Args[0] = (ULONG)arg;
+   swapargs.Args[0] = (IPTR)arg;
 
    return NewStackSwap(stack, function, &swapargs);
 }
