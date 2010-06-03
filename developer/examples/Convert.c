@@ -86,7 +86,7 @@ int main(int argc, char **argv)
                                          TAG_DONE);
             if (destbuf)
             {
-              fprintf(stderr, "Result length: %u\n", destlen);
+              fprintf(stderr, "Result length: %u\n", (unsigned int)destlen);
               fwrite(destbuf, destlen, 1, stdout);
               fputc('\n', stderr);
               CodesetsFreeA(destbuf, NULL);
