@@ -9,6 +9,8 @@ $URL$
 
   * developer/examples/DetectCodeset.c: fixed some warnings about wrong types
     in the printf() calls.
+  * developer/examples/b64[ed].c: fixed some warnings about wrong types in the
+    printf() calls.
 
 2010-06-03  Matthias Rustler <mrustler@gmx.de>
 
