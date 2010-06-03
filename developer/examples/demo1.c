@@ -228,7 +228,7 @@ MakeStaticHook(popupCloseHook, popupCloseFun);
 ** Codesets popup new method
 */
 
-static ULONG
+static IPTR
 mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *str, *bt, *lv, *l;
@@ -276,7 +276,7 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
         set(str,MUIA_Text_Contents,codeset->name);
     }
 
-    return (ULONG)obj;
+    return (IPTR)obj;
 }
 
 /***********************************************************************/
@@ -309,7 +309,7 @@ struct editorData
 ** Editor new method
 */
 
-static ULONG
+static IPTR
 meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     struct FileRequester *req;
@@ -329,7 +329,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
         if (req) MUI_FreeAslRequest(req);
     }
 
-    return (ULONG)obj;
+    return (IPTR)obj;
 }
 
 /***********************************************************************/
@@ -337,7 +337,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 ** Editor dispose method
 */
 
-static ULONG
+static IPTR
 meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -352,7 +352,7 @@ meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 ** Editor load method
 */
 
-static ULONG
+static IPTR
 meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -463,7 +463,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 ** Editor save method
 */
 
-static ULONG
+static IPTR
 meditorSave(struct IClass *cl, Object *obj, UNUSED Msg msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -581,7 +581,7 @@ static struct NewMenu appMenu[] =
     MEND
 };
 
-static ULONG
+static IPTR
 mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *strip, *win, *codesets = NULL, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
@@ -665,7 +665,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
         set(win,MUIA_Window_Open,TRUE);
     }
 
-    return (ULONG)obj;
+    return (IPTR)obj;
 }
 
 /***********************************************************************/
@@ -673,7 +673,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 ** App dispose win method
 */
 
-static ULONG
+static IPTR
 mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 {
     struct appData *data = INST_DATA(cl,obj);
@@ -694,7 +694,7 @@ mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 ** App about method
 */
 
-static ULONG
+static IPTR
 mappAbout(struct IClass *cl,Object *obj,UNUSED Msg msg)
 {
     struct appData *data = INST_DATA(cl,obj);
@@ -748,10 +748,10 @@ mappAbout(struct IClass *cl,Object *obj,UNUSED Msg msg)
 ** App MUI settings method
 */
 
-static ULONG
+static IPTR
 mappOpenMUIConfigWindow(struct IClass *cl,Object *obj,Msg msg)
 {
-    ULONG res;
+    IPTR res;
 
     SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
     res = DoSuperMethodA(cl,obj,msg);
@@ -790,7 +790,7 @@ main(UNUSED int argc,char **argv)
     if((IntuitionBase = (APTR)OpenLibrary("intuition.library", 39)) &&  // open intuition.library
        GETINTERFACE(IIntuition, IntuitionBase))
     {
-      if((UtilityBase = OpenLibrary("utility.library", 39)) &&      // open utility.library
+      if((UtilityBase = (APTR)OpenLibrary("utility.library", 39)) &&      // open utility.library
          GETINTERFACE(IUtility, UtilityBase))
       {
         if((CodesetsBase = OpenLibrary(CODESETSNAME, CODESETSVER)) && // open codesets.library

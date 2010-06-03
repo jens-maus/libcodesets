@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-06-03  Matthias Rustler <mrustler@gmx.de>
+
+  * fixes for 64-bit AROS. Changed some ULONG to IPTR to get rid of warnings
+    like "conversion from/to integer to/from pointer with different size".
+
 2010-04-23 Pavel Fedin <pavel_fedin@mail.ru>
 
   * src/libinit.c: use NewStackSwap() under AROS, re-enabled stack swapping under MorphOS
