@@ -1623,7 +1623,7 @@ static int checkTextAgainstSingleCodeset(CONST_STRPTR text, ULONG textLen, struc
     }
   }
   else
-    W(DBF_STARTUP, "codeset '%s' is either ready-only (%ld) or UTF8/16/32 (%ld)", codeset->name, codeset->read_only, codeset == CodesetsBase->utf8Codeset || codeset == CodesetsBase->utf16Codeset || codeset == CodesetsBase->utf32Codeset);
+    W(DBF_STARTUP, "codeset '%s' is either read-only (%ld) or UTF8/16/32 (%ld)", codeset->name, codeset->read_only, codeset == CodesetsBase->utf8Codeset || codeset == CodesetsBase->utf16Codeset || codeset == CodesetsBase->utf32Codeset);
 
   D(DBF_STARTUP, "tried to identify text as '%s' text with %ld of %ld errors", codeset->name, errors, textLen);
 
@@ -2626,7 +2626,7 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     else
     {
       if((dest = (UTF8 *)GetTagData(CSA_Dest, 0, attrs)) != NULL ||
-        GetTagData(CSA_AllocIfNeeded, TRUE, attrs))
+         GetTagData(CSA_AllocIfNeeded, TRUE, attrs))
       {
         ULONG len;
 

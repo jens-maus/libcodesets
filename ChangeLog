@@ -8,6 +8,8 @@ $URL$
 2010-06-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/libinit.c: fixed a warning for the OS3 build.
+  * misc: added all necessary stuff for an automated build for all supported
+    platforms. This also includes an Installer script for an easy installation.
 
 2010-06-07 Thore Böckelmann <tboeckel@gmx.de>
 
