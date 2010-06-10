@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-06-10 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/libinit.c: fixed a warning for the OS3 build.
+
 2010-06-07 Thore Böckelmann <tboeckel@gmx.de>
 
   * include/SDI_compiler.h: updated to latest version.

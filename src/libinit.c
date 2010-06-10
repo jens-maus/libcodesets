@@ -448,7 +448,7 @@ static BOOL callLibFunction(ULONG (*function)(struct LibraryHeader *), struct Li
       if((stack->stk_Lower = AllocVec(MIN_STACKSIZE, MEMF_PUBLIC)) != NULL)
       {
         // perform the StackSwap
-        stack->stk_Upper = (UBYTE *)stack->stk_Lower + MIN_STACKSIZE;
+        stack->stk_Upper = (ULONG)stack->stk_Lower + MIN_STACKSIZE;
         stack->stk_Pointer = (APTR)stack->stk_Upper;
 
         // call routine but with embedding it into a [NewPPC]StackSwap()
