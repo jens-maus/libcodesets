@@ -1,11 +1,13 @@
 ;
-; $VER: Install 1.1 (10.06.2010)
+; $VER: Install 1.1 (11.06.2010)
 ;
 ; $Id$
 ;
 ; History:
 ;
-;   1.0   10.6.2010: initial release
+;   1.0   10.06.2010: initial release
+;   1.1   11.06.2010: extended the final message that a reboot might be
+;                     necessary to be able to use the just installed version.
 
 ;----------------------------------------------------------------------------
 ; /// ***** English
@@ -14,7 +16,10 @@
         (set #acknowledgeOS (cat "Please acknowledge the automatic\n"
                                  "detection of your operating system:"))
         (set #done          (cat "\n"
-                                 @app-name " has been successfully installed.\n"))
+                                 @app-name " has been successfully installed.\n"
+                                 "\n"
+                                 "A reboot might be necessary to\n"
+                                 "finish this installation!"))
     )
 )
 
@@ -25,7 +30,10 @@
         (set #acknowledgeOS (cat "Bitte bestätigen Sie die automatische\n"
                                  "Ermittlung Ihres Betriebssystems:"))
         (set #done          (cat "\n"
-                                 @app-name " wurde erfolgreich installiert.\n"))
+                                 @app-name " wurde erfolgreich installiert.\n"
+                                 "\n"
+                                 "Gegebenenfalls ist ein Neustart des Systems\n"
+                                 "nötig, um die Installation abzuschließen!"))
     )
 )
 ; ///

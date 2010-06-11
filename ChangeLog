@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-06-11 Thore Böckelmann <tboeckel@gmx.de>
+
+  * Install: extended the final message that a reboot might be necessary to be
+    able to use the just installed version.
+
 2010-06-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/libinit.c: fixed a warning for the OS3 build.
