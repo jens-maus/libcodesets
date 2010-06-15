@@ -49,6 +49,22 @@
 
 /**************************************************************************/
 
+// a union used for various type casts while avoiding the annoying "dereferencing
+// type punned pointer is breaking strict alias rules" warnings of GCC4+
+union TypeAliases
+{
+  void **voidptr;
+  char **schar;
+  unsigned char **uchar;
+  STRPTR *strptr;
+  UTF8 **utf8;
+  const UTF8 **cutf8;
+  UTF16 **utf16;
+  const UTF16 **cutf16;
+  UTF32 **utf32;
+  const UTF32 **cutf32;
+};
+
 /// BIN_SEARCH()
 // search a sorted array in O(log n) e.g.
 // BIN_SEARCH(strings,0,sizeof(strings)/sizeof(strings[0]),strcmp(key,array[mid]),res);
@@ -2118,15 +2134,20 @@ ULONG LIBFUNC CodesetsStrLenA(REG(a0, STRPTR str), REG(a1, struct TagItem *attrs
     {
       void *srcend = src + len;
       UTF8 *dstlen = NULL;
+      union TypeAliases srcAlias;
+      union TypeAliases dstAlias;
+
+      srcAlias.strptr = &src;
+      dstAlias.utf8 = &dstlen;
 
       switch(utf)
       {
-        case 32:
-          CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &dstlen, NULL, 0);
+        case 16:
+          CodesetsConvertUTF16toUTF8(srcAlias.cutf16, srcend, dstAlias.utf8, NULL, 0);
         break;
 
-        case 16:
-          CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
+        case 32:
+          CodesetsConvertUTF32toUTF8(srcAlias.cutf32, srcend, dstAlias.utf8, NULL, 0);
         break;
       }
       res = (IPTR)dstlen;
@@ -2237,15 +2258,20 @@ STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         if(utf)
         {
           void *dstlen = NULL;
+          union TypeAliases srcAlias;
+          union TypeAliases dstAlias;
+
+          srcAlias.uchar = &s;
+          dstAlias.voidptr = &dstlen;
 
           switch(utf)
           {
-            case 32:
-              CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&dstlen, NULL, 0);
+            case 16:
+              CodesetsConvertUTF8toUTF16(srcAlias.cutf8, e, dstAlias.utf16, NULL, 0);
             break;
 
-            case 16:
-              CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&dstlen, NULL, 0);
+            case 32:
+              CodesetsConvertUTF8toUTF32(srcAlias.cutf8, e, dstAlias.utf32, NULL, 0);
             break;
           }
           len = (IPTR)dstlen;
@@ -2304,14 +2330,20 @@ STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
         dstend = b + destLen - char_size;
         do
         {
+          union TypeAliases srcAlias;
+          union TypeAliases dstAlias;
+
+          srcAlias.uchar = &s;
+          dstAlias.schar = &b;
+
           switch(utf)
           {
-            case 32:
-              r = CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&b, dstend, 0);
+            case 16:
+              r = CodesetsConvertUTF8toUTF16(srcAlias.cutf8, e, dstAlias.utf16, dstend, 0);
             break;
 
-            case 16:
-              r = CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&b, dstend, 0);
+            case 32:
+              r = CodesetsConvertUTF8toUTF32(srcAlias.cutf8, e, dstAlias.utf32, dstend, 0);
             break;
           }
           b[0] = 0;
@@ -2329,15 +2361,20 @@ STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
       }
       else
       {
+        union TypeAliases srcAlias;
+        union TypeAliases dstAlias;
+
+        srcAlias.uchar = &s;
+        dstAlias.strptr = &destIter;
         dstend = destIter + destLen - char_size;
         switch(utf)
         {
-          case 32:
-            CodesetsConvertUTF8toUTF32((const UTF8 **)&s, e, (UTF32 **)&destIter, dstend, 0);
+          case 16:
+            CodesetsConvertUTF8toUTF16(srcAlias.cutf8, e, dstAlias.utf16, dstend, 0);
           break;
 
-          case 16:
-            CodesetsConvertUTF8toUTF16((const UTF8 **)&s, e, (UTF16 **)&destIter, dstend, 0);
+          case 32:
+            CodesetsConvertUTF8toUTF32(srcAlias.cutf8, e, dstAlias.utf32, dstend, 0);
           break;
         }
         n = destIter-dest;
@@ -2608,8 +2645,9 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
     struct Hook    *hook;
     ULONG          destLen;
     int            i = 0;
-    UBYTE          buf[256];
-    UBYTE          *src, *destPtr = NULL, *b = NULL, c;
+    TEXT           buf[256];
+    STRPTR         src, destPtr = NULL, b = NULL;
+    ULONG          c;
 
     hook    = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
     destLen = GetTagData(CSA_DestLen, 0, attrs);
@@ -2630,21 +2668,26 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       {
         ULONG len;
 
-        src = from;
+        src = (STRPTR)from;
 
         if(utf != 0)
         {
           void *srcend = src + fromLen;
           UTF8 *dstlen = NULL;
+          union TypeAliases srcAlias;
+          union TypeAliases dstAlias;
+
+          srcAlias.strptr = &src;
+          dstAlias.utf8 = &dstlen;
 
           switch(utf)
           {
-            case 32:
-              CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &dstlen, NULL, 0);
+            case 16:
+              CodesetsConvertUTF16toUTF8(srcAlias.cutf16, srcend, dstAlias.utf8, NULL, 0);
             break;
 
-            case 16:
-              CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &dstlen, NULL, 0);
+            case 32:
+              CodesetsConvertUTF32toUTF8(srcAlias.cutf32, srcend, dstAlias.utf8, NULL, 0);
             break;
           }
           len = (IPTR)dstlen;
@@ -2691,10 +2734,10 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
         }
       }
 
-      destPtr = (UBYTE*)dest;
+      destPtr = (STRPTR)dest;
     }
 
-    src = from;
+    src = (STRPTR)from;
     if(utf != 0)
     {
       void *srcend = src + fromLen;
@@ -2703,18 +2746,22 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       if(hook != NULL)
       {
         ULONG r = CSR_TargetExhausted;
+        union TypeAliases srcAlias;
+        union TypeAliases dstAlias;
 
-        dstend = b + destLen - 1;
+        srcAlias.strptr = &src;
+        dstAlias.strptr = &b;
+        dstend = (UTF8 *)(b + destLen - 1);
         do
         {
           switch(utf)
           {
-            case 32:
-              r = CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &b, dstend, 0);
+            case 16:
+              r = CodesetsConvertUTF16toUTF8(srcAlias.cutf16, srcend, dstAlias.utf8, dstend, 0);
             break;
 
-            case 16:
-              r = CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &b, dstend, 0);
+            case 32:
+              r = CodesetsConvertUTF32toUTF8(srcAlias.cutf32, srcend, dstAlias.utf8, dstend, 0);
             break;
           }
           *b = 0;
@@ -2730,18 +2777,23 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
       }
       else
       {
-        dstend = destPtr + destLen;
+        union TypeAliases srcAlias;
+        union TypeAliases dstAlias;
+
+        srcAlias.strptr = &src;
+        dstAlias.strptr = &destPtr;
+        dstend = (UTF8 *)(destPtr + destLen);
         switch(utf)
         {
-          case 32:
-            CodesetsConvertUTF32toUTF8((const UTF32 **)&src, srcend, &destPtr, dstend, 0);
+          case 16:
+            CodesetsConvertUTF16toUTF8(srcAlias.cutf16, srcend, dstAlias.utf8, dstend, 0);
           break;
 
-          case 16:
-            CodesetsConvertUTF16toUTF8((const UTF16 **)&src, srcend, &destPtr, dstend, 0);
+          case 32:
+            CodesetsConvertUTF32toUTF8(srcAlias.cutf32, srcend, dstAlias.utf8, dstend, 0);
           break;
         }
-        n = destPtr-dest;
+        n = destPtr-(STRPTR)dest;
       }
     }
     else

@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-06-15 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/codesets.c: added a union of several pointer types to avoid the tons of
+    warnings of GCC4+ about type punned pointer accesses.
+
 2010-06-11 Thore Böckelmann <tboeckel@gmx.de>
 
   * Install: extended the final message that a reboot might be necessary to be
