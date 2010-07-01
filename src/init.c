@@ -179,6 +179,7 @@ static void getSystemCodeset(struct LibraryHeader *lib)
   // might not be so accurate) we try different other means of
   // finding the codeset/charset of the system
   #if defined(__amigaos4__)
+  if(foundCodeset == NULL)
   {
     LONG default_charset = GetDiskFontCtrl(DFCTRL_CHARSET);
     char *charset = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
@@ -189,9 +190,8 @@ static void getSystemCodeset(struct LibraryHeader *lib)
   }
   #endif
 
-  #if defined(__MORPHOS__)
+  if(foundCodeset == NULL)
   {
-    /* The system maintains CODEPAGE environment variable which defines the preferred codepage for this user. */
     char codepage[40];
 
     codepage[0] = '\0';
@@ -200,8 +200,12 @@ static void getSystemCodeset(struct LibraryHeader *lib)
       foundCodeset = codesetsFind(&lib->codesets, codepage);
     }
 
-    D(DBF_STARTUP, "%s system default codeset: '%s' (keymap)", foundCodeset ? "found" : "not found", codepage);
+    D(DBF_STARTUP, "%s system default codeset: '%s' (ENV:CODEPAGE)", foundCodeset ? "found" : "not found", codepage);
+  }
 
+  #if defined(__MORPHOS__)
+  if(foundCodeset == NULL)
+  {
     /* If CODEPAGE did not work (maybe user deleted it or something) we try a keymap instead. This only works
      * in MorphOS 2 and only if an old Amiga keymap is not used.
      */

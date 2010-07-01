@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-07-01 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/init.c: enabled querying of ENV:CODEPAGES to obtain the default codeset
+    for all systems.
+
 2010-06-15 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/codesets.c: added a union of several pointer types to avoid the tons of
