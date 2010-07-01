@@ -9,6 +9,10 @@ $URL$
 
   * src/init.c: enabled querying of ENV:CODEPAGES to obtain the default codeset
     for all systems.
+  * src/init.c: added car plate codes and ISO3166 Alpha 3 country code detection
+    when obtaining the system default codeset. Thus a user can use a system
+    default language/codeset which doesn't match the country's language/codeset.
+    This fulfils feature request #2971890.
 
 2010-06-15 Thore Böckelmann <tboeckel@gmx.de>
 
