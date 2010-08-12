@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005-2009 by codesets.library Open Source Team
+ Copyright (C) 2005-2010 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -1035,7 +1035,7 @@ BOOL codesetsInit(struct codesetList *csList)
         codeset->table[i].ucs4 = src;
         CodesetsConvertUTF32toUTF8((const UTF32 **)&src_ptr, src_ptr+1, &dest_ptr, dest_ptr+6, CSF_StrictConversion);
         *dest_ptr = 0;
-        codeset->table[i].utf8[0] = (ULONG)dest_ptr-(ULONG)&codeset->table[i].utf8[1];
+        codeset->table[i].utf8[0] = (IPTR)dest_ptr-(IPTR)&codeset->table[i].utf8[1];
       }
 
       memcpy(codeset->table_sorted, codeset->table, sizeof(codeset->table));

@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005-2009 by codesets.library Open Source Team
+ Copyright (C) 2005-2010 by codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -228,7 +228,7 @@ MakeStaticHook(popupCloseHook, popupCloseFun);
 ** Codesets popup new method
 */
 
-static IPTR
+static Object *
 mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *str, *bt, *lv, *l;
@@ -276,7 +276,7 @@ mpopupNew(struct IClass *cl,Object *obj,struct opSet *msg)
         set(str,MUIA_Text_Contents,codeset->name);
     }
 
-    return (IPTR)obj;
+    return obj;
 }
 
 /***********************************************************************/
@@ -309,7 +309,7 @@ struct editorData
 ** Editor new method
 */
 
-static IPTR
+static Object *
 meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     struct FileRequester *req;
@@ -329,7 +329,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
         if (req) MUI_FreeAslRequest(req);
     }
 
-    return (IPTR)obj;
+    return obj;
 }
 
 /***********************************************************************/
@@ -337,7 +337,7 @@ meditorNew(struct IClass *cl,Object *obj,struct opSet *msg)
 ** Editor dispose method
 */
 
-static IPTR
+static ULONG
 meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -352,7 +352,7 @@ meditorDispose(struct IClass *cl,Object *obj,Msg msg)
 ** Editor load method
 */
 
-static IPTR
+static ULONG
 meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -463,7 +463,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
 ** Editor save method
 */
 
-static IPTR
+static ULONG
 meditorSave(struct IClass *cl, Object *obj, UNUSED Msg msg)
 {
     struct editorData *data = INST_DATA(cl,obj);
@@ -581,7 +581,7 @@ static struct NewMenu appMenu[] =
     MEND
 };
 
-static IPTR
+static Object *
 mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 {
     Object *strip, *win, *codesets = NULL, *editor, *sb, *loadPlain, *loadUTF8, *save, *cancel;
@@ -665,7 +665,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
         set(win,MUIA_Window_Open,TRUE);
     }
 
-    return (IPTR)obj;
+    return obj;
 }
 
 /***********************************************************************/
@@ -673,7 +673,7 @@ mappNew(struct IClass *cl,Object *obj,struct opSet *msg)
 ** App dispose win method
 */
 
-static IPTR
+static ULONG
 mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 {
     struct appData *data = INST_DATA(cl,obj);
@@ -694,7 +694,7 @@ mappDisposeWin(struct IClass *cl,Object *obj,struct MUIP_App_DisposeWin *msg)
 ** App about method
 */
 
-static IPTR
+static ULONG
 mappAbout(struct IClass *cl,Object *obj,UNUSED Msg msg)
 {
     struct appData *data = INST_DATA(cl,obj);
@@ -748,10 +748,10 @@ mappAbout(struct IClass *cl,Object *obj,UNUSED Msg msg)
 ** App MUI settings method
 */
 
-static IPTR
+static ULONG
 mappOpenMUIConfigWindow(struct IClass *cl,Object *obj,Msg msg)
 {
-    IPTR res;
+    ULONG res;
 
     SetSuperAttrs(cl,obj,MUIA_Application_Sleep,TRUE,TAG_DONE);
     res = DoSuperMethodA(cl,obj,msg);

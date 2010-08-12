@@ -50,6 +50,7 @@
  1.20  26.03.09 : fixed m68k define checks.
  1.21  19.05.09 : added SDISPATCHER() to generate a static dispatcher.
  1.22  24.06.10 : fixed AROS macros (Matthias Rustler).
+       12.08.10 : added missing proto/alib.h include for AROS
 */
 
 /*
@@ -190,6 +191,8 @@
   #define ENTRY(func) (APTR)&Gate_##func
 
 #elif __AROS__
+
+  #include <proto/alib.h>
 
   #define MakeHook(hookname, funcname) struct Hook hookname = {{NULL, NULL}, \
     (HOOKFUNC)HookEntry, (HOOKFUNC)funcname, NULL}
