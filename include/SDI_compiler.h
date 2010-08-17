@@ -235,6 +235,9 @@
 #if !defined(__AROS__) && !defined(STACKED)
   #define STACKED
 #endif
+#if !defined(RODATA)
+  #define RODATA
+#endif
 
 /*************************************************************************/
 
