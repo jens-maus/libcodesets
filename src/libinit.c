@@ -52,8 +52,8 @@ struct ExecBase *SysBase = NULL;
 
 struct LibraryHeader *CodesetsBase = NULL;
 
-static const char UserLibName[] = "codesets.library";
-static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING " [" SYSTEMSHORT "/" CPU "] (" LIB_DATE ") " LIB_COPYRIGHT;
+static const char RODATA UserLibName[] = "codesets.library";
+static const char RODATA UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING " [" SYSTEMSHORT "/" CPU "] (" LIB_DATE ") " LIB_COPYRIGHT;
 
 /****************************************************************************/
 
@@ -169,14 +169,19 @@ static LONG                   LIBFUNC LibNull    (void);
  *
  */
 
-#if defined(__amigaos4__)
-int _start(void)
-#else
-int Main(void)
-#endif
+#if defined(__amigaos4__) || !defined(__mc68000__)
+int32 _start(void)
 {
   return RETURN_FAIL;
 }
+#else
+asm(".text                    \n\
+     .even                    \n\
+     .globl _start            \n\
+   _start:                    \n\
+     moveq #0,d0              \n\
+     rts");
+#endif
 
 static LONG LIBFUNC LibNull(VOID)
 {

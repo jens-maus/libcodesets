@@ -7,6 +7,9 @@ $URL$
 
 2010-08-16 Thore Böckelmann <tboeckel@gmx.de>
 
+  * libinit.c: the library init code now ensures that the entry code is really
+    the first code to be executed in case the .library is executed like a
+    regular command by accident.
   * include/SDI_compiler.h: updated to latest version.
 
 2010-08-12 Pavel Fedin <pavel_fedin@mail.ru>
