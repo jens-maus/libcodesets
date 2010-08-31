@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.11 RELEASE ########################################################
+
+2010-09-01 Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: final 6.11 release preparations.
+
 2010-08-16 Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c: the library init code now ensures that the entry code is really
