@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-09-10 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: CodesetsUTF8ToStr() did not return the correct length of the
+    converted string in case mapping of foreign characters was requested and
+    the string really contained mappable characters which might be replaced
+    by longer ASCII strings of than one single character.
+
 2010-09-03 Thore Böckelmann <tboeckel@gmx.de>
 
   * libinit.c, debug.c: clear all semaphore structures before calling
