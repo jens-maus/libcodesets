@@ -5,6 +5,13 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-09-20 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: fixed a possible length issue in case a UTF8 sequence had to be
+    replaced more than once by "lookalike" characters. Before the length of the
+    sequence to be replaced was not modified after the first replacement. Thanks
+    to Bernd Gollesch for the hint.
+
 2010-09-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: CodesetsUTF8ToStr() did not return the correct length of the

@@ -2452,6 +2452,9 @@ STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
                   // stay in the loop as long as one replacement function delivers
                   // further UTF8 replacement sequences
                   src = (unsigned char *)repstr;
+                  // remember the length of the replaced string, as we might do another
+                  // iteration in the loop which might result in a further replacement
+                  lenStr = -replen;
                 }
                 else if(replen == 0)
                 {
