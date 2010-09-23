@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.12 RELEASE ########################################################
+
+2010-09-23 Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: final 6.12 release preparations.
+
 2010-09-20 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: fixed a possible length issue in case a UTF8 sequence had to be
