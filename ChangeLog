@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-09-28 Thore Böckelmann <tboeckel@gmx.de>
+
+  * tools/mkrelease.sh: remove the mmakefile.src file from the distribution.
+
 #### 6.12 RELEASE ########################################################
 
 2010-09-23 Jens Langner <Jens.Langner@light-speed.de>
