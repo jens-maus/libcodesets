@@ -5,6 +5,14 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-10-05 Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: make sure that removing the library during LibClose() really
+    operates on the correct base. Calling LibExpunge() on MorphOS is wrong,
+    since that takes no parameter but expects the base to be in A6. We work
+    around this by using an additional function which gets called from
+    LibClose() and LibExpunge() with the correct base pointer.
+
 2010-09-28 Thore Böckelmann <tboeckel@gmx.de>
 
   * tools/mkrelease.sh: remove the mmakefile.src file from the distribution.
