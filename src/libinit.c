@@ -760,18 +760,7 @@ static BPTR LIBFUNC LibClose(REG(a6, struct LibraryHeader *base))
     // expunge the library base right now
     if(base->libBase.lib_Flags & LIBF_DELEXP)
     {
-      #if defined(__amigaos4__)
-      rc = LibExpunge(Self);
-      #elif defined(__MORPHOS__)
-      rc = LibExpunge();
-      #elif defined(__AROS__)
-      rc = AROS_LC1(BPTR, LibExpunge,
-                    AROS_LCA(struct LibraryHeader *, base, D0),
-                    struct LibraryHeader *, base, 3, Codesets
-      );
-      #else
-      rc = LibExpunge(base);
-      #endif
+      rc = LibDelete(base);
     }
   }
 
