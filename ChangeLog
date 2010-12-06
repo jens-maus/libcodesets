@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2010-12-06 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: added some "const" keywords to avoid type casts.
+
 2010-10-06 Thore Böckelmann <tboeckel@gmx.de>
 
   * dist/Install: adapted the Installer script to respect MorphOS' default
