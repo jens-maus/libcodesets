@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2011-01-04 Thore Böckelmann <tboeckel@gmx.de>
+
+  * all/Makefile: fixed the dependency generation to respect the system specific
+    object file path.
+
 2010-12-06 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: added some "const" keywords to avoid type casts.
