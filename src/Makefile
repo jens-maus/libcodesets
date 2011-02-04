@@ -395,9 +395,6 @@ $(OBJDIR)/codesets_68k.o: ../include/codesets_68k.c
 
 ## DEPENDENCY GENERATION ##############
 
-Makefile.dep: ;
-	@echo "WARNING: Makefile.dep missing. Please run 'make depend'"
-
 .PHONY: depend
 depend:
 	@echo "  MK $(DEPFILE)"
