@@ -78,4 +78,4 @@ echo "  MK codesets-$releasever.$releaserev.lha"
 find release -nowarn -name ".svn" -exec rm -rf {} \; 2>/dev/null
 find release -nowarn -name "mmakefile.src" -exec rm -rf {} \; 2>/dev/null
 cd release
-lha -aq ../codesets-$releasever.$releaserev.lha *
+lha -ao5q ../codesets-$releasever.$releaserev.lha *
