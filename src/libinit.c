@@ -307,9 +307,9 @@ STATIC CONST CONST_APTR LibVectors[] =
   #ifdef __MORPHOS__
   (CONST_APTR)FUNCARRAY_32BIT_NATIVE,
   #endif
-  (CONST_APTR)LibOpen,
-  (CONST_APTR)LibClose,
-  (CONST_APTR)LibExpunge,
+  (CONST_APTR)AROS_SLIB_ENTRY(LibOpen, Codesets),
+  (CONST_APTR)AROS_SLIB_ENTRY(LibClose, Codesets),
+  (CONST_APTR)AROS_SLIB_ENTRY(LibExpunge, Codesets),
   (CONST_APTR)LibNull,
   (CONST_APTR)libvector,
   (CONST_APTR)-1
@@ -374,7 +374,7 @@ const USED_VAR ULONG __abox__ = 1;
 /* generic StackSwap() function which calls function() surrounded by
    StackSwap() calls */
 
-#if defined(__mc68000__)
+#if defined(__mc68000__) && !defined(__AROS__)
 ULONG stackswap_call(struct StackSwapStruct *stack,
                      ULONG (*function)(struct LibraryHeader *),
                      struct LibraryHeader *arg);

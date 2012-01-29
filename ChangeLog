@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2012-01-29  Matthias Rustler <mrustler@gmx.de>
+
+  * Backport of some AROS fixes.
+    SDI headers updated.
+
 #### 6.13 RELEASE ########################################################
 
 2011-11-26 Jens Langner <Jens.Langner@light-speed.de>

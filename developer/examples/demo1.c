@@ -180,7 +180,7 @@ MakeStaticHook(popupWindowHook, popupWindowFun);
 
 HOOKPROTONH(popupOpenFun, ULONG, Object *list, Object *str)
 {
-    STRPTR s, x;
+    STRPTR s = NULL, x;
     int i;
 
     get(str, MUIA_Text_Contents, (IPTR *)&s);
@@ -288,7 +288,7 @@ DISPATCHER(popupDispatcher)
 {
     switch (msg->MethodID)
     {
-        case OM_NEW: return mpopupNew(cl,obj,(APTR)msg);
+        case OM_NEW: return (IPTR)mpopupNew(cl,obj,(APTR)msg);
         default:     return DoSuperMethodA(cl,obj,msg);
     }
 }
@@ -420,7 +420,7 @@ meditorLoad(struct IClass *cl,Object *obj,struct MUIP_Editor_Load *msg)
                                 {
                                     struct codeset *codeset;
                                     STRPTR         str;
-                                    STRPTR                  cname;
+                                    STRPTR                  cname = NULL;
 
                                     /* Get used codeset */
                                     get(data->codesetsObj, MUIA_Text_Contents, (IPTR *)&cname);
@@ -476,7 +476,7 @@ meditorSave(struct IClass *cl, Object *obj, UNUSED Msg msg)
     {
         struct codeset *codeset;
         UTF8           *utf8;
-        STRPTR                  cname;
+        STRPTR                  cname = NULL;
         ULONG                   dlen;
 
         /* Get current user codeset */
@@ -527,7 +527,7 @@ DISPATCHER(editorDispatcher)
 {
     switch (msg->MethodID)
     {
-        case OM_NEW:           return meditorNew(cl,obj,(APTR)msg);
+        case OM_NEW:           return (IPTR)meditorNew(cl,obj,(APTR)msg);
         case OM_DISPOSE:       return meditorDispose(cl,obj,(APTR)msg);
         case MUIM_Editor_Save: return meditorSave(cl,obj,(APTR)msg);
         case MUIM_Editor_Load: return meditorLoad(cl,obj,(APTR)msg);
@@ -769,7 +769,7 @@ DISPATCHER(appDispatcher)
 {
     switch (msg->MethodID)
     {
-        case OM_NEW:                            return mappNew(cl,obj,(APTR)msg);
+        case OM_NEW:                            return (IPTR)mappNew(cl,obj,(APTR)msg);
         case MUIM_App_DisposeWin:               return mappDisposeWin(cl,obj,(APTR)msg);
         case MUIM_App_About:                    return mappAbout(cl,obj,(APTR)msg);
         case MUIM_Application_OpenConfigWindow: return mappOpenMUIConfigWindow(cl,obj,(APTR)msg);
