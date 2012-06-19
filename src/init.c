@@ -415,6 +415,7 @@ ULONG initBase(struct LibraryHeader *lib)
                                                      ASOPOOL_Puddle, 4096,
                                                      ASOPOOL_Threshold, 512,
                                                      ASOPOOL_Name, "codesets.library pool",
+                                                     ASOPOOL_LockMem, FALSE,
                                                      TAG_DONE);
         #else
         lib->pool = CreatePool(MEMF_ANY, 4096, 512);
