@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.14 RELEASE ########################################################
+
+2012-08-05 Jens Langner <Jens.Langner@light-speed.de>
+
+  * misc: final 6.14 release preparations.
+
 2012-06-19 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/init.c: don't allocate locked memory.

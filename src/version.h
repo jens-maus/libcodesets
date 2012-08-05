@@ -31,9 +31,9 @@
 
 // for setting all necessary version information
 #define LIB_VERSION    6
-#define LIB_REVISION   13
-#define LIB_DATE       "26.11.2011"
-#define LIB_COPYRIGHT  "Copyright (c) 2005-2011 codesets.library Open Source Team"
+#define LIB_REVISION   14
+#define LIB_DATE       "05.08.2012"
+#define LIB_COPYRIGHT  "Copyright (c) 2005-2012 codesets.library Open Source Team"
 
 // set the LIB_REV_STRING
 #define LIB_REV_STRING STR(LIB_VERSION) "." STR(LIB_REVISION)
