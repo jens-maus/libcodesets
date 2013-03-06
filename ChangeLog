@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2013-03-06 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/libinit.c: rearranged the code to ensure that trying to start the final
+    library from a shell does not crash.
+
 #### 6.14 RELEASE ########################################################
 
 2012-08-05 Jens Langner <Jens.Langner@light-speed.de>
