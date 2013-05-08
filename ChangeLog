@@ -5,6 +5,10 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2013-05-08 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/codesets.c: removed a duplicate NUL termination.
+
 #### 6.15 RELEASE ########################################################
 
 2013-04-25 Jens Langner <Jens.Langner@light-speed.de>

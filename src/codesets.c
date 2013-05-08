@@ -121,8 +121,6 @@ static STRPTR mystrndup(const char *str1, int n)
       strlcpy(dest, str1, n+1);
     else
       dest[0] = '\0';
-
-    dest[n] = '\0';
   }
 
   RETURN(dest);
