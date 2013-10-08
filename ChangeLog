@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2013-10-08 Thore Böckelmann <tboeckel@gmx.de>
+
+  * src/codesets.c: added the tag CSA_AllowMultibyteCodesets for the
+    CodesetsSupportedA() function to be able to exclude multibyte codesets
+    (i.e. UTF8) from the generated names array.
+
 2013-05-08 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/codesets.c: removed a duplicate NUL termination.

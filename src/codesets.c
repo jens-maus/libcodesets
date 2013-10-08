@@ -292,13 +292,21 @@ static int parseUtf8(STRPTR *ps)
 
 ///
 /// countCodesets()
-static int countCodesets(struct codesetList *csList)
+static int countCodesets(struct codesetList *csList, BOOL allowMultibyte)
 {
   struct Node *node;
   int num = 0;
 
   for(node = GetHead((struct List *)csList); node != NULL; node = GetSucc(node))
-    num++;
+  {
+    struct codeset *cs = (struct codeset *)node;
+
+    if(allowMultibyte == TRUE ||
+       (cs != CodesetsBase->utf8Codeset && cs != CodesetsBase->utf16Codeset && cs != CodesetsBase->utf32Codeset))
+    {
+      num++;
+    }
+  }
 
   return num;
 }
@@ -1865,27 +1873,30 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, C
 /**************************************************************************/
 
 /// CodesetsSupportedA()
-STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, UNUSED struct TagItem *attrs))
+STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, struct TagItem *attrs))
 {
   STRPTR *array = NULL;
   struct TagItem *tstate = attrs;
   struct TagItem *tag;
+  BOOL allowMultibyte;
   int numCodesets;
 
   ENTER();
+
+  allowMultibyte = GetTagData(CSA_AllowMultibyteCodesets, TRUE, attrs);
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
   // first we need to check how many codesets our supplied
   // lists carry.
-  numCodesets = countCodesets(&CodesetsBase->codesets);
+  numCodesets = countCodesets(&CodesetsBase->codesets, allowMultibyte);
   while((tag = NextTagItem((APTR)&tstate)) != NULL)
   {
     switch(tag->ti_Tag)
     {
       case CSA_CodesetList:
       {
-        numCodesets += countCodesets((struct codesetList *)tag->ti_Data);
+        numCodesets += countCodesets((struct codesetList *)tag->ti_Data, allowMultibyte);
       }
       break;
     }
@@ -1906,8 +1917,12 @@ STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, UNUSED struct TagItem *attrs))
       {
         struct codeset *code = (struct codeset *)node;
 
-        array[i] = code->name;
-        i++;
+        if(allowMultibyte == TRUE ||
+           (code != CodesetsBase->utf8Codeset && code != CodesetsBase->utf16Codeset && code != CodesetsBase->utf32Codeset))
+        {
+          array[i] = code->name;
+          i++;
+        }
       }
 
       // reset the tstate
@@ -1924,8 +1939,12 @@ STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, UNUSED struct TagItem *attrs))
             {
               struct codeset *code = (struct codeset *)node;
 
-              array[i] = code->name;
-              i++;
+              if(allowMultibyte == TRUE ||
+                 (code != CodesetsBase->utf8Codeset && code != CodesetsBase->utf16Codeset && code != CodesetsBase->utf32Codeset))
+              {
+                array[i] = code->name;
+                i++;
+              }
             }
           }
           break;
