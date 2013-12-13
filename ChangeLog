@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.16 RELEASE ########################################################
+
+2013-12-13 Jens Maus <mail@jens-maus.de>
+
+  * misc: final 6.16 release preparations.
+
 2013-10-08 Thore Böckelmann <tboeckel@gmx.de>
 
   * src/codesets.c: added the tag CSA_AllowMultibyteCodesets for the
