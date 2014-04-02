@@ -47,6 +47,9 @@
 
 #include "debug.h"
 
+#define __NOLIBBASE__
+#include <proto/codesets.h>
+
 /**************************************************************************/
 
 // a union used for various type casts while avoiding the annoying "dereferencing
@@ -1873,7 +1876,7 @@ static struct codeset *codesetsFindBest(struct TagItem *attrs, ULONG csFamily, C
 /**************************************************************************/
 
 /// CodesetsSupportedA()
-STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsSupportedA, STRPTR *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   STRPTR *array = NULL;
   struct TagItem *tstate = attrs;
@@ -1961,9 +1964,23 @@ STRPTR * LIBFUNC CodesetsSupportedA(REG(a0, struct TagItem *attrs))
   return array;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsSupported, STRPTR *, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  STRPTR *res;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  res = CodesetsSupportedA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsFreeA()
-void LIBFUNC CodesetsFreeA(REG(a0, APTR obj), REG(a1, UNUSED struct TagItem *attrs))
+LIBPROTO(CodesetsFreeA, void, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR obj), REG(a1, UNUSED struct TagItem *attrs))
 {
   ENTER();
 
@@ -1973,9 +1990,20 @@ void LIBFUNC CodesetsFreeA(REG(a0, APTR obj), REG(a1, UNUSED struct TagItem *att
   LEAVE();
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsFree, void,  REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR obj), ...)
+{
+  VA_LIST args;
+
+  VA_START(args, obj);
+  CodesetsFreeA(obj, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+}
+#endif
+
 ///
 /// CodesetsSetDefaultA()
-struct codeset * LIBFUNC CodesetsSetDefaultA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset;
 
@@ -2000,9 +2028,23 @@ struct codeset * LIBFUNC CodesetsSetDefaultA(REG(a0, STRPTR name), REG(a1, struc
   return codeset;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsSetDefault, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...)
+{
+  struct codeset *cs;
+  VA_LIST args;
+
+  VA_START(args, name);
+  cs = CodesetsSetDefaultA(name, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return cs;
+}
+#endif
+
 ///
 /// CodesetsFindA()
-struct codeset * LIBFUNC CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
 
@@ -2048,9 +2090,23 @@ struct codeset * LIBFUNC CodesetsFindA(REG(a0, STRPTR name), REG(a1, struct TagI
   return codeset;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsFind, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...)
+{
+  struct codeset *cs;
+  VA_LIST args;
+
+  VA_START(args, name);
+  cs = CodesetsFindA(name, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return cs;
+}
+#endif
+
 ///
 /// CodesetsFindBestA()
-struct codeset * LIBFUNC CodesetsFindBestA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsFindBestA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
   char *text;
@@ -2085,11 +2141,25 @@ struct codeset * LIBFUNC CodesetsFindBestA(REG(a0, struct TagItem *attrs))
   return codeset;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  struct codeset *cs;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  cs = CodesetsFindBestA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return cs;
+}
+#endif
+
 ///
 /// CodesetsUTF8Len()
 // Returns the number of characters a utf8 string has. This is not
 // identically with the size of memory is required to hold the string.
-ULONG LIBFUNC CodesetsUTF8Len(REG(a0, UTF8 *str))
+LIBPROTO(CodesetsUTF8Len, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, UTF8 *str))
 {
   int len = 0;
   unsigned char c;
@@ -2111,7 +2181,7 @@ ULONG LIBFUNC CodesetsUTF8Len(REG(a0, UTF8 *str))
 
 ///
 /// CodesetsStrLenA()
-ULONG LIBFUNC CodesetsStrLenA(REG(a0, STRPTR str), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), REG(a1, struct TagItem *attrs))
 {
   ULONG res = 0;
 
@@ -2187,13 +2257,27 @@ ULONG LIBFUNC CodesetsStrLenA(REG(a0, STRPTR str), REG(a1, struct TagItem *attrs
   return res;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsStrLen, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), ...)
+{
+  ULONG res;
+  VA_LIST args;
+
+  VA_START(args, str);
+  res = CodesetsStrLenA(str, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsUTF8ToStrA()
 // Converts an UTF8 string to a given charset. Return the number of bytes
 // written to dest excluding the NULL byte (which is always ensured by this
 // function; it means a NULL str will produce "" as dest; anyway you should
 // check NULL str to not waste your time!).
-STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   UTF8 *src;
   ULONG srcLen;
@@ -2614,12 +2698,26 @@ STRPTR LIBFUNC CodesetsUTF8ToStrA(REG(a0, struct TagItem *attrs))
   return dest;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsUTF8ToStr, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  STRPTR res;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  res = CodesetsUTF8ToStrA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsUTF8CreateA()
 // Converts a string and a charset to an UTF8. Returns the UTF8.
 // If a destination hook is supplied always return 0.
 // If from is NULL, it returns NULL and doesn't call the hook.
-UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   UTF8   *from;
   UTF8   *dest;
@@ -2878,13 +2976,27 @@ UTF8 * LIBFUNC CodesetsUTF8CreateA(REG(a0, struct TagItem *attrs))
   return dest;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsUTF8Create, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  UTF8 *res;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  res = CodesetsUTF8CreateA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsIsValidUTF8()
 #define GOOD_UCS(c) \
      ((c) >= 160 && ((c) & ~0x3ff) != 0xd800 && \
       (c) != 0xfeff && (c) != 0xfffe && (c) != 0xffff)
 
-BOOL LIBFUNC CodesetsIsValidUTF8(REG(a0, STRPTR s))
+LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR s))
 {
   STRPTR t = s;
   int n;
@@ -2908,7 +3020,7 @@ BOOL LIBFUNC CodesetsIsValidUTF8(REG(a0, STRPTR s))
 /// CodesetsConvertStrA()
 // Converts a given string from one source Codeset to a given destination
 // codeset and returns the convert string
-STRPTR LIBFUNC CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   struct codeset *srcCodeset;
   STRPTR srcStr = NULL;
@@ -3084,9 +3196,23 @@ STRPTR LIBFUNC CodesetsConvertStrA(REG(a0, struct TagItem *attrs))
   return dstStr;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsConvertStr, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  STRPTR res;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  res = CodesetsConvertStrA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsFreeVecPooledA()
-void LIBFUNC CodesetsFreeVecPooledA(REG(a0, APTR pool), REG(a1, APTR mem), REG(a2, struct TagItem *attrs))
+LIBPROTO(CodesetsFreeVecPooledA, void, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR pool), REG(a1, APTR mem), REG(a2, struct TagItem *attrs))
 {
   ENTER();
 
@@ -3106,9 +3232,20 @@ void LIBFUNC CodesetsFreeVecPooledA(REG(a0, APTR pool), REG(a1, APTR mem), REG(a
   LEAVE();
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsFreeVecPooled, void, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR pool), REG(a1, APTR mem), ...)
+{
+  VA_LIST args;
+
+  VA_START(args, mem);
+  CodesetsFreeVecPooledA(pool, mem, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+}
+#endif
+
 ///
 /// CodesetsListCreateA()
-struct codesetList * LIBFUNC CodesetsListCreateA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsListCreateA, struct codesetList *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   struct codesetList *csList = NULL;
 
@@ -3168,9 +3305,23 @@ struct codesetList * LIBFUNC CodesetsListCreateA(REG(a0, struct TagItem *attrs))
   return csList;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsListCreate, struct codesetList *, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  struct codesetList *res;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  res = CodesetsListCreateA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return res;
+}
+#endif
+
 ///
 /// CodesetsListDeleteA()
-BOOL LIBFUNC CodesetsListDeleteA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsListDeleteA, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   BOOL result = FALSE;
   struct TagItem *tstate = attrs;
@@ -3198,7 +3349,7 @@ BOOL LIBFUNC CodesetsListDeleteA(REG(a0, struct TagItem *attrs))
           if(freeCodesets == TRUE)
             codesetsCleanup(csList);
 
-          // then free the list itself
+          // then free the list itICodesets
           freeArbitrateVecPooled(csList);
 
           result = TRUE;
@@ -3212,9 +3363,23 @@ BOOL LIBFUNC CodesetsListDeleteA(REG(a0, struct TagItem *attrs))
   return result;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsListDelete, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  BOOL result;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  result = CodesetsListDeleteA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return result;
+}
+#endif
+
 ///
 /// CodesetsListAddA()
-BOOL LIBFUNC CodesetsListAddA(REG(a0, struct codesetList *csList), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsListAddA, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct codesetList *csList), REG(a1, struct TagItem *attrs))
 {
   BOOL result = FALSE;
 
@@ -3261,9 +3426,23 @@ BOOL LIBFUNC CodesetsListAddA(REG(a0, struct codesetList *csList), REG(a1, struc
   return result;
 }
 
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsListAdd, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct codesetList *csList), ...)
+{
+  BOOL result;
+  VA_LIST args;
+
+  VA_START(args, csList);
+  result = CodesetsListAddA(csList, VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return result;
+}
+#endif
+
 ///
 /// CodesetsListRemoveA()
-BOOL LIBFUNC CodesetsListRemoveA(REG(a0, struct TagItem *attrs))
+LIBPROTO(CodesetsListRemoveA, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   BOOL result = FALSE;
   struct TagItem *tstate = attrs;
@@ -3335,6 +3514,20 @@ BOOL LIBFUNC CodesetsListRemoveA(REG(a0, struct TagItem *attrs))
   RETURN(result);
   return result;
 }
+
+#if defined(__amigaos4__)
+LIBPROTOVA(CodesetsListRemove, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), ...)
+{
+  BOOL result;
+  VA_LIST args;
+
+  VA_START(args, ICodesets);
+  result = CodesetsListRemoveA(VA_ARG(args, struct TagItem *));
+  VA_END(args);
+
+  return result;
+}
+#endif
 
 ///
 

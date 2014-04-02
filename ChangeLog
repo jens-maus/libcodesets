@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2014-04-02 Thore Böckelmann <tboeckel@gmx.de>
+
+  * misc: updated to the most recent SDI header files. This makes it possible to
+    remove the stub functions for AmigaOS4.
+
 #### 6.17 RELEASE ########################################################
 
 2014-01-26 Jens Maus <mail@jens-maus.de>
