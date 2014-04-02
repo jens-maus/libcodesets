@@ -55,7 +55,7 @@ LIBSTUB(CodesetsSetDefaultA, struct codeset *)
 LIBSTUB(CodesetsFindA, struct codeset *)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  return CALL_LFUNC(CALL_LFUNC(CodesetsFindA, (STRPTR)REG_A0, (struct TagItem *)REG_A1);
+  return CALL_LFUNC(CodesetsFindA, (STRPTR)REG_A0, (struct TagItem *)REG_A1);
 }
 
 LIBSTUB(CodesetsFindBestA, struct codeset *)
@@ -79,7 +79,7 @@ LIBSTUB(CodesetsStrLenA, ULONG)
 LIBSTUB(CodesetsUTF8ToStrA, STRPTR)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  returnCALL_LFUNC(CodesetsUTF8ToStrA, (struct TagItem *)REG_A0);
+  return CALL_LFUNC(CodesetsUTF8ToStrA, (struct TagItem *)REG_A0);
 }
 
 LIBSTUB(CodesetsUTF8CreateA, UTF8 *)
