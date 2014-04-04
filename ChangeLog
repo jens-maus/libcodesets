@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.18 RELEASE ########################################################
+
+2014-04-04 Jens Maus <mail@jens-maus.de>
+
+  * misc: final 6.18 release preparations.
+
 2014-04-02 Thore Böckelmann <tboeckel@gmx.de>
 
   * misc: updated to the most recent SDI header files. This makes it possible to

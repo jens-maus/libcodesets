@@ -82,7 +82,7 @@
         (help @askchoice-help)
         (choices "AmigaOS 3.x"
                  "AmigaOS 4.x"
-                 "MorphOS 1.x/2.x"
+                 "MorphOS 1.x/2.x/3.x"
                  "AROS i386"
                  "AROS PPC"
                  "AROS x86_64"
