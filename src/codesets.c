@@ -627,6 +627,7 @@ const struct CodesetAliases codesetAliases[] =
   { "windows-1255", "cp1255 windows1255" },
   { "windows-1256", "cp1256 windows1256" },
   { "windows-1257", "cp1257 windows1257" },
+  { "windows-1258", "cp1258 windows1258" },
   { NULL,           NULL,                }
 };
 

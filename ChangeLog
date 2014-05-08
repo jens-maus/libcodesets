@@ -8,6 +8,8 @@ $URL$
 2014-05-08 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: removed a duplicate entry from the alias table.
+  * codesets.c: added Windows-1258 to the known codesets and added a suitable
+    external conversion table.
 
 #### 6.18 RELEASE ########################################################
 
