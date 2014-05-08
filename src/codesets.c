@@ -614,7 +614,6 @@ const struct CodesetAliases codesetAliases[] =
   { "ISO-8859-14",  "ISO8859-14 8859-14" },
   { "ISO-8859-15",  "ISO8859-15 8859-15" },
   { "ISO-8859-16",  "ISO8859-16 8859-16" },
-  { "ISO-8859-10",  "ISO8859-10 8859-10" },
   { "KOI8-R",       "KOI8R" },
   { "US-ASCII",     "ASCII" },
   { "UTF-8",        "UTF8 UTF" },
