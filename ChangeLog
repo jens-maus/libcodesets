@@ -10,6 +10,7 @@ $URL$
   * codesets.c: removed a duplicate entry from the alias table.
   * codesets.c: added Windows-1258 to the known codesets and added a suitable
     external conversion table.
+  * charsets/misc: added some more Windows-125x conversion tables.
 
 #### 6.18 RELEASE ########################################################
 
