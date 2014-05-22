@@ -692,7 +692,7 @@ static struct codeset *defaultCodeset(BOOL useSemaphore)
     ObtainSemaphoreShared(&CodesetsBase->libSem);
 
   buf[0] = '\0';
-  GetVar("codeset_default" ,buf, sizeof(buf), GVF_GLOBAL_ONLY);
+  GetVar("codeset_default", buf, sizeof(buf), GVF_GLOBAL_ONLY);
 
   if(buf[0] == '\0' || (codeset = codesetsFind(&CodesetsBase->codesets, buf)) == NULL)
     codeset = CodesetsBase->systemCodeset;

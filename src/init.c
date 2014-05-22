@@ -376,6 +376,8 @@ static void getSystemCodeset(struct LibraryHeader *lib)
   else
     lib->systemCodeset = foundCodeset;
 
+  D(DBF_STARTUP, "final system default codeset: '%s'", lib->systemCodeset ? lib->systemCodeset->name : "?");
+
   LEAVE();
 }
 
