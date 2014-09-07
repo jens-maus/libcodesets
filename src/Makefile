@@ -26,7 +26,7 @@
 
 ###########################################################################
 # This makefile is a very generic one. It tries to identify both, the host
-# and the target operating system for which YAM should be compiled.
+# and the target operating system for which codesets.library should be compiled.
 # However, this auto-detection can be easily overridden by directly
 # specifying an option on the commandline while calling 'make'.
 #
@@ -59,8 +59,8 @@ ifeq ($(HOST),)
 endif
 
 #############################################
-# now we find out the target OS for
-# which we are going to compile YAM in case
+# now we find out the target OS for which we
+# are going to compile codesets.library in case
 # the caller didn't yet define OS himself
 ifndef (OS)
   ifeq ($(HOST), AmigaOS4)
@@ -77,16 +77,16 @@ ifndef (OS)
     ifeq ($(shell uname -m), powerpc)
       OS = aros-ppc
     endif
-	 ifeq ($(shell uname -m), ppc)
+    ifeq ($(shell uname -m), ppc)
       OS = aros-ppc
     endif
-	 ifeq ($(shell uname -m), i386)
+    ifeq ($(shell uname -m), i386)
       OS = aros-i386
     endif
-	 ifeq ($(shell uname -m), i686)
+    ifeq ($(shell uname -m), i686)
       OS = aros-i686
     endif
-	 ifeq ($(shell uname -m), x86_64)
+    ifeq ($(shell uname -m), x86_64)
       OS = aros-x86_64
     endif
   else
@@ -262,6 +262,9 @@ ifeq ($(OS), aros-i386)
   CFLAGS += -Wno-pointer-sign
   LDLIBS += -lrom
 
+  # additional object files required
+  OBJS += stubs-aros.o
+
 else
 ifeq ($(OS), aros-ppc)
 
@@ -279,6 +282,9 @@ ifeq ($(OS), aros-ppc)
   CFLAGS += -Wno-pointer-sign
   LDLIBS += -lrom
 
+  # additional object files required
+  OBJS += stubs-aros.o
+
 else
 ifeq ($(OS), aros-x86_64)
 
@@ -295,6 +301,9 @@ ifeq ($(OS), aros-x86_64)
   OPTFLAGS = -O2 -fomit-frame-pointer
   CFLAGS += -Wno-pointer-sign
   LDLIBS += -lrom
+
+  # additional object files required
+  OBJS += stubs-aros.o
 
 endif
 endif

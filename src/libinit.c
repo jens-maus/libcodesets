@@ -49,6 +49,11 @@ asm(".text\n\
     _start:\n\
      moveq #20,d0\n\
      rts");
+#elif defined(__AROS__)
+__startup int Main(void)
+{
+  return RETURN_FAIL;
+}
 #else
 LONG _start(void)
 {
@@ -311,9 +316,15 @@ STATIC CONST CONST_APTR LibVectors[] =
   (CONST_APTR)FUNCARRAY_32BIT_NATIVE,
   #endif
   #if defined(__AROS__)
-  (CONST_APTR)AROS_SLIB_ENTRY(LibOpen, Codesets),
-  (CONST_APTR)AROS_SLIB_ENTRY(LibClose, Codesets),
-  (CONST_APTR)AROS_SLIB_ENTRY(LibExpunge, Codesets),
+    #ifdef AROS_ABI_V1
+    (CONST_APTR)AROS_SLIB_ENTRY(LibOpen, Codesets, 1),
+    (CONST_APTR)AROS_SLIB_ENTRY(LibClose, Codesets, 2),
+    (CONST_APTR)AROS_SLIB_ENTRY(LibExpunge, Codesets, 3),
+    #else
+    (CONST_APTR)AROS_SLIB_ENTRY(LibOpen, Codesets),
+    (CONST_APTR)AROS_SLIB_ENTRY(LibClose, Codesets),
+    (CONST_APTR)AROS_SLIB_ENTRY(LibExpunge, Codesets),
+    #endif
   #else
   (CONST_APTR)LibOpen,
   (CONST_APTR)LibClose,

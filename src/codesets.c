@@ -2159,7 +2159,7 @@ LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE),
 /// CodesetsUTF8Len()
 // Returns the number of characters a utf8 string has. This is not
 // identically with the size of memory is required to hold the string.
-LIBPROTO(CodesetsUTF8Len, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, UTF8 *str))
+LIBPROTO(CodesetsUTF8Len, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, const UTF8 *str))
 {
   int len = 0;
   unsigned char c;

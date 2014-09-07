@@ -5,6 +5,22 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2014-09-07 Matthias Rustler <mrustler@gmx.de>
+
+  * include/SDI_lib.h: fixes for AROS to avoid segfaults because the
+    library base was at the wrong place in the parameter list. We must
+    differ between ABI_V0 and ABI_v1 because latter has an additional
+    LVO entry.
+  * src/Makefile: compile for AROS with stubs-aros.o. Changed "YAM"
+    to "codesets.library".
+  * src/codesets.c: added "const" to the parameter because that's how
+    it's defined in the SFD file.
+  * src/lib_protos.h: added AROS prototypes.
+  * src/libinit.c: for AROS we must differ between ABIv1 and v0.
+  * src/stubs-aros.c: new AROS specific file. The prototypes with
+    the AROS compatibilty macros are used in the LVO table. They call
+    the real library functions like normal C functions.
+
 2014-05-08 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: removed a duplicate entry from the alias table.
