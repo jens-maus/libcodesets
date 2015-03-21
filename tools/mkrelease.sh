@@ -65,7 +65,6 @@ cp -a charsets/* "release/codesets/Charsets/"
 cp -a developer/docs/* "release/codesets/Developer/Autodocs/"
 cp -a developer/examples/*.c "release/codesets/Developer/Examples/"
 cp -a developer/examples/Makefile "release/codesets/Developer/Examples/"
-cp -a developer/examples/mmakefile.src "release/codesets/Developer/Examples/"
 cp -a developer/fd/* "release/codesets/Developer/fd/"
 cp -a -R developer/include/* "release/codesets/Developer/include/"
 cp -a developer/sfd/* "release/codesets/Developer/sfd/"
@@ -76,7 +75,6 @@ releaserev=`grep "#define LIB_REVISION" src/version.h | awk '{ print $3 }'`
 
 echo "  MK codesets-$releasever.$releaserev.lha"
 find release -nowarn -name ".svn" -exec rm -rf {} \; 2>/dev/null
-find release -nowarn -name "mmakefile.src" -exec rm -rf {} \; 2>/dev/null
 cd release
 lha -ao5q ../codesets-$releasever.$releaserev.lha *
 cp codesets/ReadMe ../codesets-$releasever.$releaserev.readme

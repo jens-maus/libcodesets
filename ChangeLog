@@ -5,6 +5,12 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+#### 6.19 RELEASE ########################################################
+
+2015-03-21 Jens Maus <mail@jens-maus.de>
+
+  * misc: final 6.19 release preparations.
+
 2014-09-07 Matthias Rustler <mrustler@gmx.de>
 
   * include/SDI_lib.h: fixes for AROS to avoid segfaults because the
