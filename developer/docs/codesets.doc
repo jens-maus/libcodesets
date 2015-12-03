@@ -222,12 +222,12 @@ codesets.library/CodesetsEncodeB64A
     codeset = CodesetsFindA(name, attrs);
     D0                      A0    A1
 
-    struct codeset * CodesetsFindA(STRPTR, struct TagItem *);
+    struct codeset * CodesetsFindA(CONST_STRPTR, struct TagItem *);
 
     codeset = CodesetsFind(name, tag1, ...);
     D0                     A0    A1
 
-    struct codeset * CodesetsFind(STRPTR, Tag, ...);
+    struct codeset * CodesetsFind(CONST_STRPTR, Tag, ...);
 
    FUNCTION
     Finds and returns a codeset by its name. The data behind the
@@ -611,12 +611,12 @@ codesets.library/CodesetsEncodeB64A
     codeset = CodesetsSetDefaultA(name, attrs);
                                   A0    A1
 
-    struct codeset * CodesetsSetDefaultA(STRPTR, struct TagItem *);
+    struct codeset * CodesetsSetDefaultA(CONST_STRPTR, struct TagItem *);
 
     codeset = CodesetsSetDefault(name, tag1, ...);
                                  A0    A1
 
-    struct codeset * CodesetsSetDefault(STRPTR, Tag, ...);
+    struct codeset * CodesetsSetDefault(CONST_STRPTR, Tag, ...);
 
    FUNCTION
     Sets the default codeset to name. The codeset will be stored in
@@ -1331,7 +1331,7 @@ codesets.library/CodesetsEncodeB64A
     result = CodesetsIsValidUTF8(str);
     D0                           A0
 
-    BOOL CodesetsIsValidUTF8(STRPTR);
+    BOOL CodesetsIsValidUTF8(CONST_STRPTR);
 
    FUNCTION
     Returns TRUE in case the supplied string only contains char sequences
@@ -1417,12 +1417,12 @@ codesets.library/CodesetsEncodeB64A
     len = CodesetsStrLenA(str, attrs)
                           A0   A1
 
-    ULONG CodesetsStrLenA(STRPTR, struct TagItem *);
+    ULONG CodesetsStrLenA(CONST_STRPTR, struct TagItem *);
 
     len = CodesetsStrLen(str, tag1, ...);
                          A0   A1
 
-    ULONG CodesetsStrLen(STRPTR, Tag, ...);
+    ULONG CodesetsStrLen(CONST_STRPTR, Tag, ...);
 
    FUNCTION
     Return the length (size) of str in case it will be converted to
