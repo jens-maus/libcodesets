@@ -29,11 +29,11 @@ ULONG __CodesetsConvertUTF32toUTF8(__reg("a6") struct Library *, __reg("a0") voi
 ULONG __CodesetsConvertUTF8toUTF32(__reg("a6") struct Library *, __reg("a0") void * sourceStart, __reg("a1") void * sourceEnd, __reg("a2") UTF32 ** targetStart, __reg("a3") UTF32 * targetEnd, __reg("d0") ULONG flags)="\tjsr\t-78(a6)";
 #define CodesetsConvertUTF8toUTF32(sourceStart, sourceEnd, targetStart, targetEnd, flags) __CodesetsConvertUTF8toUTF32(CodesetsBase, (void *)(sourceStart), (void *)(sourceEnd), (targetStart), (targetEnd), (flags))
 
-struct codeset * __CodesetsSetDefaultA(__reg("a6") struct Library *, __reg("a0") STRPTR name, __reg("a1") struct TagItem * attrs)="\tjsr\t-84(a6)";
+struct codeset * __CodesetsSetDefaultA(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR name, __reg("a1") struct TagItem * attrs)="\tjsr\t-84(a6)";
 #define CodesetsSetDefaultA(name, attrs) __CodesetsSetDefaultA(CodesetsBase, (name), (attrs))
 
 #if !defined(NO_INLINE_STDARG) && (__STDC__ == 1L) && (__STDC_VERSION__ >= 199901L)
-struct codeset * __CodesetsSetDefault(__reg("a6") struct Library *, __reg("a0") STRPTR name, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-84(a6)\n\tmovea.l\t(a7)+,a1";
+struct codeset * __CodesetsSetDefault(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR name, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-84(a6)\n\tmovea.l\t(a7)+,a1";
 #define CodesetsSetDefault(name, ...) __CodesetsSetDefault(CodesetsBase, (name), __VA_ARGS__)
 #endif
 
@@ -53,11 +53,11 @@ STRPTR * __CodesetsSupported(__reg("a6") struct Library *, Tag attrs, ...)="\tmo
 #define CodesetsSupported(...) __CodesetsSupported(CodesetsBase, __VA_ARGS__)
 #endif
 
-struct codeset * __CodesetsFindA(__reg("a6") struct Library *, __reg("a0") STRPTR name, __reg("a1") struct TagItem * attrs)="\tjsr\t-102(a6)";
+struct codeset * __CodesetsFindA(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR name, __reg("a1") struct TagItem * attrs)="\tjsr\t-102(a6)";
 #define CodesetsFindA(name, attrs) __CodesetsFindA(CodesetsBase, (name), (attrs))
 
 #if !defined(NO_INLINE_STDARG) && (__STDC__ == 1L) && (__STDC_VERSION__ >= 199901L)
-struct codeset * __CodesetsFind(__reg("a6") struct Library *, __reg("a0") STRPTR name, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-102(a6)\n\tmovea.l\t(a7)+,a1";
+struct codeset * __CodesetsFind(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR name, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-102(a6)\n\tmovea.l\t(a7)+,a1";
 #define CodesetsFind(name, ...) __CodesetsFind(CodesetsBase, (name), __VA_ARGS__)
 #endif
 
@@ -104,15 +104,15 @@ ULONG __CodesetsDecodeB64(__reg("a6") struct Library *, Tag attrs, ...)="\tmove.
 #define CodesetsDecodeB64(...) __CodesetsDecodeB64(CodesetsBase, __VA_ARGS__)
 #endif
 
-ULONG __CodesetsStrLenA(__reg("a6") struct Library *, __reg("a0") STRPTR str, __reg("a1") struct TagItem * attrs)="\tjsr\t-144(a6)";
+ULONG __CodesetsStrLenA(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR str, __reg("a1") struct TagItem * attrs)="\tjsr\t-144(a6)";
 #define CodesetsStrLenA(str, attrs) __CodesetsStrLenA(CodesetsBase, (str), (attrs))
 
 #if !defined(NO_INLINE_STDARG) && (__STDC__ == 1L) && (__STDC_VERSION__ >= 199901L)
-ULONG __CodesetsStrLen(__reg("a6") struct Library *, __reg("a0") STRPTR str, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-144(a6)\n\tmovea.l\t(a7)+,a1";
+ULONG __CodesetsStrLen(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR str, Tag attrs, ...)="\tmove.l\ta1,-(a7)\n\tlea\t4(a7),a1\n\tjsr\t-144(a6)\n\tmovea.l\t(a7)+,a1";
 #define CodesetsStrLen(str, ...) __CodesetsStrLen(CodesetsBase, (str), __VA_ARGS__)
 #endif
 
-BOOL __CodesetsIsValidUTF8(__reg("a6") struct Library *, __reg("a0") STRPTR str)="\tjsr\t-150(a6)";
+BOOL __CodesetsIsValidUTF8(__reg("a6") struct Library *, __reg("a0") CONST_STRPTR str)="\tjsr\t-150(a6)";
 #define CodesetsIsValidUTF8(str) __CodesetsIsValidUTF8(CodesetsBase, (str))
 
 void __CodesetsFreeVecPooledA(__reg("a6") struct Library *, __reg("a0") APTR pool, __reg("a1") APTR mem, __reg("a2") struct TagItem * attrs)="\tjsr\t-156(a6)";

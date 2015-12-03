@@ -60,11 +60,11 @@
 			<arg name="flags" type="ULONG"/>
 		</method>
 		<method name="CodesetsSetDefaultA" result="struct codeset *">
-			<arg name="name" type="STRPTR"/>
+			<arg name="name" type="CONST_STRPTR"/>
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
 		<method name="CodesetsSetDefault" result="struct codeset *">
-			<arg name="name" type="STRPTR"/>
+			<arg name="name" type="CONST_STRPTR"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsFreeA" result="void">
@@ -82,11 +82,11 @@
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsFindA" result="struct codeset *">
-			<arg name="name" type="STRPTR"/>
+			<arg name="name" type="CONST_STRPTR"/>
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
 		<method name="CodesetsFind" result="struct codeset *">
-			<arg name="name" type="STRPTR"/>
+			<arg name="name" type="CONST_STRPTR"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsFindBestA" result="struct codeset *">
@@ -123,15 +123,15 @@
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsStrLenA" result="ULONG">
-			<arg name="str" type="STRPTR"/>
+			<arg name="str" type="CONST_STRPTR"/>
 			<arg name="attrs" type="struct TagItem *"/>
 		</method>
 		<method name="CodesetsStrLen" result="ULONG">
-			<arg name="str" type="STRPTR"/>
+			<arg name="str" type="CONST_STRPTR"/>
 			<vararg name="attrs" type="Tag"/>
 		</method>
 		<method name="CodesetsIsValidUTF8" result="BOOL">
-			<arg name="str" type="STRPTR"/>
+			<arg name="str" type="CONST_STRPTR"/>
 		</method>
 		<method name="CodesetsFreeVecPooledA" result="void">
 			<arg name="pool" type="APTR"/>

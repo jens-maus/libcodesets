@@ -88,7 +88,7 @@ typedef ULONG _sfdc_vararg;
 
 #define CodesetsSetDefaultA(___name, ___attrs) \
 	AROS_LC2(struct codeset *, CodesetsSetDefaultA, \
-	AROS_LCA(STRPTR, (___name), A0), \
+	AROS_LCA(CONST_STRPTR, (___name), A0), \
 	AROS_LCA(struct TagItem *, (___attrs), A1), \
 	struct Library *, CODESETS_BASE_NAME, 14, Codesets)
 
@@ -120,7 +120,7 @@ typedef ULONG _sfdc_vararg;
 
 #define CodesetsFindA(___name, ___attrs) \
 	AROS_LC2(struct codeset *, CodesetsFindA, \
-	AROS_LCA(STRPTR, (___name), A0), \
+	AROS_LCA(CONST_STRPTR, (___name), A0), \
 	AROS_LCA(struct TagItem *, (___attrs), A1), \
 	struct Library *, CODESETS_BASE_NAME, 17, Codesets)
 
@@ -186,7 +186,7 @@ typedef ULONG _sfdc_vararg;
 
 #define CodesetsStrLenA(___str, ___attrs) \
 	AROS_LC2(ULONG, CodesetsStrLenA, \
-	AROS_LCA(STRPTR, (___str), A0), \
+	AROS_LCA(CONST_STRPTR, (___str), A0), \
 	AROS_LCA(struct TagItem *, (___attrs), A1), \
 	struct Library *, CODESETS_BASE_NAME, 24, Codesets)
 
@@ -197,7 +197,7 @@ typedef ULONG _sfdc_vararg;
 
 #define CodesetsIsValidUTF8(___str) \
 	AROS_LC1(BOOL, CodesetsIsValidUTF8, \
-	AROS_LCA(STRPTR, (___str), A0), \
+	AROS_LCA(CONST_STRPTR, (___str), A0), \
 	struct Library *, CODESETS_BASE_NAME, 25, Codesets)
 
 #define CodesetsFreeVecPooledA(___pool, ___mem, ___attrs) \

@@ -118,18 +118,18 @@ LIBPROTOVA(CodesetsSupported, STRPTR *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0,
 #endif
 LIBPROTO(CodesetsFreeA,       void,  REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR obj), REG(a1, struct TagItem *attrs));
 LIBPROTOVA(CodesetsFree,      void,  REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR obj), ...);
-LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs));
-LIBPROTOVA(CodesetsSetDefault,struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...);
-LIBPROTO(CodesetsFindA,       struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs));
-LIBPROTOVA(CodesetsFind,      struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...);
+LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs));
+LIBPROTOVA(CodesetsSetDefault,struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), ...);
+LIBPROTO(CodesetsFindA,       struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs));
+LIBPROTOVA(CodesetsFind,      struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), ...);
 LIBPROTO(CodesetsFindBestA,   struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs));
 #if defined(__amigaos4__)
 LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), ...);
 #else
 LIBPROTOVA(CodesetsFindBest,  struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, Tag tag1), ...);
 #endif
-LIBPROTO(CodesetsStrLenA,     ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), REG(a1, struct TagItem *attrs));
-LIBPROTOVA(CodesetsStrLen,    ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), ...);
+LIBPROTO(CodesetsStrLenA,     ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR str), REG(a1, struct TagItem *attrs));
+LIBPROTOVA(CodesetsStrLen,    ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR str), ...);
 LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs));
 #if defined(__amigaos4__)
 LIBPROTOVA(CodesetsConvertStr, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), ...);
@@ -150,7 +150,7 @@ LIBPROTOVA(CodesetsUTF8Create, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, 
 #endif
 LIBPROTO(CodesetsFreeVecPooledA, void, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR pool), REG(a1, APTR mem), REG(a2, struct TagItem *attrs));
 LIBPROTOVA(CodesetsFreeVecPooled, void, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR pool), REG(a1, APTR mem), ...);
-LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR s));
+LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR s));
 LIBPROTO(CodesetsUTF8Len,     ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, const UTF8 *str));
 LIBPROTO(CodesetsListCreateA, struct codesetList *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs));
 #if defined(__amigaos4__)

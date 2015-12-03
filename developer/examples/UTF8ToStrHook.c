@@ -70,7 +70,7 @@ int main(int argc,char **argv)
     if((CodesetsBase = OpenLibrary(CODESETSNAME,CODESETSVER)) &&
         GETINTERFACE(ICodesets, CodesetsBase))
     {
-        char *str;
+        const char *str;
 
         if(argc>1)
           str = argv[1];

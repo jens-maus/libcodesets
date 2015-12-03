@@ -184,7 +184,7 @@ static struct codeset * stub_CodesetsSetDefaultAPPC(ULONG *regarray)
 	struct CodesetsIFace *Self = (struct CodesetsIFace *) ExtLib->MainIFace;
 
 	return Self->CodesetsSetDefaultA(
-		(STRPTR)regarray[8],
+		(CONST_STRPTR)regarray[8],
 		(struct TagItem *)regarray[9]
 	);
 }

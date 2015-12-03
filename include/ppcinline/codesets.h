@@ -66,12 +66,12 @@
 
 #define CodesetsIsValidUTF8(__p0) \
 	LP1(150, BOOL , CodesetsIsValidUTF8, \
-		STRPTR , __p0, a0, \
+		CONST_STRPTR , __p0, a0, \
 		, CODESETS_BASE_NAME, 0, 0, 0, 0, 0, 0)
 
 #define CodesetsStrLenA(__p0, __p1) \
 	LP2(144, ULONG , CodesetsStrLenA, \
-		STRPTR , __p0, a0, \
+		CONST_STRPTR , __p0, a0, \
 		struct TagItem *, __p1, a1, \
 		, CODESETS_BASE_NAME, 0, 0, 0, 0, 0, 0)
 
@@ -82,7 +82,7 @@
 
 #define CodesetsFindA(__p0, __p1) \
 	LP2(102, struct codeset *, CodesetsFindA, \
-		STRPTR , __p0, a0, \
+		CONST_STRPTR , __p0, a0, \
 		struct TagItem *, __p1, a1, \
 		, CODESETS_BASE_NAME, 0, 0, 0, 0, 0, 0)
 
@@ -140,7 +140,7 @@
 
 #define CodesetsSetDefaultA(__p0, __p1) \
 	LP2(84, struct codeset *, CodesetsSetDefaultA, \
-		STRPTR , __p0, a0, \
+		CONST_STRPTR , __p0, a0, \
 		struct TagItem *, __p1, a1, \
 		, CODESETS_BASE_NAME, 0, 0, 0, 0, 0, 0)
 

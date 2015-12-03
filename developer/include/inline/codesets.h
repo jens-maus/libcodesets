@@ -72,7 +72,7 @@
 	, CODESETS_BASE_NAME)
 
 #define CodesetsSetDefaultA(name, attrs) \
-	LP2(0x54, struct codeset *, CodesetsSetDefaultA, STRPTR, name, a0, struct TagItem *, attrs, a1, \
+	LP2(0x54, struct codeset *, CodesetsSetDefaultA, CONST_STRPTR, name, a0, struct TagItem *, attrs, a1, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG
@@ -99,7 +99,7 @@
 #endif
 
 #define CodesetsFindA(name, attrs) \
-	LP2(0x66, struct codeset *, CodesetsFindA, STRPTR, name, a0, struct TagItem *, attrs, a1, \
+	LP2(0x66, struct codeset *, CodesetsFindA, CONST_STRPTR, name, a0, struct TagItem *, attrs, a1, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG
@@ -157,7 +157,7 @@
 #endif
 
 #define CodesetsStrLenA(str, attrs) \
-	LP2(0x90, ULONG, CodesetsStrLenA, STRPTR, str, a0, struct TagItem *, attrs, a1, \
+	LP2(0x90, ULONG, CodesetsStrLenA, CONST_STRPTR, str, a0, struct TagItem *, attrs, a1, \
 	, CODESETS_BASE_NAME)
 
 #ifndef NO_INLINE_STDARG
@@ -166,7 +166,7 @@
 #endif
 
 #define CodesetsIsValidUTF8(str) \
-	LP1(0x96, BOOL, CodesetsIsValidUTF8, STRPTR, str, a0, \
+	LP1(0x96, BOOL, CodesetsIsValidUTF8, CONST_STRPTR, str, a0, \
 	, CODESETS_BASE_NAME)
 
 #define CodesetsFreeVecPooledA(pool, mem, attrs) \

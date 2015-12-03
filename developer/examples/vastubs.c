@@ -45,7 +45,7 @@ ULONG SetAttrs( APTR object, ULONG tag1, ... )
 #include <proto/codesets.h>
 STRPTR *CodesetsSupported(Tag tag1, ...)
 { return CodesetsSupportedA((struct TagItem *)&tag1); }
-struct codeset *CodesetsFind(STRPTR name, Tag tag1, ...)
+struct codeset *CodesetsFind(CONST_STRPTR name, Tag tag1, ...)
 { return CodesetsFindA(name, (struct TagItem *)&tag1); }
 struct codeset *CodesetsFindBest(Tag tag1, ...)
 { return CodesetsFindBestA((struct TagItem *)&tag1); }

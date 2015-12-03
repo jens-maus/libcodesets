@@ -49,13 +49,13 @@ LIBSTUB(CodesetsFreeA, void)
 LIBSTUB(CodesetsSetDefaultA, struct codeset *)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  return CALL_LFUNC(CodesetsSetDefaultA, (STRPTR)REG_A0, (struct TagItem *)REG_A1);
+  return CALL_LFUNC(CodesetsSetDefaultA, (CONST_STRPTR)REG_A0, (struct TagItem *)REG_A1);
 }
 
 LIBSTUB(CodesetsFindA, struct codeset *)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  return CALL_LFUNC(CodesetsFindA, (STRPTR)REG_A0, (struct TagItem *)REG_A1);
+  return CALL_LFUNC(CodesetsFindA, (CONST_STRPTR)REG_A0, (struct TagItem *)REG_A1);
 }
 
 LIBSTUB(CodesetsFindBestA, struct codeset *)
@@ -73,7 +73,7 @@ LIBSTUB(CodesetsUTF8Len, ULONG)
 LIBSTUB(CodesetsStrLenA, ULONG)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  return CALL_LFUNC(CodesetsStrLenA, (STRPTR)REG_A0, (struct TagItem *)REG_A1);
+  return CALL_LFUNC(CodesetsStrLenA, (CONST_STRPTR)REG_A0, (struct TagItem *)REG_A1);
 }
 
 LIBSTUB(CodesetsUTF8ToStrA, STRPTR)
@@ -91,7 +91,7 @@ LIBSTUB(CodesetsUTF8CreateA, UTF8 *)
 LIBSTUB(CodesetsIsValidUTF8, BOOL)
 {
   __BASE_OR_IFACE = (__BASE_OR_IFACE_TYPE)REG_A6;
-  return CALL_LFUNC(CodesetsIsValidUTF8, (STRPTR)REG_A0);
+  return CALL_LFUNC(CodesetsIsValidUTF8, (CONST_STRPTR)REG_A0);
 }
 
 LIBSTUB(CodesetsConvertStrA, STRPTR)

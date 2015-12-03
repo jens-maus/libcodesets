@@ -60,6 +60,7 @@ union TypeAliases
   char **schar;
   unsigned char **uchar;
   STRPTR *strptr;
+  CONST_STRPTR *cstrptr;
   UTF8 **utf8;
   const UTF8 **cutf8;
   UTF16 **utf16;
@@ -198,9 +199,9 @@ static const char *getConfigItem(const char *buf, const char *item)
 
 ///
 /// parseUtf8()
-static int parseUtf8(STRPTR *ps)
+static int parseUtf8(CONST_STRPTR *ps)
 {
-  STRPTR s = *ps;
+  CONST_STRPTR s = *ps;
   int wc, n, i;
 
   ENTER();
@@ -2003,7 +2004,7 @@ LIBPROTOVA(CodesetsFree, void,  REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR ob
 
 ///
 /// CodesetsSetDefaultA()
-LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset;
 
@@ -2029,7 +2030,7 @@ LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE),
 }
 
 #if defined(__amigaos4__)
-LIBPROTOVA(CodesetsSetDefault, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...)
+LIBPROTOVA(CodesetsSetDefault, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), ...)
 {
   struct codeset *cs;
   VA_LIST args;
@@ -2044,7 +2045,7 @@ LIBPROTOVA(CodesetsSetDefault, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE)
 
 ///
 /// CodesetsFindA()
-LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
 
@@ -2091,7 +2092,7 @@ LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a
 }
 
 #if defined(__amigaos4__)
-LIBPROTOVA(CodesetsFind, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR name), ...)
+LIBPROTOVA(CodesetsFind, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), ...)
 {
   struct codeset *cs;
   VA_LIST args;
@@ -2181,7 +2182,7 @@ LIBPROTO(CodesetsUTF8Len, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, const 
 
 ///
 /// CodesetsStrLenA()
-LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), REG(a1, struct TagItem *attrs))
+LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR str), REG(a1, struct TagItem *attrs))
 {
   ULONG res = 0;
 
@@ -2191,7 +2192,7 @@ LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR
   {
     struct codeset *codeset;
     int            len;
-    STRPTR         src;
+    CONST_STRPTR   src;
     int            utf;
 
     if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
@@ -2219,12 +2220,12 @@ LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR
 
     if(utf != 0)
     {
-      void *srcend = src + len;
+      const void *srcend = src + len;
       UTF8 *dstlen = NULL;
       union TypeAliases srcAlias;
       union TypeAliases dstAlias;
 
-      srcAlias.strptr = &src;
+      srcAlias.cstrptr = &src;
       dstAlias.utf8 = &dstlen;
 
       switch(utf)
@@ -2258,7 +2259,7 @@ LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR
 }
 
 #if defined(__amigaos4__)
-LIBPROTOVA(CodesetsStrLen, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR str), ...)
+LIBPROTOVA(CodesetsStrLen, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR str), ...)
 {
   ULONG res;
   VA_LIST args;
@@ -2996,9 +2997,9 @@ LIBPROTOVA(CodesetsUTF8Create, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), ...)
      ((c) >= 160 && ((c) & ~0x3ff) != 0xd800 && \
       (c) != 0xfeff && (c) != 0xfffe && (c) != 0xffff)
 
-LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, STRPTR s))
+LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR s))
 {
-  STRPTR t = s;
+  CONST_STRPTR t = s;
   int n;
 
   ENTER();

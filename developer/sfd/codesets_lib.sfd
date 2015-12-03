@@ -20,18 +20,18 @@ ULONG CodesetsConvertUTF32toUTF8(const UTF32 **sourceStart, const UTF32 *sourceE
 	UTF8 *targetEnd, ULONG flags) (a0,a1,a2,a3,d0)
 ULONG CodesetsConvertUTF8toUTF32(const UTF8 **sourceStart, const UTF8 *sourceEnd, UTF32 **targetStart,
 	UTF32 *targetEnd, ULONG flags) (a0,a1,a2,a3,d0)
-struct codeset * CodesetsSetDefaultA(STRPTR name, struct TagItem * attrs) (a0,a1)
+struct codeset * CodesetsSetDefaultA(CONST_STRPTR name, struct TagItem * attrs) (a0,a1)
 ==varargs
-struct codeset * CodesetsSetDefault(STRPTR name, Tag attrs, ...) (a0,a1)
+struct codeset * CodesetsSetDefault(CONST_STRPTR name, Tag attrs, ...) (a0,a1)
 void CodesetsFreeA(APTR obj, struct TagItem * attrs) (a0,a1)
 ==varargs
 void CodesetsFree(APTR obj, Tag attrs, ...) (a0,a1)
 STRPTR * CodesetsSupportedA(struct TagItem * attrs) (a0)
 ==varargs
 STRPTR * CodesetsSupported(Tag attrs, ...) (a0)
-struct codeset * CodesetsFindA(STRPTR name, struct TagItem * attrs) (a0,a1)
+struct codeset * CodesetsFindA(CONST_STRPTR name, struct TagItem * attrs) (a0,a1)
 ==varargs
-struct codeset * CodesetsFind(STRPTR name, Tag attrs, ...) (a0,a1)
+struct codeset * CodesetsFind(CONST_STRPTR name, Tag attrs, ...) (a0,a1)
 struct codeset * CodesetsFindBestA(struct TagItem * attrs) (a0)
 ==varargs
 struct codeset * CodesetsFindBest(Tag attrs, ...) (a0)
@@ -48,10 +48,10 @@ ULONG CodesetsEncodeB64(Tag attrs, ...) (a0)
 ULONG CodesetsDecodeB64A(struct TagItem * attrs) (a0)
 ==varargs
 ULONG CodesetsDecodeB64(Tag attrs, ...) (a0)
-ULONG CodesetsStrLenA(STRPTR str, struct TagItem * attrs) (a0,a1)
+ULONG CodesetsStrLenA(CONST_STRPTR str, struct TagItem * attrs) (a0,a1)
 ==varargs
-ULONG CodesetsStrLen(STRPTR str, Tag attrs, ...) (a0,a1)
-BOOL CodesetsIsValidUTF8(STRPTR str) (a0)
+ULONG CodesetsStrLen(CONST_STRPTR str, Tag attrs, ...) (a0,a1)
+BOOL CodesetsIsValidUTF8(CONST_STRPTR str) (a0)
 void CodesetsFreeVecPooledA(APTR pool, APTR mem, struct TagItem *attrs) (a0,a1,a2)
 ==varargs
 void CodesetsFreeVecPooled(APTR pool, APTR mem, Tag attrs, ...) (a0,a1,a2)
