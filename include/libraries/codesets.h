@@ -97,6 +97,7 @@ struct codeset
   int                     read_only;
   struct single_convert   table[256];
   struct single_convert   table_sorted[256];
+  unsigned int            MIBenum;
 };
 
 /***********************************************************************/
@@ -179,6 +180,10 @@ enum
 
 #define CSA_AllowMultibyteCodesets CODESETSLIB_TAG(30)
 
+#define CSA_MIBenum                CODESETSLIB_TAG(31) // equal to CSA_SourceMIBenum
+#define CSA_SourceMIBenum          CODESETSLIB_TAG(31) // equal to CSA_MIBenum
+#define CSA_DestMIBenum            CODESETSLIB_TAG(32)
+
 /***********************************************************************/
 /*
 ** Returns code from CodesetsEncodeB64A() CodesetsDecodeB64A()
@@ -191,6 +196,50 @@ enum
   CSR_B64_ERROR_DOS,
   CSR_B64_ERROR_INCOMPLETE,
   CSR_B64_ERROR_ILLEGAL,
+};
+
+/***********************************************************************/
+
+enum
+{
+  // the system default encoding
+  CS_MIBENUM_SYSTEM          = 0xffffffffUL,
+
+  // standard IANA MIBenum definitions
+  CS_MIBENUM_INVALID         = 0,
+  CS_MIBENUM_US_ASCII        = 3,
+  CS_MIBENUM_ISO_8859_1      = 4,
+  CS_MIBENUM_ISO_8859_2      = 5,
+  CS_MIBENUM_ISO_8859_3      = 6,
+  CS_MIBENUM_ISO_8859_4      = 7,
+  CS_MIBENUM_ISO_8859_5      = 8,
+  CS_MIBENUM_ISO_8859_6      = 9,
+  CS_MIBENUM_ISO_8859_7      = 10,
+  CS_MIBENUM_ISO_8859_8      = 11,
+  CS_MIBENUM_ISO_8859_9      = 12,
+  CS_MIBENUM_ISO_8859_10     = 13,
+  CS_MIBENUM_UTF_8           = 106,
+  CS_MIBENUM_ISO_8859_13     = 109,
+  CS_MIBENUM_ISO_8859_14     = 110,
+  CS_MIBENUM_ISO_8859_15     = 111,
+  CS_MIBENUM_ISO_8859_16     = 112,
+  CS_MIBENUM_ISO_10646_UCS_2 = 1000,
+  CS_MIBENUM_ISO_10646_UCS_4 = 1001,
+  CS_MIBENUM_UTF_16BE        = 1013,
+  CS_MIBENUM_UTF_16LE        = 1014,
+  CS_MIBENUM_UTF_16          = 1015,
+  CS_MIBENUM_UTF_32          = 1017,
+  CS_MIBENUM_UTF_32BE        = 1018,
+  CS_MIBENUM_UTF_32LE        = 1019,
+  CS_MIBENUM_KOI8_R          = 2084,
+  CS_MIBENUM_AMIGA_1251      = 2104,
+  CS_MIBENUM_WINDOWS_1250    = 2250,
+  CS_MIBENUM_WINDOWS_1251    = 2251,
+  CS_MIBENUM_WINDOWS_1252    = 2252,
+  CS_MIBENUM_TIS_620         = 2259,
+
+  // non-standard MIBenum numbers
+  CS_MIBENUM_AMIGAPL         = 5000,
 };
 
 /***********************************************************************/

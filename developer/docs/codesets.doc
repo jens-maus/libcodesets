@@ -250,6 +250,12 @@ codesets.library/CodesetsEncodeB64A
         list of available codesets will be searched.
         Default: NONE
 
+      CSA_MIBenum (ULONG)
+        As an alternative to a codeset name one of the IANA MIBenum
+        numbers may be passed here to specify the codeset to be
+        looked up.
+        Default: CS_MIBENUM_INVALID
+
    RESULT
     codeset - the codeset or NULL on an error
 
@@ -260,6 +266,21 @@ codesets.library/CodesetsEncodeB64A
      struct codeset *cs;
 
      if((cs = CodesetsFind("Amiga-1251",
+                           CSA_FallbackToDefault, FALSE,
+                           TAG_DONE)))
+     {
+       ...
+     }
+     -- cut here --
+
+     E.g. for receiving the pointer to the ISO-8859-15 codeset by
+     its IANA MIBenum number:
+
+     -- cut here --
+     struct codeset *cs;
+
+     if((cs = CodesetsFind(NULL,
+                           CSA_MIBenum, CS_MIBENUM_ISO_8859_15,
                            CSA_FallbackToDefault, FALSE,
                            TAG_DONE)))
      {
@@ -417,9 +438,21 @@ codesets.library/CodesetsEncodeB64A
         The codeset in which the source string is encoded.
         Default: the system's default codeset
 
+      CSA_SourceMIBenum (ULONG)
+        As an alternative to the source codeset pointer one of the IANA MIBenum
+        numbers may be passed here to specify the source codeset to be used for
+        the conversion.
+        Default: CS_MIBENUM_INVALID
+
       CSA_DestCodeset (struct codeset *)
         The codeset to which the source string should be converted to.
         Default: the system's default codeset
+
+      CSA_DestMIBenum (ULONG)
+        As an alternative to the destination codeset pointer one of the IANA
+        MIBenum numbers may be passed here to specify the destination codeset to
+        be used for the conversion.
+        Default: CS_MIBENUM_INVALID
 
       CSA_DestLenPtr (ULONG *)
         If supplied, will contain the length of the converted string
@@ -476,7 +509,6 @@ codesets.library/CodesetsEncodeB64A
         supply a UTF8 sequence as a replacement for the "foreign" UTF8, your
         hook might be called again if this sequence can still not be mapped to
         the destination codesets, thus is again a "foreign" sequence.
-
 
    RESULT
     either a pointer to the generated destination string or NULL
@@ -631,6 +663,12 @@ codesets.library/CodesetsEncodeB64A
         a reset. Otherwise the default setting will just last until
         the next reboot.
         Default: FALSE
+
+      CSA_MIBenum (ULONG)
+        As an alternative to the codeset name one of the IANA MIBenum
+        numbers may be passed here to specify the codeset to be looked
+        up.
+        Default: CS_MIBENUM_INVALID
 
    RESULT
     codeset - the codeset or NULL
@@ -924,6 +962,12 @@ codesets.library/CodesetsEncodeB64A
         The codeset in which the source string is encoded.
         Default: the system's default codeset
 
+      CSA_SourceMIBenum (ULONG)
+        As an alternative to the source codeset pointer one of the
+        IANA MIBenum numbers may be passed here to specify the source
+        codeset to be used for the conversion.
+        Default: CS_MIBENUM_INVALID
+
       CSA_Dest (STRPTR)
         Destination buffer. If you supply a valid buffer here, you
         must also set CSA_DestLen to the length of your buffer. If
@@ -1165,6 +1209,12 @@ codesets.library/CodesetsEncodeB64A
       CSA_DestCodeset (struct codeset *)
         The codeset to which the UTF8 string should be encoded to.
         Default: the system's default codeset
+
+      CSA_DestMIBenum (ULONG)
+        As an alternative to the destination codeset pointer one of the
+        IANA MIBenum numbers may be passed here to specify the destination
+        codeset to be used for the conversion.
+        Default: CS_MIBENUM_INVALID
 
       CSA_DestHook (struct Hook *)
         Destination hook. If this is supplied, it is called with a
@@ -1435,6 +1485,12 @@ codesets.library/CodesetsEncodeB64A
       CSA_SourceCodeset (struct codeset *)
         The codeset the source string is encoded in.
         Default: the system's default codeset
+
+      CSA_SourceMIBenum (ULONG)
+        As an alternative to the source codeset pointer one of the
+        IANA MIBenum numbers may be passed here to specify the source
+        codeset to be used for the calculation.
+        Default: CS_MIBENUM_INVALID
 
       CSA_SourceLen (ULONG)
         The length of str

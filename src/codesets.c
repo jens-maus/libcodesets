@@ -678,6 +678,67 @@ static const char *matchCodesetAlias(const char *search)
 }
 
 ///
+/// MIBenumFromName()
+static LONG MIBenumFromName(const char *name)
+{
+  const char *mimeName;
+
+  if((mimeName = matchCodesetAlias(name)) != NULL)
+  {
+    if(strcasecmp(mimeName, "US-ASCII") == 0)
+      return CS_MIBENUM_US_ASCII;
+    else if(strcasecmp(mimeName, "UTF-8") == 0)
+      return CS_MIBENUM_UTF_8;
+    else if(strcasecmp(mimeName, "UTF-16") == 0)
+      return CS_MIBENUM_UTF_16;
+    else if(strcasecmp(mimeName, "UTF-32") == 0)
+      return CS_MIBENUM_UTF_32;
+    else if(strcasecmp(mimeName, "ISO-8859-1") == 0)
+      return CS_MIBENUM_ISO_8859_1;
+    else if(strcasecmp(mimeName, "ISO-8859-2") == 0)
+      return CS_MIBENUM_ISO_8859_2;
+    else if(strcasecmp(mimeName, "ISO-8859-3") == 0)
+      return CS_MIBENUM_ISO_8859_3;
+    else if(strcasecmp(mimeName, "ISO-8859-4") == 0)
+      return CS_MIBENUM_ISO_8859_4;
+    else if(strcasecmp(mimeName, "ISO-8859-5") == 0)
+      return CS_MIBENUM_ISO_8859_5;
+    else if(strcasecmp(mimeName, "ISO-8859-6") == 0)
+      return CS_MIBENUM_ISO_8859_6;
+    else if(strcasecmp(mimeName, "ISO-8859-7") == 0)
+      return CS_MIBENUM_ISO_8859_7;
+    else if(strcasecmp(mimeName, "ISO-8859-8") == 0)
+      return CS_MIBENUM_ISO_8859_8;
+    else if(strcasecmp(mimeName, "ISO-8859-9") == 0)
+      return CS_MIBENUM_ISO_8859_9;
+    else if(strcasecmp(mimeName, "ISO-8859-10") == 0)
+      return CS_MIBENUM_ISO_8859_10;
+    else if(strcasecmp(mimeName, "ISO-8859-13") == 0)
+      return CS_MIBENUM_ISO_8859_13;
+    else if(strcasecmp(mimeName, "ISO-8859-14") == 0)
+      return CS_MIBENUM_ISO_8859_14;
+    else if(strcasecmp(mimeName, "ISO-8859-15") == 0)
+      return CS_MIBENUM_ISO_8859_15;
+    else if(strcasecmp(mimeName, "ISO-8859-16") == 0)
+      return CS_MIBENUM_ISO_8859_16;
+    else if(strcasecmp(mimeName, "KOI8-R") == 0)
+      return CS_MIBENUM_KOI8_R;
+    else if(strcasecmp(mimeName, "Amiga-1251") == 0)
+      return CS_MIBENUM_AMIGA_1251;
+    else if(strcasecmp(mimeName, "AmigaPL") == 0)
+      return CS_MIBENUM_AMIGAPL;
+    else if(strcasecmp(mimeName, "windows-1250") == 0)
+      return CS_MIBENUM_WINDOWS_1250;
+    else if(strcasecmp(mimeName, "windows-1251") == 0)
+      return CS_MIBENUM_WINDOWS_1251;
+    else if(strcasecmp(mimeName, "windows-1252") == 0)
+      return CS_MIBENUM_WINDOWS_1252;
+  }
+
+  return CS_MIBENUM_INVALID;
+}
+
+///
 
 /**************************************************************************/
 
@@ -811,6 +872,8 @@ static BOOL codesetsReadTable(struct codesetList *csList, STRPTR name)
       // check if there is not already codeset with the same name in here
       if(codeset->name != NULL && codesetsFind(csList, codeset->name) == NULL)
       {
+        codeset->MIBenum = MIBenumFromName(codeset->name);
+
         for(i=0; i<256; i++)
         {
           UTF32 src = codeset->table[i].ucs4;
@@ -848,6 +911,7 @@ static BOOL codesetsReadTable(struct codesetList *csList, STRPTR name)
   RETURN(res);
   return res;
 }
+
 ///
 /// codesetsScanDir()
 static void codesetsScanDir(struct codesetList *csList, const char *dirPath)
@@ -976,6 +1040,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF8");
   codeset->characterization = mystrdup("Unicode");
   codeset->read_only        = 0;
+  codeset->MIBenum          = CS_MIBENUM_UTF_8;
   D(DBF_STARTUP, "adding internal codeset 'UTF-8'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf8Codeset = codeset;
@@ -988,6 +1053,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF16");
   codeset->characterization = mystrdup("16-bit Unicode");
   codeset->read_only        = 0;
+  codeset->MIBenum          = CS_MIBENUM_UTF_16;
   D(DBF_STARTUP, "adding internal codeset 'UTF-16'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf16Codeset = codeset;
@@ -1000,6 +1066,7 @@ BOOL codesetsInit(struct codesetList *csList)
   codeset->alt_name         = mystrdup("UTF32");
   codeset->characterization = mystrdup("32-bit Unicode");
   codeset->read_only        = 0;
+  codeset->MIBenum          = CS_MIBENUM_UTF_32;
   D(DBF_STARTUP, "adding internal codeset 'UTF-32'");
   AddTail((struct List *)csList, (struct Node *)&codeset->node);
   CodesetsBase->utf32Codeset = codeset;
@@ -1033,6 +1100,7 @@ BOOL codesetsInit(struct codesetList *csList)
       codeset->alt_name         = NULL;
       codeset->characterization = mystrdup(ianaName);
       codeset->read_only        = 0;
+      codeset->MIBenum          = curMIB;
 
       for(i=0; i<256; i++)
       {
@@ -1085,6 +1153,7 @@ BOOL codesetsInit(struct codesetList *csList)
              codeset->alt_name         = NULL;
              codeset->characterization = mystrdup(name);  // No further information available
              codeset->read_only        = 0;
+             codeset->MIBenum          = MIBenumFromName(name);
 
              for(i=0; i<256; i++)
              {
@@ -1149,6 +1218,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = NULL;
     codeset->characterization = mystrdup("West European (with EURO)");
     codeset->read_only        = 1;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_1;
 
     for(i = 0; i<256; i++)
     {
@@ -1183,6 +1253,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-1");
     codeset->characterization = mystrdup("West European");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_1;
 
     for(i = 0; i<256; i++)
     {
@@ -1214,6 +1285,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-2");
     codeset->characterization = mystrdup("Central/East European");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_2;
 
     for(i = 0; i<256; i++)
     {
@@ -1248,6 +1320,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-3");
     codeset->characterization = mystrdup("South European");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_3;
 
     for(i = 0; i<256; i++)
     {
@@ -1282,6 +1355,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-4");
     codeset->characterization = mystrdup("North European");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_4;
 
     for(i = 0; i<256; i++)
     {
@@ -1316,6 +1390,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-5");
     codeset->characterization = mystrdup("Slavic languages");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_5;
 
     for(i = 0; i<256; i++)
     {
@@ -1350,6 +1425,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-9");
     codeset->characterization = mystrdup("Turkish");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_9;
 
     for(i = 0; i<256; i++)
     {
@@ -1384,6 +1460,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8859-15");
     codeset->characterization = mystrdup("West European II");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_15;
 
     for(i = 0; i<256; i++)
     {
@@ -1418,6 +1495,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("ISO8869-16");
     codeset->characterization = mystrdup("South-Eastern European");
     codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_ISO_8859_16;
 
     for(i=0;i<256;i++)
     {
@@ -1448,10 +1526,11 @@ BOOL codesetsInit(struct codesetList *csList)
     if((codeset = allocArbitrateVecPooled(sizeof(*codeset))) == NULL)
       goto end;
 
-    codeset->name               = mystrdup("KOI8-R");
-    codeset->alt_name           = mystrdup("KOI8R");
-    codeset->characterization   = mystrdup("Russian");
-    codeset->read_only          = 0;
+    codeset->name             = mystrdup("KOI8-R");
+    codeset->alt_name         = mystrdup("KOI8R");
+    codeset->characterization = mystrdup("Russian");
+    codeset->read_only        = 0;
+    codeset->MIBenum          = CS_MIBENUM_KOI8_R;
 
     for(i = 0; i<256; i++)
     {
@@ -1486,6 +1565,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("AmiPL");
     codeset->characterization = mystrdup("Polish (Amiga)");
     codeset->read_only        = 1;
+    codeset->MIBenum          = CS_MIBENUM_AMIGAPL;
 
     for(i=0; i<256; i++)
     {
@@ -1520,6 +1600,7 @@ BOOL codesetsInit(struct codesetList *csList)
     codeset->alt_name         = mystrdup("Ami1251");
     codeset->characterization = mystrdup("Cyrillic (Amiga)");
     codeset->read_only        = 1;
+    codeset->MIBenum          = CS_MIBENUM_AMIGA_1251;
 
     for(i=0; i<256; i++)
     {
@@ -1598,6 +1679,46 @@ struct codeset *codesetsFind(struct codesetList *csList, const char *name)
 
       if(stricmp(name, mstate->name) == 0 ||
         (mstate->alt_name != NULL && stricmp(name, mstate->alt_name) == 0))
+      {
+        // break out
+        res = mstate;
+        break;
+      }
+    }
+  }
+
+  RETURN(res);
+  return res;
+}
+
+///
+/// codesetsFindMIBenum()
+// Returns the given codeset.
+struct codeset *codesetsFindMIBenum(struct codesetList *csList, ULONG mib)
+{
+  struct codeset *res = NULL;
+
+  ENTER();
+
+  if(mib == CS_MIBENUM_ISO_10646_UCS_2)
+  {
+    // not entirely correct, but better than nothing
+    res = CodesetsBase->utf16Codeset;
+  }
+  else if(mib == CS_MIBENUM_ISO_10646_UCS_4)
+  {
+    // not entirely correct, but better than nothing
+    res = CodesetsBase->utf32Codeset;
+  }
+  else if(mib != CS_MIBENUM_INVALID)
+  {
+    struct Node *node;
+
+    for(node = GetHead((struct List *)csList); node != NULL; node = GetSucc(node))
+    {
+      struct codeset *mstate = (struct codeset *)node;
+
+      if(mstate->MIBenum == mib)
       {
         // break out
         res = mstate;
@@ -2006,13 +2127,20 @@ LIBPROTOVA(CodesetsFree, void,  REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, APTR ob
 /// CodesetsSetDefaultA()
 LIBPROTO(CodesetsSetDefaultA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs))
 {
-  struct codeset *codeset;
+  struct codeset *codeset = NULL;
+  ULONG mib;
 
   ENTER();
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
-  if((codeset = codesetsFind(&CodesetsBase->codesets, name)) != NULL)
+  if((mib = GetTagData(CSA_MIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+    codeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+
+  if(codeset == NULL)
+    codeset = codesetsFind(&CodesetsBase->codesets, name);
+
+  if(codeset != NULL)
   {
     ULONG flags;
 
@@ -2048,8 +2176,11 @@ LIBPROTOVA(CodesetsSetDefault, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE)
 LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_STRPTR name), REG(a1, struct TagItem *attrs))
 {
   struct codeset *codeset = NULL;
+  ULONG mib;
 
   ENTER();
+
+  mib = GetTagData(CSA_MIBenum, CS_MIBENUM_INVALID, attrs);
 
   ObtainSemaphoreShared(&CodesetsBase->libSem);
 
@@ -2060,23 +2191,29 @@ LIBPROTO(CodesetsFindA, struct codeset *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a
     // we first walk through our internal list and check if we
     // can find the requested codeset
     codeset = codesetsFind(&CodesetsBase->codesets, name);
+  }
+  else if(mib != CS_MIBENUM_INVALID)
+  {
+    codeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+  }
 
-    if(codeset == NULL)
+  if(codeset == NULL)
+  {
+    struct TagItem *tstate = attrs;
+    struct TagItem *tag;
+
+    // now we walk through our taglist and check if the user
+    // supplied
+    while((tag = NextTagItem((APTR)&tstate)) != NULL)
     {
-      struct TagItem *tstate = attrs;
-      struct TagItem *tag;
-
-      // now we walk through our taglist and check if the user
-      // supplied
-      while((tag = NextTagItem((APTR)&tstate)) != NULL)
+      if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
       {
-        if(tag->ti_Tag == CSA_CodesetList && tag->ti_Data != 0)
-        {
-          struct codesetList *csList = (struct codesetList *)tag->ti_Data;
+        struct codesetList *csList = (struct codesetList *)tag->ti_Data;
 
-          if((codeset = codesetsFind(csList, name)) != NULL)
-            break;
-        }
+        if(name != NULL && (codeset = codesetsFind(csList, name)) != NULL)
+          break;
+        else if(mib != CS_MIBENUM_INVALID && (codeset = codesetsFindMIBenum(csList, mib)) != NULL)
+          break;
       }
     }
   }
@@ -2190,12 +2327,23 @@ LIBPROTO(CodesetsStrLenA, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST_
 
   if(str != NULL)
   {
-    struct codeset *codeset;
+    ULONG mib;
+    struct codeset *codeset = NULL;
     int            len;
     CONST_STRPTR   src;
     int            utf;
 
-    if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
+    if((mib = GetTagData(CSA_SourceMIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+    {
+      ObtainSemaphoreShared(&CodesetsBase->libSem);
+      codeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+      ReleaseSemaphore(&CodesetsBase->libSem);
+    }
+
+    if(codeset == NULL)
+      codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs);
+
+    if(codeset == NULL)
       codeset = defaultCodeset(TRUE);
 
     if(codeset == CodesetsBase->utf32Codeset)
@@ -2293,7 +2441,7 @@ LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, st
      (srcLen = GetTagData(CSA_SourceLen, src != NULL ? strlen((char *)src) : 0, attrs)) > 0)
   {
     struct convertMsg msg;
-    struct codeset *codeset;
+    struct codeset *codeset = NULL;
     struct Hook *destHook;
     struct Hook *mapForeignCharsHook;
     char buf[256];
@@ -2309,6 +2457,7 @@ LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, st
     struct SignalSemaphore *sem = NULL;
     int utf;
     ULONG char_size;
+    ULONG mib;
 
     // get some more optional attributes
     destHook = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
@@ -2318,8 +2467,19 @@ LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, st
     mapForeignCharsHook = (struct Hook *)GetTagData(CSA_MapForeignCharsHook, 0, attrs);
 
     // get the destination codeset pointer
-    if((codeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs)) == NULL)
+    if((mib = GetTagData(CSA_DestMIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+    {
+      ObtainSemaphoreShared(&CodesetsBase->libSem);
+      codeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+      ReleaseSemaphore(&CodesetsBase->libSem);
+    }
+
+    if(codeset == NULL)
+      codeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs);
+
+    if(codeset == NULL)
       codeset = defaultCodeset(TRUE);
+
     if(codeset == CodesetsBase->utf32Codeset)
     {
       utf = 32;
@@ -2722,7 +2882,8 @@ LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
 {
   UTF8   *from;
   UTF8   *dest;
-  struct codeset *codeset;
+  ULONG  mib;
+  struct codeset *codeset = NULL;
   ULONG  fromLen, *destLenPtr;
   ULONG  n;
   int    utf;
@@ -2732,8 +2893,19 @@ LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
   dest = NULL;
   n    = 0;
 
-  if((codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
+  if((mib = GetTagData(CSA_SourceMIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+  {
+    ObtainSemaphoreShared(&CodesetsBase->libSem);
+    codeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+    ReleaseSemaphore(&CodesetsBase->libSem);
+  }
+
+  if(codeset == NULL)
+    codeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs);
+
+  if(codeset == NULL)
     codeset = defaultCodeset(TRUE);
+
   if(codeset == CodesetsBase->utf32Codeset)
     utf = 32;
   else if(codeset == CodesetsBase->utf16Codeset)
@@ -3021,9 +3193,11 @@ LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CON
 /// CodesetsConvertStrA()
 // Converts a given string from one source Codeset to a given destination
 // codeset and returns the convert string
+void kprintf(const char *,...);
 LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
-  struct codeset *srcCodeset;
+  ULONG mib;
+  struct codeset *srcCodeset = NULL;
   STRPTR srcStr = NULL;
   STRPTR dstStr = NULL;
   ULONG srcLen = 0;
@@ -3037,7 +3211,17 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
   srcStr = (STRPTR)GetTagData(CSA_Source, 0, attrs);
 
   // get the pointer to the codeset in which the src string is encoded
-  if((srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs)) == NULL)
+  if((mib = GetTagData(CSA_SourceMIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+  {
+    ObtainSemaphoreShared(&CodesetsBase->libSem);
+    srcCodeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+    ReleaseSemaphore(&CodesetsBase->libSem);
+  }
+
+  if(srcCodeset == NULL)
+    srcCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs);
+
+  if(srcCodeset == NULL)
     srcCodeset = defaultCodeset(TRUE);
 
   if(srcStr != NULL)
@@ -3064,10 +3248,20 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
 
   if(srcStr != NULL && srcLen > 0)
   {
-    struct codeset *dstCodeset;
+    struct codeset *dstCodeset = NULL;
 
     // get the pointer to the codeset in which the dst string should be encoded
-    if((dstCodeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs)) == NULL)
+    if((mib = GetTagData(CSA_DestMIBenum, CS_MIBENUM_INVALID, attrs)) != CS_MIBENUM_INVALID)
+    {
+      ObtainSemaphoreShared(&CodesetsBase->libSem);
+      dstCodeset = codesetsFindMIBenum(&CodesetsBase->codesets, mib);
+      ReleaseSemaphore(&CodesetsBase->libSem);
+    }
+
+    if(dstCodeset == NULL)
+      dstCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs);
+
+    if(dstCodeset == NULL)
       dstCodeset = defaultCodeset(TRUE);
 
     D(DBF_UTF, "srcCodeset: '%s' dstCodeset: '%s'", srcCodeset->name, dstCodeset->name);
