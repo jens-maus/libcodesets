@@ -3194,7 +3194,6 @@ LIBPROTO(CodesetsIsValidUTF8, BOOL, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CON
 /// CodesetsConvertStrA()
 // Converts a given string from one source Codeset to a given destination
 // codeset and returns the convert string
-void kprintf(const char *,...);
 LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   ULONG mib;
@@ -3246,7 +3245,6 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
   else
     srcLen = 0;
   srcLen = GetTagData(CSA_SourceLen, srcLen, attrs);
-//kprintf("%s: src mib %ld cs %08lx fcs %08lx utf8 %08lx '%s'\n", __FUNCTION__, mib, GetTagData(CSA_SourceCodeset, 0, attrs), srcCodeset, CodesetsBase->utf8Codeset, srcStr);
 
   if(srcStr != NULL && srcLen > 0)
   {
