@@ -5,6 +5,11 @@ codesets.library - Library for handling different codesets
 $Id$
 $URL$
 
+2015-12-16 Thore Böckelmann <tboeckel@gmx.de>
+
+  * codesets.c: fixed the wrong destination codeset extraction since the
+    addition of MIBenums as alternative to codesets.
+
 2015-12-04 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: added support for IANA MIBenum numbers as an alternative for

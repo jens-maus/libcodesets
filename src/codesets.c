@@ -2426,6 +2426,7 @@ LIBPROTOVA(CodesetsStrLen, ULONG, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, CONST
 // written to dest excluding the NULL byte (which is always ensured by this
 // function; it means a NULL str will produce "" as dest; anyway you should
 // check NULL str to not waste your time!).
+void kprintf(const char *,...);
 LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, struct TagItem *attrs))
 {
   UTF8 *src;
@@ -3245,6 +3246,7 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
   else
     srcLen = 0;
   srcLen = GetTagData(CSA_SourceLen, srcLen, attrs);
+//kprintf("%s: src mib %ld cs %08lx fcs %08lx utf8 %08lx '%s'\n", __FUNCTION__, mib, GetTagData(CSA_SourceCodeset, 0, attrs), srcCodeset, CodesetsBase->utf8Codeset, srcStr);
 
   if(srcStr != NULL && srcLen > 0)
   {
@@ -3259,7 +3261,7 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
     }
 
     if(dstCodeset == NULL)
-      dstCodeset = (struct codeset *)GetTagData(CSA_SourceCodeset, 0, attrs);
+      dstCodeset = (struct codeset *)GetTagData(CSA_DestCodeset, 0, attrs);
 
     if(dstCodeset == NULL)
       dstCodeset = defaultCodeset(TRUE);
