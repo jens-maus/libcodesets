@@ -233,7 +233,7 @@ AROS_LD5(ULONG, CodesetsConvertUTF8toUTF32,
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
 AROS_LD2(struct codeset *, CodesetsSetDefaultA,
-    AROS_LDA(STRPTR, ___name, A0),
+    AROS_LDA(CONST_STRPTR, ___name, A0),
     AROS_LDA(struct TagItem *, ___attrs, A1),
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
@@ -247,7 +247,7 @@ AROS_LD1(STRPTR *, CodesetsSupportedA,
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
 AROS_LD2(struct codeset *, CodesetsFindA,
-    AROS_LDA(STRPTR, ___name, A0),
+    AROS_LDA(CONST_STRPTR, ___name, A0),
     AROS_LDA(struct TagItem *, ___attrs, A1),
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
@@ -276,12 +276,12 @@ AROS_LD1(ULONG, CodesetsDecodeB64A,
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
 AROS_LD2(ULONG, CodesetsStrLenA,
-    AROS_LDA(STRPTR, ___str, A0),
+    AROS_LDA(CONST_STRPTR, ___str, A0),
     AROS_LDA(struct TagItem *, ___attrs, A1),
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
 AROS_LD1(BOOL, CodesetsIsValidUTF8,
-    AROS_LDA(STRPTR, ___str, A0),
+    AROS_LDA(CONST_STRPTR, ___str, A0),
     struct LibraryHeader *, __BASE_OR_IFACE_VAR, 0, LIBSTUB);
 
 AROS_LD3(void, CodesetsFreeVecPooledA,

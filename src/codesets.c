@@ -1165,7 +1165,7 @@ BOOL codesetsInit(struct codesetList *csList)
 
                // here we use UTF8_Encode() instead of ConvertUCS4ToUTF8() because
                // of an internal bug in MorphOS 2.2.
-               rc = UTF8_Encode(src, dest_ptr);
+               rc = UTF8_Encode(src, (STRPTR)dest_ptr);
                rc = rc > 0 ? rc : 1;
 
                dest_ptr[rc] = '\0';
@@ -2942,8 +2942,13 @@ LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
     struct Hook    *hook;
     ULONG          destLen;
     int            i = 0;
+    #if !defined(__MORPHOS__)
     TEXT           buf[256];
-    STRPTR         src, destPtr = NULL, b = NULL;
+    #else
+    char           buf[256];
+    #endif
+    STRPTR         b = NULL;
+    STRPTR         src, destPtr = NULL;
     ULONG          c;
 
     hook    = (struct Hook *)GetTagData(CSA_DestHook, 0, attrs);
@@ -3064,7 +3069,7 @@ LIBPROTO(CodesetsUTF8CreateA, UTF8 *, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
           *b = 0;
           if(r != CSR_TargetExhausted)
             msg.state = CSV_End;
-          msg.len = b-buf;
+          msg.len = b - buf;
           CallHookPkt(hook,&msg,buf);
 
           b  = buf;
