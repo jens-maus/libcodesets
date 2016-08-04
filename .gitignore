@@ -1,2 +1,5 @@
 bin_*/
 .obj_*/
+release/
+codesets-*.lha
+codesets-*.readme

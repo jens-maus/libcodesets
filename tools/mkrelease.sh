@@ -60,7 +60,7 @@ for os in os3 os4 mos aros-i386 aros-ppc aros-x86_64; do
 done
 
 cp -a -R dist/* "release/"
-cp -a AUTHORS ChangeLog COPYING "release/codesets/"
+cp -a ChangeLog COPYING "release/codesets/"
 cp -a charsets/* "release/codesets/Charsets/"
 cp -a developer/docs/* "release/codesets/Developer/Autodocs/"
 cp -a developer/examples/*.c "release/codesets/Developer/Examples/"

@@ -2,8 +2,11 @@
 codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
-$Id$
-$URL$
+#### 6.20 RELEASE ########################################################
+
+2016-08-04 Jens Maus <mail@jens-maus.de>
+
+  * misc: final 6.20 release preparations.
 
 2015-12-16 Thore Böckelmann <tboeckel@gmx.de>
 
