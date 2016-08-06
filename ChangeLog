@@ -2,6 +2,10 @@
 codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
+2016-08-06 Jens Maus <mail@jens-maus.de>
+
+  * include: updated SDI headers.
+
 #### 6.20 RELEASE ########################################################
 
 2016-08-04 Jens Maus <mail@jens-maus.de>
