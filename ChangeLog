@@ -6,6 +6,11 @@ codesets.library - Library for handling different codesets
 
   * libinit.c: moved the system and CPU description behind the copyright part.
 
+2016-08-15 Thore Böckelmann <tboeckel@gmx.de>
+
+  * all/Debug.c: declare inlined _INDENT() function as static to avoid warnings
+    of GCC5.
+
 2016-08-06 Jens Maus <mail@jens-maus.de>
 
   * include: updated SDI headers.
