@@ -2,6 +2,10 @@
 codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
+2016-09-07 Thore Böckelmann <tboeckel@gmx.de>
+
+  * libinit.c: moved the system and CPU description behind the copyright part.
+
 2016-08-06 Jens Maus <mail@jens-maus.de>
 
   * include: updated SDI headers.

@@ -89,7 +89,7 @@ struct CodesetsIFace *ICodesets = NULL;
 #endif
 
 static const char UserLibName[] = "codesets.library";
-static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING " [" SYSTEMSHORT "/" CPU "] (" LIB_DATE ") " LIB_COPYRIGHT;
+static const char UserLibID[]   = "$VER: codesets.library " LIB_REV_STRING " (" LIB_DATE ") " LIB_COPYRIGHT " [" SYSTEMSHORT "/" CPU "]";
 
 /****************************************************************************/
 
