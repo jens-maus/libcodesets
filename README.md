@@ -1,5 +1,6 @@
 # codesets.library
 
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RAQSDY9YNZVCL)
 [![Build Status](https://travis-ci.org/jens-maus/libcodesets.svg?branch=master)](https://travis-ci.org/jens-maus/libcodesets) [![Code Climate](https://codeclimate.com/github/jens-maus/libcodesets/badges/gpa.svg)](https://codeclimate.com/github/jens-maus/libcodesets) [![License](http://img.shields.io/:license-lgpl2-blue.svg?style=flat)](http://www.gnu.org/licenses/lgpl-2.1.html) [![Github Issues](http://githubbadges.herokuapp.com/jens-maus/libcodesets/issues.svg)](https://github.com/jens-maus/libcodesets/issues)
 
 Classic Amiga systems, but even modern AmigaOS versions like AmigaOS4 and
