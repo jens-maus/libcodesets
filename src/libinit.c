@@ -24,6 +24,7 @@
 #include "version.h"
 
 #include <exec/resident.h>
+#include <exec/execbase.h>
 #include <proto/exec.h>
 
 #include "debug.h"

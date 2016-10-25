@@ -57,12 +57,12 @@ struct Library *LocaleBase = NULL;
 #else
 struct LocaleBase *LocaleBase = NULL;
 #endif
-#ifdef __AROS__
+#if defined(__AROS__) || defined(__amigaos3__)
 struct UtilityBase *UtilityBase = NULL;
 #else
 struct Library *UtilityBase = NULL;
-struct Library *__UtilityBase = NULL; // required by clib2 & libnix
 #endif
+struct Library *__UtilityBase = NULL; // required by clib2 & libnix
 #endif
 
 /****************************************************************************/
