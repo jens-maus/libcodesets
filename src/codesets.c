@@ -1700,17 +1700,31 @@ struct codeset *codesetsFindMIBenum(struct codesetList *csList, ULONG mib)
 
   ENTER();
 
-  if(mib == CS_MIBENUM_ISO_10646_UCS_2)
+  // handle unicode codesets first
+  switch(mib)
   {
+    case CS_MIBENUM_UTF_8:
+      res = CodesetsBase->utf8Codeset;
+    break;
+
+    case CS_MIBENUM_UTF_16:
+    case CS_MIBENUM_UTF_16BE:
+    case CS_MIBENUM_UTF_16LE:
     // not entirely correct, but better than nothing
-    res = CodesetsBase->utf16Codeset;
-  }
-  else if(mib == CS_MIBENUM_ISO_10646_UCS_4)
-  {
+    case CS_MIBENUM_ISO_10646_UCS_2:
+      res = CodesetsBase->utf16Codeset;
+    break;
+
+    case CS_MIBENUM_UTF_32:
+    case CS_MIBENUM_UTF_32BE:
+    case CS_MIBENUM_UTF_32LE:
     // not entirely correct, but better than nothing
-    res = CodesetsBase->utf32Codeset;
+    case CS_MIBENUM_ISO_10646_UCS_4:
+      res = CodesetsBase->utf32Codeset;
+    break;
   }
-  else if(mib != CS_MIBENUM_INVALID)
+
+  if(mib != CS_MIBENUM_INVALID && res == NULL)
   {
     struct Node *node;
 
