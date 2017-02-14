@@ -219,8 +219,8 @@ ifeq ($(OS), os3)
 
   # Compiler/Linker flags
   CPU	    = -m68020-60 -msoft-float -D__amigaos3__
-  CFLAGS  += -mcrt=clib2
-  LDFLAGS += -mcrt=clib2
+  CFLAGS  += -noixemul
+  LDFLAGS += -noixemul
   LDLIBS  += -ldebug
 
 else
