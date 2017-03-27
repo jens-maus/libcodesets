@@ -80,7 +80,7 @@ long __stack = 8192;
 
 struct Library *MUIMasterBase = NULL;
 struct Library *CodesetsBase = NULL;
-#ifdef __AROS__
+#if defined(__AROS__) || defined(__amigaos3__)
 struct UtilityBase *UtilityBase = NULL;
 #else
 struct Library *UtilityBase = NULL;
