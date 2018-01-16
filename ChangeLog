@@ -2,6 +2,8 @@
 codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
+#### 6.21 RELEASE ########################################################
+
 2017-01-10 Thore Böckelmann <tboeckel@gmx.de>
 
   * codesets.c: treat CS_MIBENUM_UTF_16LE/BE and allow CS_MIBENUM_UTF_32LE/BE as
