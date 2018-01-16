@@ -2,7 +2,7 @@
 
  codesets.library - Amiga shared library for handling different codesets
  Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
- Copyright (C) 2005-2017 codesets.library Open Source Team
+ Copyright (C) 2005-2018 codesets.library Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -80,7 +80,7 @@ long __stack = 8192;
 
 struct Library *MUIMasterBase = NULL;
 struct Library *CodesetsBase = NULL;
-#ifdef __AROS__
+#if defined(__AROS__) || defined(__amigaos3__)
 struct UtilityBase *UtilityBase = NULL;
 #else
 struct Library *UtilityBase = NULL;
@@ -801,7 +801,7 @@ main(UNUSED int argc,char **argv)
                GETINTERFACE(IMUIMaster, MUIMasterBase))
             {
                 /* Create classes */
-		if ((appClass = MUI_CreateCustomClass(NULL, 		MUIC_Application, NULL, sizeof(struct appData), ENTRY(appDispatcher))) &&
+		if ((appClass = MUI_CreateCustomClass(NULL, MUIC_Application, NULL, sizeof(struct appData), ENTRY(appDispatcher))) &&
 		    (popupCodesetsClass = MUI_CreateCustomClass(NULL, MUIC_Popobject, NULL, 0, ENTRY(popupDispatcher))) &&
 		    (editorClass = MUI_CreateCustomClass(NULL, MUIC_TextEditor, NULL, sizeof(struct editorData), ENTRY(editorDispatcher))))
                 {

@@ -2,7 +2,7 @@
 #
 # codesets.library - Amiga shared library for handling different codesets
 # Copyright (C) 2001-2005 by Alfonso [alfie] Ranieri <alforan@tin.it>.
-# Copyright (C) 2005-2017 codesets.library Open Source Team
+# Copyright (C) 2005-2018 codesets.library Open Source Team
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -207,9 +207,9 @@ ifeq ($(OS), os3)
   endif
 
   # Compiler/Linker flags
-  CPU	    = -m68020-60 -msoft-float
-  CFLAGS  += -noixemul
-  LDFLAGS += -noixemul
+  CPU	    = -m68020-60 -msoft-float -D__amigaos3__
+  CFLAGS  += -mcrt=clib2
+  LDFLAGS += -mcrt=clib2
   LDLIBS  += -ldebug -lmui
   NOINLINE = -DNO_INLINE_STDARG
 

@@ -107,7 +107,7 @@ To report bugs use the [bug/issue tracker](https://github.com/jens-maus/libcodes
 
 codesets.library was originally written in 2001 and is Copyright (C) 2001-2005 by Alfonso Ranieri.
 As of 2005 the library is maintained by an independent open source team and
-Copyright (C) 2005-2017 codesets.library Open Source Team.
+Copyright (C) 2005-2018 codesets.library Open Source Team.
 
 codesets.library is distributed and licensed under the GNU Lesser General Public License Version 2.1.
 See [COPYING](COPYING) for more detailed information.
