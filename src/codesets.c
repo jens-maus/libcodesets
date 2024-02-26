@@ -2452,8 +2452,10 @@ LIBPROTO(CodesetsUTF8ToStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, st
 
   ENTER();
 
-  if((src = (UTF8 *)GetTagData(CSA_Source, 0, attrs)) != NULL &&
-     (srcLen = GetTagData(CSA_SourceLen, src != NULL ? strlen((char *)src) : 0, attrs)) > 0)
+  src = (UTF8 *)GetTagData(CSA_Source, 0, attrs);
+  srcLen = FindTagItem(CSA_SourceLen, attrs) || !src ? GetTagData(CSA_SourceLen, 0, attrs) : strlen((char *)src);
+ 
+  if(src != NULL && srcLen > 0)
   {
     struct convertMsg msg;
     struct codeset *codeset = NULL;
@@ -3257,7 +3259,9 @@ LIBPROTO(CodesetsConvertStrA, STRPTR, REG(a6, UNUSED __BASE_OR_IFACE), REG(a0, s
     }
     else
     {
-      srcLen = strlen(srcStr);
+      if(!FindTagItem(CSA_SourceLen, attrs))
+        srcLen = strlen(srcStr);
+      
       charSize = sizeof(char);
     }
   }
