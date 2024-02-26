@@ -1,7 +1,7 @@
 # codesets.library
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RAQSDY9YNZVCL)
-[![Build](https://github.com/jens-maus/libcodesets/workflows/CI/badge.svg)](https://github.com/jens-maus/libcodesets/actions)
+[![Build](https://github.com/jens-maus/libcodesets/actions/workflows/ci.yml/badge.svg)](https://github.com/jens-maus/libcodesets/actions)
 [![License](http://img.shields.io/:license-lgpl2-blue.svg?style=flat)](http://www.gnu.org/licenses/lgpl-2.1.html)
 
 Classic Amiga systems, but even modern AmigaOS versions like AmigaOS4 and
