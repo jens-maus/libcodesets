@@ -2,6 +2,18 @@
 codesets.library - Library for handling different codesets
 ----------------------------------------------------------
 
+#### 6.22 RELEASE ########################################################
+
+2024-02-26 Jens Maus <mail@jens-maus.de>
+
+  * misc: final 6.22 release preparations.
+
+2022-11-15 Andreas Falkenhahn <andreas@falkenhahn.com>
+
+  * codesets.c: Only call strlen() if CSA_SourceLen is not set. When using
+    CSA_SourceLen, the string passed in CSA_Source might not be NULL-terminated
+    so we should not call strlen() on it.
+
 #### 6.21 RELEASE ########################################################
 
 2017-01-10 Thore Böckelmann <tboeckel@gmx.de>
